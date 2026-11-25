@@ -86,7 +86,7 @@ const SCREENS = {
   phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}<span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span>${hero_()}${flares_()}${tabs_(0)}</div>`,
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
-  lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-w="kp"></span></div><div class="rect"><b data-w="condition"></b><span data-w="watch"></span></div></div><div class="notes"></div></div>`,
+  lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-d="kp"></span></div><div class="rect"><b data-d="condition"></b><span data-d="watch"></span></div></div><div class="notes"></div></div>`,
   chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span>Reykjavík area</span></div><div class="bubbles"></div><div class="field">Message</div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
@@ -157,7 +157,6 @@ function showWidgets(day) {
   const s = { ...day, peakText: "Kp " + day.peak, windText: day.wind + " km/s", bzText: minus(day.bz) + " nT" };
   for (const el of document.querySelectorAll("[data-w]")) { put(el, s[el.dataset.w]); }
   for (const el of document.querySelectorAll("[data-flow]")) { paintFlow(el, day.level); }
-  for (const el of document.querySelectorAll("[data-ring]")) { el.style.setProperty("--k", day.kp / 9); }
   for (const el of document.querySelectorAll("[data-wchart]")) {
     const lo = Math.min(...day.curve) - 0.3, hi = Math.max(...day.curve) + 0.3;
     const P = day.curve.map((v, i) => [-10 + i / 23 * 384, 23 + (1 - (v - lo) / (hi - lo)) * 25]), path = (a, b) => "M" + P.slice(a, b + 1).map((p) => p.map((n) => n.toFixed(1)).join(" ")).join("L");
@@ -200,6 +199,7 @@ const view = { curve: DAYS[0].curve.slice() };
 function showScreens(day) {
   const s = { ...day, bz: minus(day.bz) + " nT" };
   for (const el of document.querySelectorAll("[data-d]")) { put(el, s[el.dataset.d]); }
+  for (const el of document.querySelectorAll("[data-ring]")) { el.style.setProperty("--k", clamp(day.kp / 9, 0, 1)); }
   for (const el of document.querySelectorAll("[data-sun]")) { el.classList.toggle("on", +el.dataset.sun === day.level); }
 }
 const charts = [...document.querySelectorAll("[data-chart]")];

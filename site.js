@@ -309,6 +309,8 @@ async function live() {
   liveLevel = l;
   liveDay = { level: l, kp: Math.round(kp), curve: [...past, ...next].map((p) => p.kp),
     state: ["Space weather is quiet now", "Space weather is active now", g > 0 ? "Magnetic storm now" : "Space weather storm now", g > 0 ? "Severe magnetic storm now" : "Severe space weather now"][l],
+    condition: ["Quiet space weather", "Active space weather", g > 0 ? "Magnetic storm" : "Stormy space weather", g > 0 ? "Severe magnetic storm" : "Severe space weather"][l],
+    watch: ((p) => p >= 5 ? "Storm possible" : p >= 4 ? "Unsettled" : "Calm next 24 hours")(Math.round(Math.max(...next.slice(0, 8).map((p) => p.kp)))),
     feel: FEEL[clamp(Math.round(kp), 0, 9)],
     m: percent(odds?.[0]?.m_class_1_day), x: percent(odds?.[0]?.x_class_1_day), flare: cls ?? "–", flareWord: cls ? { X: "Strong", M: "Medium", C: "Moderate" }[cls[0]] ?? "Low" : "",
     wind: isFinite(speed) ? Math.round(speed) : "–", windWord: !isFinite(speed) ? "" : speed < 400 ? "Calm" : speed < 600 ? "Raised" : "High", bz: isFinite(bz) ? Math.round(bz) : "–" };

@@ -21,7 +21,7 @@ a { color: inherit; }
 .word line { stroke: currentColor; stroke-width: 10; stroke-linecap: round; opacity: .28; animation: ray 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * .4s); }
 @keyframes ray { 0%, 60%, 100% { opacity: .22; } 25% { opacity: .6; } }
 #bar { position: fixed; inset: 0 0 auto; height: 72px; z-index: 5; display: flex; justify-content: center; align-items: center; pointer-events: none; --in: 0; --glass: 0; padding-bottom: 8px; }
-#bar::before { content: ""; position: absolute; inset: 0 0 -14px; opacity: var(--glass); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
+#bar::before { content: ""; position: absolute; inset: 0 0 -14px; opacity: var(--glass); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
 #bar .word { position: relative; font-size: 15px; opacity: calc(var(--glass) * var(--rest, 1)); }
 #bar .sun_ b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: inherit; opacity: calc(1 - var(--in)); }
 #bar .o { width: 25px; height: 25px; margin: 0 auto; }
@@ -166,7 +166,7 @@ html:not(.landed) #orb { pointer-events: none; }
 .part { max-width: 1180px; margin: 0 auto; padding: 110px 24px 0; text-align: center; }
 .part > .lead { max-width: 30em; margin: 0 auto 48px; }
 .part .lead p { margin-top: 16px; }
-.pair { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -24px; padding: 4px 12vw 12px; scrollbar-width: none; }
+.pair { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -24px -60px; padding: 4px 12vw 72px; scrollbar-width: none; }
 .pair::-webkit-scrollbar { display: none; }
 .pair figure { margin: 0; flex: none; width: min(70vw, 300px); scroll-snap-align: center; }
 .pair figcaption, .grid figcaption { margin-top: 16px; font-size: var(--small); font-weight: 600; }
@@ -240,6 +240,7 @@ html:not(.landed) #orb { pointer-events: none; }
 .family figure { margin: 0; width: 100%; } .family .wide_ { grid-column: span 2; }
 .family figcaption { margin-top: 14px; font-size: var(--small); font-weight: 600; } .family figcaption { white-space: nowrap; } .family figcaption span { font-weight: 400; color: var(--quiet); }
 .family .phone { width: min(100%, 190px); margin: 0 auto; } .family .clock_ { width: min(80%, 130px); margin: 0 auto; }
+@media (max-width: 899px) { .family .d { order: 3; } }
 @media (min-width: 900px) { .family { grid-template-columns: 5.4fr 1.75fr 5fr 1.55fr; gap: 2.2vw; } .family .wide_ { grid-column: auto; } .family .phone, .family .clock_ { width: 100%; } }
 
 #end { max-width: 900px; margin: 0 auto; padding: 130px 24px 110px; text-align: center; }
