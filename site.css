@@ -282,7 +282,8 @@ figcaption span { font-weight: 400; color: var(--quiet); }
 /* Devices: tiles in a row, from the left margin off the right edge */
 #devices { --in: max(var(--edge), calc((100vw - 1080px) / 2)); align-items: stretch; padding-left: 0; padding-right: 0; gap: 40px; text-align: left; }
 #devices .lead { padding: 0 var(--in); max-width: none; }
-#strip { display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none; padding: 0 var(--in); scroll-padding: 0 var(--in); scroll-snap-type: x proximity; cursor: grab; -webkit-user-select: none; user-select: none; --mm: min(1.95px, calc((86vw - 48px) / 289)); }
+#strip { display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none; padding: 0 var(--in); scroll-padding: 0 var(--in); scroll-snap-type: x proximity; cursor: grab; -webkit-user-select: none; user-select: none; --mm: 1.95px; }
+@media (max-width: 760px) { #strip { --mm: 1.5px; gap: 12px; } .dtile { height: 480px; padding: 22px 24px 24px; border-radius: 26px; min-width: 74vw; } }
 #strip::-webkit-scrollbar { display: none; } #strip.drag { cursor: grabbing; scroll-snap-type: none; }
 .dtile { margin: 0; flex: none; scroll-snap-align: start; height: 560px; min-width: min(78vw, 340px); border-radius: 30px; background: var(--tile); padding: 28px 32px 32px; display: flex; flex-direction: column; }
 .dtile figcaption { margin: 0; text-align: left; font-size: var(--text); font-weight: 400; color: var(--quiet); white-space: normal; } .dtile figcaption b { display: block; color: var(--ink); font-weight: 600; }

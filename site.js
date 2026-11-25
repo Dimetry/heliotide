@@ -99,12 +99,12 @@ function findOwner() {
   let best = null, near = 1e9;
   for (const v of views) {
     if (v.name === "bar") { continue; }
-    const r = v.el.getBoundingClientRect(), y = r.top + r.height / 2, room = v === owner ? 0.02 : 0.1;
-    if (y > H * room && y < H * (1 - room)) { const d = Math.abs(y - H * 0.45); if (d < near) { near = d; best = v; } }
+    const r = v.el.getBoundingClientRect(), y = r.top + r.height / 2, x = r.left + r.width / 2, room = v === owner ? 0.02 : 0.1;
+    if (y > H * room && y < H * (1 - room) && x > 10 && x < W - 10) { const d = Math.abs(y - H * 0.45); if (d < near) { near = d; best = v; } }
   }
   const next = best ?? viewOf("bar");
   if (next !== owner) { owner = next; body.held = null; body.air = false; for (const p of [body.x, body.y, body.squash, body.tilt]) { p.x = p.v = 0; } }
-  bar.classList.toggle("shown", owner.name !== "hero" || scrollY > 90);
+  bar.classList.toggle("shown", owner.name !== "end" && (owner.name !== "hero" || scrollY > 90));
   bar.classList.toggle("docked", owner.name === "bar");
 }
 
