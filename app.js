@@ -86,11 +86,32 @@ const SCREENS = {
   phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}<span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span>${hero_()}${flares_()}${tabs_(0)}</div>`,
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
+  fold: () => `<div class="half l">${SCREENS.wide()}</div><div class="half r">${SCREENS.wide()}</div><div class="foldshade"></div>`,
+  face: () => `<div class="scr watchface"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
   lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-d="kp"></span></div><div class="rect"><b data-d="condition"></b><span data-d="watch"></span></div></div><div class="notes"></div></div>`,
-  chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span>Reykjavík area</span></div><div class="bubbles"></div><div class="field">Message</div></div>`
+  chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field">Message</div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
-for (const el of document.querySelectorAll(".dev")) { el.insertAdjacentHTML("beforeend", '<div class="rim"></div>' + (el.classList.contains("phone") ? '<div class="keys"><i></i><i></i><i></i><i></i></div>' : "")); }
+// Frames: Apple's product bezels (Apple Design Resources).
+for (const el of document.querySelectorAll(".dev")) {
+  const kind = ["phone", "land", "pad", "duo", "fold"].find((k) => el.classList.contains(k));
+  if (kind) { el.insertAdjacentHTML("beforeend", `<img class="frame" src="img/frame-${kind === "pad" ? "ipad" : kind}.png" alt="">`); }
+}
+/// The half-folded Duo: each half of the screen is laid exactly on its half of the frame.
+function foldScreens() {
+  const solve = (w, h, q) => {                       // rectangle w × h -> four corners (tl, tr, br, bl)
+    const [x0, y0] = q[0], [x1, y1] = q[1], [x2, y2] = q[2], [x3, y3] = q[3];
+    const dx1 = x1 - x2, dx2 = x3 - x2, sx = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, sy = y0 - y1 + y2 - y3, den = dx1 * dy2 - dx2 * dy1;
+    const g = (sx * dy2 - dx2 * sy) / den, k = (dx1 * sy - sx * dy1) / den;
+    const m = [x1 - x0 + g * x1, y1 - y0 + g * y1, g, x3 - x0 + k * x3, y3 - y0 + k * y3, k, x0, y0];
+    return `matrix3d(${m[0] / w},${m[1] / w},0,${m[2] / w},${m[3] / h},${m[4] / h},0,${m[5] / h},0,0,1,0,${m[6]},${m[7]},0,1)`;
+  };
+  for (const el of document.querySelectorAll(".dev.fold")) {
+    const k = el.clientWidth / 5600, w = 500, h = 703, at = (x, y) => [x * k, y * k];
+    el.querySelector(".half.l").style.transform = solve(w, h, [at(203, 148), at(2802, 381), at(2802, 4119), at(203, 4352)]);
+    el.querySelector(".half.r").style.transform = solve(w, h, [at(2798, 381), at(5397, 148), at(5397, 4352), at(2798, 4119)]);
+  }
+}
 
 // ---- Widgets ----
 
@@ -157,6 +178,7 @@ function showWidgets(day) {
   const s = { ...day, peakText: "Kp " + day.peak, windText: day.wind + " km/s", bzText: minus(day.bz) + " nT" };
   for (const el of document.querySelectorAll("[data-w]")) { put(el, s[el.dataset.w]); }
   for (const el of document.querySelectorAll("[data-flow]")) { paintFlow(el, day.level); }
+  for (const el of document.querySelectorAll("[data-ring2]")) { el.style.setProperty("--k", day.kp / 9); el.style.color = ["#8fd457", "#4bc6ff", "#ff9d2e", "#ff5fc0"][day.level]; }
   for (const el of document.querySelectorAll("[data-wchart]")) {
     const lo = Math.min(...day.curve) - 0.3, hi = Math.max(...day.curve) + 0.3;
     const P = day.curve.map((v, i) => [-10 + i / 23 * 384, 23 + (1 - (v - lo) / (hi - lo)) * 25]), path = (a, b) => "M" + P.slice(a, b + 1).map((p) => p.map((n) => n.toFixed(1)).join(" ")).join("L");
@@ -169,28 +191,40 @@ function showWidgets(day) {
 // ---- Alerts and chat: small loops ----
 
 const NOTES = [["Strong magnetic storm", "Aurora may be seen farther from the poles than usual. GPS and radio may be less accurate."], ["Earthquake near you", "Magnitude 4.8, near Grindavík, Iceland."], ["Aurora possible tonight", "Look north after dark, away from city lights. Best if the sky is clear."], ["Strong solar flare", "Short radio blackouts are possible on the sunlit side of Earth."]];
-const TALK = [["Freyja", "Did anyone feel that just now?", 0], ["Óskar", "Yes! The lamp was swinging.", 0], ["", "4.8, not far from us. It is on the map.", 1], ["Freyja", "Wow. And look north, the sky is green", 0], ["", "Going outside!", 1]];
-function note(i) {
-  const box = document.querySelector(".notes");
-  if (!box) { return; }
-  const [t, b] = NOTES[i % NOTES.length], el = document.createElement("div");
-  el.className = "note";
-  el.innerHTML = `<img src="img/icon.png" alt=""><div><b>${t}</b><p>${b}</p></div><time>now</time>`;
-  box.prepend(el);
-  box.querySelectorAll("time").forEach((x, k) => { x.textContent = k ? k * 3 + "h ago" : "now"; });
-  if (box.children.length > 3) { box.lastElementChild.remove(); }
-  if (!still.matches) { el.animate([{ opacity: 0, marginTop: "calc(var(--p) * -78)", transform: "scale(.9)" }, { opacity: 1, marginTop: 0, transform: "none" }], { duration: 560, easing: "cubic-bezier(.2,.9,.3,1)" }); }
+const NEAR = [["Freyja", "Grindavík", "Did anyone feel that just now?"], ["Óskar", "Reykjavík", "Yes! The lamp was swinging."], ["", "", "4.8, not far from us. It is on the map."], ["Birta", "Keflavík", "The dog woke up before it."], ["Freyja", "Grindavík", "Look north, the sky is green"], ["", "", "Going outside!"], ["Óskar", "Reykjavík", "Clouds here. Enjoy it for me."]];
+const WORLD = [["Mateo", "Santiago", "Small one here an hour ago. Nobody else woke up."], ["Yuki", "Sapporo", "Kp 4 already? I have had a headache all day."], ["Amara", "Nairobi", "Nothing here, only a beautiful sunset."], ["Ingrid", "Tromsø", "The aurora is dancing. I wish you all could see it."], ["", "", "Send us some of that sky!"], ["Liam", "Dunedin", "Aurora australis tonight too!"], ["Noor", "Amman", "Slept badly again. Is it the storm or the coffee?"], ["Chloé", "Lyon", "Coffee. But I check the Kp first too."], ["Kenji", "Osaka", "M5.1 off the coast. All fine here."]];
+const ROOMS = [{ name: "Reykjavík area · 12 online", talk: NEAR }, { name: "World · 214 online", talk: WORLD }];
+let room = 1, said = 0;
+function openRoom(i) {
+  room = i; said = 0;
+  document.querySelectorAll("#chat .segments button").forEach((b, k) => b.setAttribute("aria-pressed", k === i));
+  document.querySelector("#chat .thumb").style.transform = `translateX(${i * 100}%)`;
+  put(document.querySelector("#room"), ROOMS[i].name);
+  document.querySelector(".bubbles").replaceChildren();
+  for (let k = 0; k < 5; k++) { say(true); }
 }
-let said = 0;
-function say() {
-  const box = document.querySelector(".bubbles");
-  if (!box) { return; }
-  if (said % TALK.length === 0) { box.replaceChildren(); }
-  const [who, text, mine] = TALK[said++ % TALK.length], el = document.createElement("div");
-  el.className = mine ? "bub mine" : "bub";
-  el.innerHTML = (who ? `<small>${who}</small>` : "") + `<span>${text}</span>`;
+function note(i) {
+  for (const box of document.querySelectorAll(".notes")) {
+    const [t, b] = NOTES[i % NOTES.length], el = document.createElement("div"), old = box.firstElementChild;
+    el.className = "note";
+    el.innerHTML = `<img src="img/icon.png" alt=""><div><b>${t}</b><p>${b}</p></div><time>now</time>`;
+    box.append(el);
+    if (!old || still.matches) { old?.remove(); continue; }
+    old.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.92)" }], { duration: 260, easing: "ease-in", fill: "forwards" }).onfinish = () => old.remove();
+    el.animate([{ opacity: 0, transform: "translateY(120%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 720, delay: 160, fill: "backwards", easing: "cubic-bezier(.16, 1.15, .3, 1)" });
+  }
+}
+function say(quiet) {
+  const box = document.querySelector(".bubbles"), talk = ROOMS[room].talk, [who, from, text] = talk[said++ % talk.length], el = document.createElement("div");
+  el.className = who ? "bub" : "bub mine";
+  el.innerHTML = (who ? `<small>${who} · ${from}</small>` : "") + `<span>${text}</span>`;
   box.append(el);
-  if (!still.matches) { el.animate([{ opacity: 0, transform: "translateY(60%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.2,.9,.3,1.1)" }); }
+  while (box.children.length > 8) { box.firstElementChild.remove(); }
+  if (!quiet && !still.matches) {
+    const h = el.offsetHeight + 10;
+    box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 460, easing: "cubic-bezier(.2, .9, .25, 1)" });
+    el.animate([{ opacity: 0, transform: "scale(.86)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.2, 1.2, .3, 1)" });
+  }
 }
 
 // ---- What the screens show ----

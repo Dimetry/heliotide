@@ -7,7 +7,7 @@ const DARK = [["#0C150B", "#0C4E0F", "#71A54A"], ["#00323A", "#1C8687", "#4BC6FF
               ["#340C04", "#901414", "#B8420E"], ["#341C3C", "#AB296E", "#FF42A9"]];                           // deep, mid, glow
 const DARK_SKY = ["#295B29", "#366980", "#8E260D", "#5F0076"];
 const SPEED = [0.49, 0.84, 1.64, 2.14], ENERGY = [0, 0.07, 0.36, 0.52];
-const BALL = [["#F4FAE2", "#B5E06A", "#D9E36A", "#8FCB52"], ["#E6F2FF", "#B3D9FF", "#80B3FF", "#6699E6"],
+const BALL = [["#F4FAE2", "#B5E06A", "#D9E36A", "#8FCB52"], ["#EEF9FD", "#93E3FD", "#34D3EC", "#7CCBEA"],
               ["#FFF0CF", "#F7C43A", "#F08A24", "#F59A38"], ["#FDDFF3", "#F07AC8", "#C05CF0", "#F5607A"]];
 
 /// What the dark ramp makes of the plain sky.
@@ -43,25 +43,12 @@ function glide(dt) {
   }
 }
 
-// ---- The orb's way in: thrown from below, hops, then the face comes round (the app's start) ----
+// ---- The orb's way in: it glides in calmly from below and turns to us ----
 
-const HOPS = [[0.36, 1], [0.23, 0.7], [0.15, 0.5], [0.09, 0.4]], LEAD = 0.25, TURN = 0.62;
-const LANDED = LEAD + HOPS.reduce((s, h) => s + h[0], 0);
-const arrive = (u, over) => { const x = clamp(u, 0, 1) - 1; return 1 + (over + 1) * x * x * x + over * x * x; };
-function entrance(t, w, h, big) {
-  const small = big * 0.62, start = [0.2 * Math.min(w, h), h * 0.62 + big], whole = HOPS.reduce((s, x) => s + x[0] * x[1], 0);
-  const g = 12000 * clamp(h / 874, 0.5, 1.2);
-  let way = 0, lift = 0, s = t - LEAD;
-  for (const [time, speed] of HOPS) {
-    if (s <= 0) { break; }
-    const x = Math.min(s, time);
-    way += x * speed / whole;
-    lift = g / 2 * x * (time - x);
-    s -= time;
-  }
-  const left = 1 - Math.min(1, way), px = start[0] * left, py = start[1] * left, after = t - LANDED;
-  return { x: px, y: py - lift, scale: mix(small, big, after > 0 ? arrive(after / 0.42, 1.1) : 0) / big,
-           turn: [px / small * 0.4 + 3.6 * (1 - (after > 0 ? arrive(after / TURN, 0.6) : 0)), -py / small * 0.4], shown: t > LEAD, over: after > TURN };
+const LEAD = 0.2, WAY = 1.5;
+function entrance(t, w, h) {
+  const u = clamp((t - LEAD) / WAY, 0, 1), k = 1 - Math.pow(1 - u, 4);          // fast at first, a long soft arrival
+  return { x: -0.1 * Math.min(w, 900) * (1 - k), y: 0.2 * h * (1 - k), scale: mix(0.55, 1, k), turn: [-1.9 * (1 - k), 0.9 * (1 - k)], alpha: ease(u * 2.6), over: u >= 1 };
 }
 
 // ---- Scene ----
@@ -70,7 +57,7 @@ const field = shaderCanvas($("#clouds"), FIELD), ball = shaderCanvas($("#orb can
 const inside = shaderCanvas(document.createElement("canvas"), FIELD);   // the clouds on the screens of the devices
 if (!field) { $("#clouds").remove(); }
 if (!ball) { document.documentElement.classList.add("no-orb"); }
-const orb = $("#orb"), facePath = $("#orb path"), bar = $("#bar"), stage = $("#status");
+const shade = $("#shade"), orb = $("#orb"), facePath = $("#orb path"), bar = $("#bar"), stage = $("#status");
 const slots = { hero: $("#hero .slot"), stage: $("#status .slot"), end: $("#end .slot"), bar: $("#bar .o") };
 const face = new LivingFace();
 const screens = [...document.querySelectorAll("canvas[data-bg]")];
@@ -87,12 +74,13 @@ function measure() {
   ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
   orb.style.width = orb.style.height = big / 0.48 + "px";
   for (const c of screens) { c.width = c.dataset.bg === "tall" ? 132 : 240; c.height = c.dataset.bg === "tall" ? 286 : 168; }
+  foldScreens();
   dirty = true;
 }
 
 let cloudTime = 20, orbTime = 20, orbEnergy = 0, filmTime = 0, dirty = true, landed = still.matches;
-let rolled = 0, lastY = null, hop = null;
-let pointer = null, awake = 0, mood = null, moodUntil = 0, now_ = 0;
+let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
+const touch = matchMedia("(hover: none)");
 
 /// Where the page wants the orb: centre, radius, and how far it is in the bar (0...1).
 function place() {
@@ -100,7 +88,7 @@ function place() {
   const b = c(slots.bar), h = c(slots.hero);
   let at = { x: b.x, y: b.y, radius: b.r, inBar: 1, rest: 1 };
   const to = (p, k) => { at = { x: mix(at.x, p.x, k), y: mix(at.y, p.y, k), radius: mix(at.radius, p.r, k), inBar: mix(at.inBar, 0, k), rest: 1 }; };
-  to(h, 1 - ease((H * 0.02 + scrollY) / Math.max(120, h.top + scrollY + h.r * 2 - 70)));
+  to(h, 1 - ease(scrollY / Math.max(120, h.top + scrollY + h.r * 2 - 70)));
   const s = stage.getBoundingClientRect();
   to(c(slots.stage), ease((H * 0.8 - s.top) / (H * 0.55)) * ease((s.bottom - H * 0.5) / (H * 0.4)));
   // The last place: it goes into the bar's O and comes out below, it never flies over the content.
@@ -110,72 +98,154 @@ function place() {
   return at;
 }
 
-/// Which face: a tap or a hover first, then the level of the day, asleep when nobody is there.
+// ---- The body of the orb: a soft glass ball with weight ----
+
+const body = {
+  x: new Spring(150, 15), y: new Spring(150, 15),          // away from its place
+  squash: new Spring(330, 13),                             // + flat, − long; the volume stays the same
+  tilt: new Spring(120, 10),                               // which way it is squashed
+  spin: [new Spring(26, 7.2), new Spring(26, 7.2)], goal: [0, 0],   // turning; the goal is always a full turn
+  air: false, held: null, charge: 0, hits: [],
+  /// A push: it jumps, turns away from the finger and lands with weight.
+  jump(power, side) {
+    this.air = true;
+    this.y.v = -power;
+    this.x.v += -side * power * 0.16;
+    this.squash.v -= 5.5;
+    this.goal[0] += (side < 0 ? 1 : -1) * 2 * Math.PI;
+    this.spin[0].v += (side < 0 ? 1 : -1) * 2.5;
+    this.tilt.v += side * 2;
+  },
+  step(dt, R) {
+    const g = R * 26;
+    if (this.held) {
+      // Pulled: the farther, the heavier (rubber band); it gets long in the direction of the pull.
+      const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy), k = far ? R * 1.1 * (1 - 1 / (far * 0.62 / (R * 1.1) + 1)) / far : 0;
+      this.x.k = this.y.k = 420; this.x.d = this.y.d = 34;
+      this.x.step(dt, dx * k); this.y.step(dt, dy * k);
+      this.charge = Math.min(1, this.charge + dt * 2.2);
+      this.squash.step(dt, far > 8 ? -Math.min(0.22, Math.hypot(this.x.x, this.y.x) / R * 0.2) : 0.1 + 0.1 * this.charge);
+      this.tilt.step(dt, far > 8 ? Math.atan2(dx, -dy) : 0);
+    } else if (this.air) {
+      for (let t = dt; t > 1e-6; t -= 1 / 240) {
+        const h = Math.min(t, 1 / 240);
+        this.y.v += g * h;
+        this.y.x += this.y.v * h;
+        if (this.y.x > 0 && this.y.v > 0) {
+          const v = this.y.v;
+          this.y.x = 0;
+          this.squash.v += clamp(v / R, 0, 14) * 0.95;      // the hit flattens it
+          this.spin[0].v *= 0.6;
+          face.blink();
+          if (v < R * 2.6) { this.air = false; this.y.v = v * 0.15; } else { this.y.v = -v * 0.46; }
+        }
+      }
+      this.x.k = 60; this.x.d = 9;
+      this.x.step(dt, 0);
+      this.squash.step(dt, -clamp(Math.abs(this.y.v) / R * 0.012, 0, 0.12));   // long while it flies
+      this.tilt.step(dt, clamp(Math.atan2(this.x.v, Math.abs(this.y.v) + R), -0.5, 0.5));
+    } else {
+      this.x.k = this.y.k = 150; this.x.d = this.y.d = 13;
+      this.x.step(dt, 0); this.y.step(dt, 0);
+      this.squash.step(dt, -clamp(Math.hypot(this.x.v, this.y.v) / R * 0.016, 0, 0.18));
+      this.tilt.step(dt, Math.hypot(this.x.v, this.y.v) > R * 0.6 ? clamp(Math.atan(this.x.v / (Math.abs(this.y.v) + 1)), -1.2, 1.2) : 0);
+    }
+    for (let i = 0; i < 2; i++) { this.spin[i].step(dt, this.goal[i]); }
+  }
+};
+
+/// Which face: what happens to it comes first, then the level of the day; asleep when nobody is there.
+const OF_LEVEL = [["smile"], ["curious", "joy", "smirk"], ["worry", "grumpy", "worry"], ["wow", "scared", "wow"]];
 function feeling() {
+  if (body.held) { return body.held.far ? "wow" : "squeeze"; }
+  if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
-  const l = level();
-  if (stageDay === null && l === 0 && now_ - awake > 9) { return "sleepy"; }
-  return ["smile", "curious", "worry", "wow"][l];
+  const l = level(), idle = now_ - awake;
+  if (stageDay === null && l === 0) {
+    if (idle > 15) { return "sleepy"; }
+    if (idle > 13.2) { return "yawn"; }
+    if (idle > 9) { return "content"; }
+    if (idle > 6.5) { return "smirk"; }
+    return "smile";
+  }
+  if (stageDay === 1) { return Math.floor(now_ / 4) % 3 === 2 ? "content" : "smile"; }
+  return OF_LEVEL[l][Math.floor(now_ / 3.4) % OF_LEVEL[l].length];
+}
+/// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
+function looking(x, y, dt) {
+  scrollLook *= Math.exp(-dt * 3);
+  const fresh = now_ - awake;
+  if (pointer && fresh < (touch.matches ? 2.2 : 6)) {
+    const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 240);
+    return [dx / d * k, dy / d * k];
+  }
+  if (now_ > glanceAt) {
+    const a = Math.random() * Math.PI * 2, far = Math.random() < 0.35 ? 0 : 0.35 + Math.random() * 0.55;
+    glance = [Math.cos(a) * far, Math.sin(a) * far * 0.8];
+    glanceAt = now_ + 0.7 + Math.random() * 2.4;
+  }
+  return Math.abs(scrollLook) > 0.15 ? [glance[0] * 0.3, clamp(scrollLook, -0.9, 0.9)] : glance;
 }
 
 function drawOrb(dt) {
-  const p = place();
-  let turn = [0, 0], scale = p.radius / big, x = p.x, y = p.y;
-  let aim = [0, 0];
-  if (pointer && now_ - awake < 9) {
-    const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 260);
-    aim = [dx / d * k, dy / d * k];
-  }
+  const p = place(), R = Math.max(12, p.radius);
+  let turn = [0, 0], scale = p.radius / big, x = p.x, y = p.y, alpha = 1;
+  scrollLook = clamp(scrollLook + (scrollY - lastScroll) / 260, -1.2, 1.2);
+  lastScroll = scrollY;
+  let aim = still.matches ? [0, 0] : looking(x, y, dt);
   if (!landed) {
     filmTime += dt;
-    const f = entrance(filmTime, W, H, big);
-    x += f.x; y += f.y; scale *= f.scale; turn = f.turn;
-    orb.style.opacity = f.shown ? 1 : 0;
+    const f = entrance(filmTime, W, H);
+    x += f.x; y += f.y; scale *= f.scale; turn = f.turn; alpha = f.alpha;
+    aim = [0, 0];
     if (f.over || scrollY > H * 0.3) { arrived(); }
   } else if (!still.matches) {
-    if (lastY !== null && Math.abs(y - lastY) < 160) { rolled = clamp(rolled + (y - lastY) / Math.max(40, p.radius) * 0.5, -1.3, 1.3); }
-    lastY = y;
-    rolled *= Math.exp(-dt * 3.4);                 // it always comes back to show its face
-    turn = [face.gaze[0] * 0.2, -face.gaze[1] * 0.14 - rolled];
-    if (hop !== null) {
-      hop += dt;
-      const u = hop / 0.62;
-      if (u >= 1) { hop = null; }
-      else { y -= Math.sin(Math.PI * u) * p.radius * 0.7; turn[0] += Math.sin(2 * Math.PI * u) * 0.7 * (1 - u); }
-    }
+    body.step(dt, R);
+    const calm = 1 - p.inBar, float = Math.sin(now_ * 1.15) * R * 0.022 * calm;   // it breathes in the air
+    x += body.x.x;
+    y += body.y.x + (body.air || body.held ? 0 : float);
+    const up = face.head[1].x;
+    turn = [body.spin[0].x + face.head[0].x * 0.2 + Math.sin(now_ * 0.7) * 0.03, body.spin[1].x - up * (up < 0 ? 0.3 : 0.14)];
   }
-  const half = big / 0.48 / 2;
-  orb.style.transform = `translate3d(${(x - half).toFixed(2)}px, ${(y - half).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+  const half = big / 0.48 / 2, q = clamp(body.squash.x, -0.3, 0.34), sy = 1 - q, sx = 1 / Math.sqrt(sy), a = body.tilt.x;
+  // Squashed on the ground: the lowest point stays where it is.
+  const sink = !body.held && q > 0 ? R * q : 0;
+  orb.style.transform = `translate3d(${(x - half).toFixed(2)}px, ${(y - half + sink).toFixed(2)}px, 0) rotate(${a.toFixed(4)}rad) scale(${(scale * sx).toFixed(4)}, ${(scale * sy).toFixed(4)}) rotate(${(-a).toFixed(4)}rad)`;
+  orb.style.opacity = alpha;
+  const high = clamp(-body.y.x / R, 0, 2), size = R * (1.15 - 0.22 * high);
+  shade.style.transform = `translate3d(${(x - 100).toFixed(1)}px, ${(p.y + R * 1.12 - 100).toFixed(1)}px, 0) scale(${(size / 100).toFixed(3)}, ${(size / 1000 * 0.9).toFixed(3)})`;
+  shade.style.opacity = landed ? ((1 - p.inBar) * (0.3 - 0.13 * high) * (1 - ease(colour * 2))).toFixed(3) : 0;
   orb.setAttribute("aria-label", p.inBar > 0.5 ? "Back to the top" : "Heliotide");
   bar.style.setProperty("--in", ease((p.inBar - 0.5) / 0.5).toFixed(3));
   bar.style.setProperty("--rest", p.rest.toFixed(3));
   bar.style.setProperty("--glass", ease((scrollY - 40) / 160).toFixed(3));
-  const target = [0.1, 0.25, 0.5, 0.75][level()] + (mood && now_ < moodUntil ? 0.35 : 0);
+  const target = [0.1, 0.25, 0.5, 0.75][level()] + (body.air || body.held ? 0.35 : 0);
   orbEnergy += (target - orbEnergy) * (1 - Math.exp(-dt / (target > orbEnergy ? 0.25 : 1)));
   orbTime += dt * (0.55 + orbEnergy * 1.1);
   ball?.draw({ time: orbTime, energy: orbEnergy, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
-  face.step(still.matches ? 1 : dt, landed ? feeling() : "sleepy", aim);
+  face.step(still.matches ? 1 : dt, landed ? feeling() : "content", aim);
   facePath.setAttribute("d", face.path(turn));
 }
 function arrived() {
   if (document.documentElement.classList.contains("landed")) { return; }
   landed = true;
-  orb.style.opacity = 1;
   document.documentElement.classList.add("landed");
-  setTimeout(() => { awake = Math.max(awake, now_); }, 900);
+  awake = Math.max(awake, now_);
 }
 
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
 const cloudValues = (lift) => ({ time: cloudTime, energy: look.energy, zoom: ZOOM, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
                                 deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
+let colour = 0;
 function drawClouds() {
   if (!field) { return; }
-  const y = 0.5 + (60 / H - 0.5) / 1.03, top = 1 - y - (0.33 + 0.16 * look.energy + (ZOOM - 1) * 0.5) / ZOOM;
-  const s = stage.getBoundingClientRect(), colour = ease((s.bottom - H * 0.25) / (H * 0.6));
-  // The first screens are in the colour of the day; behind the rest the page is plain white or black.
+  // Clouds only behind the states; the rest of the page is plain white or black. The horizon stands high, as in a header.
+  const s = stage.getBoundingClientRect(), edge = Math.max(96, H * 0.17);
+  colour = ease((H * 0.75 - s.top) / (H * 0.55)) * ease((s.bottom - H * 0.3) / (H * 0.5));
   document.documentElement.style.setProperty("--colour", colour.toFixed(3));
   if (colour <= 0) { return; }
-  field.draw(cloudValues(mix(LIFT, Math.max(top, LIFT), ease((H * 0.2 - s.bottom + H * 0.8) / (H * 0.6)))));
+  const y = 0.5 + (edge / H - 0.5) / 1.03, top = 1 - y - (0.33 + 0.16 * look.energy + (ZOOM - 1) * 0.5) / ZOOM;
+  field.draw(cloudValues(Math.max(top, LIFT)));
 }
 /// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
 function drawScreens() {
@@ -184,7 +254,7 @@ function drawScreens() {
     const list = screens.filter((c) => c.dataset.bg === kind && onScreen.has(c));
     if (!list.length) { continue; }
     inside.resize(list[0].width, list[0].height);
-    inside.draw(cloudValues(LIFT));
+    inside.draw(cloudValues(kind === "wide" ? 0.34 : LIFT));
     for (const c of list) { c.getContext("2d").drawImage(inside.canvas, 0, 0); }
   }
 }
@@ -215,16 +285,47 @@ function frame(ms) {
 function aimAt(e) { pointer = [e.clientX, e.clientY]; awake = now_; }
 addEventListener("resize", measure);
 addEventListener("load", measure);
-addEventListener("scroll", () => { dirty = true; stageScroll(); }, { passive: true });
+addEventListener("scroll", () => { dirty = true; if (now_ - awake > 3) { awake = now_ - 3; } stageScroll(); }, { passive: true });
 darkMode.addEventListener("change", () => { dirty = true; showWidgets(DAYS[widgetDay]); });
 addEventListener("pointermove", aimAt, { passive: true });
 addEventListener("pointerdown", aimAt, { passive: true });
 document.addEventListener("pointerleave", () => { pointer = null; });
-orb.addEventListener("click", () => {
-  if (place().inBar > 0.5) { scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" }); return; }
-  if (!landed) { return; }
-  if (!still.matches && hop === null) { hop = 0; }
-  mood = ["bliss", "wink", "joy"][Math.floor(Math.random() * 3)]; moodUntil = now_ + 1.5; dirty = true;
+
+// Press, pull and let go.
+orb.addEventListener("pointerdown", (e) => {
+  if (!landed || place().inBar > 0.5 || still.matches) { return; }
+  orb.setPointerCapture(e.pointerId);
+  body.held = { from: [e.clientX, e.clientY], pull: [0, 0], far: false };
+  body.air = false;
+  body.charge = 0;
+});
+orb.addEventListener("pointermove", (e) => {
+  if (!body.held) { return; }
+  body.held.pull = [e.clientX - body.held.from[0], e.clientY - body.held.from[1]];
+  if (Math.hypot(...body.held.pull) > 8) { body.held.far = true; }
+});
+function release(e) {
+  const held = body.held;
+  if (!held) { return; }
+  body.held = null;
+  const r = orb.getBoundingClientRect(), R = r.width * 0.48, side = clamp((held.from[0] - r.left - r.width / 2) / R, -1, 1);
+  if (held.far) {
+    // Let go: it shoots back over its place, rings out and rolls with the speed.
+    body.spin[0].v += clamp(-body.x.x / R * 9, -14, 14);
+    body.spin[1].v += clamp(body.y.x / R * 6, -10, 10);
+    mood = "bliss"; moodUntil = now_ + 1.3;
+    return;
+  }
+  body.hits = [...body.hits.filter((t) => now_ - t < 3), now_];
+  body.jump(R * (6.2 + 3.6 * body.charge), Math.abs(side) < 0.12 ? (Math.random() < 0.5 ? -0.4 : 0.4) : side);
+  mood = body.hits.length > 4 ? "grumpy" : ["bliss", "wink", "joy", "content"][Math.floor(Math.random() * 4)];
+  moodUntil = now_ + 2.6;
+}
+orb.addEventListener("pointerup", release);
+orb.addEventListener("pointercancel", release);
+orb.addEventListener("click", (e) => {
+  if (place().inBar > 0.5) { scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" }); }
+  else if (e.detail === 0 && landed && !still.matches) { body.jump(big * 6.5, 0.4); mood = "joy"; moodUntil = now_ + 2.4; }   // keyboard
 });
 for (const b of document.querySelectorAll(".store")) {
   b.addEventListener("pointerenter", () => { mood = "joy"; moodUntil = now_ + 60; });
@@ -265,21 +366,38 @@ buttons.forEach((b, i) => b.addEventListener("click", () => {
 
 // ---- Loops and soft entrances ----
 
-let widgetDay = 0;
+let widgetDay = 0, noted = 1;
 showWidgets(DAYS[0]);
-note(0); note(1);
-for (let i = 0; i < 3; i++) { say(); }
-let noted = 2;
-const loops = new Map([["#widgets", false], ["#talk", false], ["#devices", false]]);
+note(0);
+for (let i = 0; i < 5; i++) { say(true); }
+const loops = new Map([["#widgets", false], ["#chat", false], ["#devices", false]]);
 const loopWatch = new IntersectionObserver((list) => { for (const e of list) { loops.set("#" + e.target.id, e.isIntersecting); } });
 for (const id of loops.keys()) { loopWatch.observe($(id)); }
-setInterval(() => {
-  if (document.hidden || still.matches || !(loops.get("#widgets") || loops.get("#talk") || loops.get("#devices"))) { return; }
-  widgetDay = (widgetDay + 1) % 4;
-  showWidgets(DAYS[widgetDay]);
-}, 3600);
-setInterval(() => { if (!document.hidden && !still.matches && loops.get("#talk")) { note(noted++); } }, 3800);
-setInterval(() => { if (!document.hidden && !still.matches && loops.get("#talk")) { say(); } }, 2100);
+const every = (ms, id, run) => setInterval(() => { if (!document.hidden && !still.matches && id.some((i) => loops.get(i))) { run(); } }, ms);
+every(3600, ["#widgets", "#devices"], () => { widgetDay = (widgetDay + 1) % 4; showWidgets(DAYS[widgetDay]); });
+every(4200, ["#widgets"], () => note(noted++));
+every(1700, ["#chat"], () => say());
+const rooms = [...document.querySelectorAll("#chat .segments button")];
+rooms.forEach((b, i) => b.addEventListener("click", () => openRoom(i)));
+openRoom(1);
+
+// The strip of devices.
+const strip = $("#strip"), slides = [...strip.children], dots = $("#dots");
+dots.innerHTML = slides.map(() => "<i></i>").join("");
+let slide = 0;
+const toSlide = (i) => { const s = slides[clamp(i, 0, slides.length - 1)]; strip.scrollTo({ left: s.offsetLeft - (strip.clientWidth - s.clientWidth) / 2, behavior: still.matches ? "auto" : "smooth" }); };
+function onStrip() {
+  const mid = strip.scrollLeft + strip.clientWidth / 2;
+  slide = slides.reduce((b, s, i) => Math.abs(s.offsetLeft + s.clientWidth / 2 - mid) < Math.abs(slides[b].offsetLeft + slides[b].clientWidth / 2 - mid) ? i : b, 0);
+  slides.forEach((s, i) => s.classList.toggle("on", i === slide));
+  [...dots.children].forEach((d, i) => d.classList.toggle("on", i === slide));
+  $("#prev").disabled = slide === 0; $("#next").disabled = slide === slides.length - 1;
+}
+strip.addEventListener("scroll", onStrip, { passive: true });
+$("#prev").addEventListener("click", () => toSlide(slide - 1));
+$("#next").addEventListener("click", () => toSlide(slide + 1));
+onStrip();
+
 const appear = new IntersectionObserver((list) => {
   for (const e of list) { if (e.isIntersecting) { e.target.classList.add("seen"); appear.unobserve(e.target); } }
 }, { rootMargin: "0px 0px -10% 0px" });
@@ -320,6 +438,7 @@ const FEEL = ["Nothing to feel right now", "Most people feel nothing", "Most peo
               "Sensitive people may feel it", "Some people may feel a bit off", "Some people may feel tired", "Some people may sleep lighter", "Very rare. Some people may feel it"];
 
 if (landed) { document.documentElement.classList.add("landed"); }
+foldScreens();
 measure();
 stageScroll();
 showStage();
