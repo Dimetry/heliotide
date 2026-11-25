@@ -2,42 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Heliotide</title>
-  <meta name="description" content="Heliotide is a free iPhone and iPad app about space weather and the Earth around you.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Heliotide: Space Weather</title>
+  <meta name="description" content="Live solar activity, solar flares and solar wind, and every earthquake near you. Space weather in plain words, for where you are.">
   <meta name="color-scheme" content="light dark">
   <meta name="referrer" content="no-referrer">
-  <link rel="icon" href="data:,">
-  <style>
-    :root { color-scheme: light dark; --bg: #ffffff; --text: #1c1c1e; --quiet: #5f5f65; --line: #e3e3e6; --link: #0b5fc4; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #121214; --text: #f2f2f4; --quiet: #a5a5ab; --line: #2f2f33; --link: #7ab8ff; }
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; overflow-wrap: break-word; }
-    .page { max-width: 660px; margin: 0 auto; padding: 24px 20px 64px; }
-    nav { display: flex; gap: 20px; }
-    nav a, footer a { display: inline-block; padding: 8px 0; }
-    h1 { font-size: 32px; line-height: 1.2; margin: 32px 0 8px; }
-    h2 { font-size: 20px; line-height: 1.3; margin: 36px 0 8px; }
-    p, ul { margin: 0 0 14px; }
-    ul { padding-left: 22px; }
-    li { margin-bottom: 8px; }
-    a { color: var(--link); }
-    .quiet { color: var(--quiet); }
-    footer { margin-top: 48px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--quiet); }
-  </style>
+  <link rel="icon" href="img/icon.png">
+  <link rel="apple-touch-icon" href="img/icon.png">
+  <link rel="stylesheet" href="site.css">
+  <noscript><style>.soft, #hero h1 span, #hero p { opacity: 1; filter: none; } #now, #orb, #levels { display: none; } .desk img:first-child { opacity: 1; filter: none; }</style></noscript>
 </head>
 <body>
-  <div class="page">
-    <main>
-      <h1>Heliotide</h1>
-      <p>A free app that shows what the Sun and the Earth are doing around you right now, from solar flares and northern lights to earthquakes, storms and the weather outside.</p>
-    </main>
-    <nav aria-label="Pages">
-      <a href="support/">Support</a>
-      <a href="privacy/">Privacy Policy</a>
-    </nav>
-  </div>
+  <canvas id="clouds" aria-hidden="true"></canvas>
+  <div id="bar" aria-hidden="true"></div>
+  <button id="orb" type="button" aria-label="Heliotide, back to the top"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>
+
+  <main>
+    <section id="hero">
+      <div class="slot" aria-hidden="true"></div>
+      <h1 aria-label="Heliotide"><span style="--i:0" aria-hidden="true">H</span><span style="--i:1" aria-hidden="true">E</span><span style="--i:2" aria-hidden="true">L</span><span style="--i:3" aria-hidden="true">I</span><span style="--i:4" aria-hidden="true">O</span><span style="--i:5" aria-hidden="true">T</span><span style="--i:6" aria-hidden="true">I</span><span style="--i:7" aria-hidden="true">D</span><span style="--i:8" aria-hidden="true">E</span></h1>
+      <p>What is the Sun doing right now?</p>
+    </section>
+
+    <section id="now" aria-label="Space weather now">
+      <p class="kp"><small>Kp</small><span id="kp"></span></p>
+      <p id="state"></p>
+      <div class="line" aria-hidden="true">
+        <svg viewBox="0 0 1000 150" preserveAspectRatio="none">
+          <clipPath id="past"><rect x="0" y="-50" width="500" height="250"/></clipPath><clipPath id="next"><rect x="500" y="-50" width="500" height="250"/></clipPath>
+          <g clip-path="url(#past)"><path/></g><g clip-path="url(#next)"><path class="ahead"/></g>
+        </svg>
+        <div class="dot"><span>Now</span></div>
+      </div>
+      <p class="ends"><span>36h ago</span><span>K-index, NOAA</span><span>in 36h</span></p>
+    </section>
+
+    <section id="levels">
+      <div class="pin">
+        <div class="slot" aria-hidden="true"></div>
+        <h2>One clear answer. The whole screen changes colour with it.</h2>
+        <div class="segments" role="group" aria-label="Level"><div class="thumb"></div><button type="button" aria-pressed="true">Quiet</button><button type="button" aria-pressed="false">Active</button><button type="button" aria-pressed="false">Storm</button><button type="button" aria-pressed="false">Severe</button></div>
+      </div>
+    </section>
+
+    <section id="story">
+      <div class="desk" aria-hidden="true"><div class="phone"><img src="img/today.jpg" alt="" class=on><img src="img/flares.jpg" alt=""><img src="img/map.jpg" alt=""><img src="img/events.jpg" alt=""></div></div>
+      <div>
+        <div class="step"><div class="soft"><h2>The Sun has weather too</h2><p>Open the app and you know what the Sun is doing right now. One look, plain words, no science degree needed.</p></div><div class="phone soft"><img src="img/today.jpg" alt="Today in Heliotide: Kp 2, space weather is quiet now" loading="lazy"></div></div>
+        <div class="step"><div class="soft"><h2>Solar activity, live</h2><p>Solar flares: the class now, the last 24 hours and the chance of a strong one, with fresh pictures and video of the Sun.</p></div><div class="phone soft"><img src="img/flares.jpg" alt="The solar flares card with a picture of the Sun" loading="lazy"></div></div>
+        <div class="step"><div class="soft"><h2>A living globe</h2><p>Every earthquake sits where it happened, bigger and redder when it is stronger. Add volcanoes, wildfires, storms, floods and tsunami alerts, the aurora, rain, day and night, the plates of the Earth and the Space Station flying over.</p></div><div class="phone soft"><img src="img/map.jpg" alt="The map: a globe with earthquakes and the aurora" loading="lazy"></div></div>
+        <div class="step"><div class="soft"><h2>What happened on the planet</h2><p>Official sources only. No opinions, no politics. See the whole world or only what is near you.</p></div><div class="phone soft"><img src="img/events.jpg" alt="The list of events: earthquakes and wildfires" loading="lazy"></div></div>
+      </div>
+    </section>
+
+    <section id="more">
+      <div class="card soft"><h3>Alerts that respect you</h3><p>Pick what matters: a strong solar flare, a magnetic storm, an earthquake close to home. Everything else stays silent.</p></div>
+      <div class="card soft"><h3>Widgets</h3><p>Space weather on your Home Screen and Lock Screen, at a glance.</p></div>
+      <div class="card soft"><h3>Chat</h3><p>Did you feel that shake? Is the sky glowing? Ask your neighbours, or talk with the whole world.</p></div>
+    </section>
+
+    <section id="end" class="soft">
+      <h2>Made by one person, as a labour of love</h2>
+      <p>Free, for iPhone and iPad. No ads. No account. No tracking.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data: NOAA Space Weather Prediction Center, NASA, USGS, GDACS, Environment and Climate Change Canada and Apple Weather. Picture of the Sun: courtesy of NASA/SDO and the AIA, EVE, and HMI science teams. Heliotide is an independent app. These organisations do not endorse it.</p>
+    <p>Heliotide shows what is measured and forecast. It is not medical advice and it is not an official warning service. In an emergency, follow your local authorities.</p>
+    <nav aria-label="Pages"><a href="support/">Support</a><a href="privacy/">Privacy Policy</a></nav>
+  </footer>
+  <script src="shaders.js"></script>
+  <script src="site.js"></script>
 </body>
 </html>
