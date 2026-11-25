@@ -125,7 +125,7 @@ const body = {
     this.y.v -= uy * power * R * (far > 0.12 ? 0.9 : 1);
     this.tilt.x = this.wrap(Math.atan2(ux, -uy));
     this.tilt.v = 0;
-    this.squash.v += 2.6 + power * 0.5;
+    this.squash.v += 1.1 + power * 0.16;
     // Off the middle it turns, the more the farther out; a quick series of taps adds up.
     const turns = far > 0.12 ? 1 : 0;
     if (turns && Math.abs(ux) >= Math.abs(uy)) { this.goal[0] -= Math.sign(ux) * 2 * Math.PI; this.spin[0].v -= ux * 3.2; }
@@ -139,16 +139,16 @@ const body = {
       this.x.k = this.y.k = 190; this.x.d = this.y.d = 20;
       this.x.step(dt, dx * k); this.y.step(dt, dy * k);
       this.charge = Math.min(1, this.charge + dt * 2.2);
-      if (far > 8) { this.tilt.step(dt, this.wrap(Math.atan2(dx, -dy))); this.squash.step(dt, -Math.min(0.2, Math.hypot(this.x.x, this.y.x) / R * 0.17)); }
-      else { this.squash.step(dt, 0.05 + 0.07 * this.charge); }
+      if (far > 8) { this.tilt.step(dt, this.wrap(Math.atan2(dx, -dy))); this.squash.step(dt, -Math.min(0.085, Math.hypot(this.x.x, this.y.x) / R * 0.07)); }
+      else { this.squash.step(dt, 0.025 + 0.035 * this.charge); }
       this.air = false;
     } else {
       this.x.k = this.y.k = 17; this.x.d = this.y.d = 3.1;
       this.x.step(dt, 0); this.y.step(dt, 0);
       const speed = Math.hypot(this.x.v, this.y.v) / R;
-      this.squash.step(dt, -clamp(speed * 0.014, 0, 0.09));
+      this.squash.step(dt, -clamp(speed * 0.007, 0, 0.04));
       if (speed > 0.9) { this.tilt.step(dt, this.tilt.x + this.wrap(Math.atan2(this.x.v, -this.y.v) - this.tilt.x) * 0.4); }
-      this.air = speed > 1.3;
+      this.air = speed > 0.9;
     }
     for (let i = 0; i < 2; i++) {
       this.spin[i].step(dt, this.goal[i]);
@@ -199,15 +199,15 @@ function looking(x, y, dt) {
 function acting(name, dt, R) {
   if (name !== act.name) {
     if ((act.name === "sleepy" || act.name === "yawn") && name === "smile" && watching()) { act.wokeAt = now_; name = "curious"; }
-    if (name === "wow") { body.y.v -= R * 1.1; act.stretch.v -= 2.2; }          // a start
-    if (name === "joy" || name === "bliss") { act.stretch.v -= 1.6; }
+    if (name === "wow") { body.y.v -= R * 1.1; act.stretch.v -= 1.2; }          // a start
+    if (name === "joy" || name === "bliss") { act.stretch.v -= 0.9; }
     if (name === "curious" && act.name !== "curious") { act.tiltTo = (Math.random() < 0.5 ? -1 : 1) * 0.13; }
     act.name = name;
     act.since = now_;
   }
   const t = now_ - act.since;
   act.tilt.step(dt, { curious: act.tiltTo ?? 0.12, smirk: -0.09, worry: 0.05, yawn: 0, sleepy: 0.1 }[name] ?? 0);
-  act.stretch.step(dt, { yawn: -0.075 * Math.sin(Math.PI * clamp(t / 2.4, 0, 1)), sleepy: 0.022 * Math.sin(now_ * 1.7), worry: 0.03, scared: 0.045, grumpy: 0.035, content: 0.012 * Math.sin(now_ * 2.1) }[name] ?? 0);
+  act.stretch.step(dt, { yawn: -0.05 * Math.sin(Math.PI * clamp(t / 2.4, 0, 1)), sleepy: 0.022 * Math.sin(now_ * 1.7), worry: 0.03, scared: 0.045, grumpy: 0.035, content: 0.012 * Math.sin(now_ * 2.1) }[name] ?? 0);
   act.lean.step(dt, { worry: 0.12, sleepy: 0.16 }[name] ?? 0);                    // the head hangs a little
   act.shakeX = name === "scared" ? Math.sin(now_ * 46) * R * 0.012 : name === "worry" ? Math.sin(now_ * 24) * R * 0.004 : 0;
   act.shakeTurn = name === "grumpy" ? Math.sin(t * 9) * 0.16 * Math.exp(-t * 1.6) : 0;   // "no"
@@ -247,7 +247,7 @@ function drawOrb(dt) {
   orbTime += dt * (0.55 + orbEnergy * 1.1) * (name === "sleepy" ? 0.5 : 1);
   ball?.draw({ time: orbTime, energy: orbEnergy, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
   face.step(still.matches ? 1 : dt, name, aim);
-  const d = face.path(turn), q = clamp(body.squash.x, -0.3, 0.34), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
+  const d = face.path(turn), q = clamp(body.squash.x, -0.1, 0.1), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
   for (const v of views) {
     const mine = v === owner;
     if (still.matches) { v.grow.x = mine ? 1 : 0; } else { v.grow.step(dt, mine ? 1 : 0); }
@@ -355,7 +355,7 @@ function release(v) {
     // Let go: it flies back over its place, rings out and rolls with the speed.
     body.x.v -= body.x.x * 3.2;
     body.y.v -= body.y.x * 3.2;
-    body.squash.v += 1.6;
+    body.squash.v += 0.7;
     body.goal[0] += Math.abs(body.x.x) > R * 0.6 ? -Math.sign(body.x.x) * 2 * Math.PI : 0;
     body.goal[1] += Math.abs(body.y.x) > R * 0.6 ? Math.sign(body.y.x) * 2 * Math.PI : 0;
     mood = "bliss"; moodUntil = now_ + 1.6;
