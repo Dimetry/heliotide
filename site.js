@@ -87,7 +87,6 @@ function measure() {
   ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
   for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
   for (const c of screens) { const [cw, ch] = c.dataset.bg === "tall" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
-  foldScreens();
   dirty = true;
 }
 
