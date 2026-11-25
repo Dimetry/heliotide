@@ -281,7 +281,6 @@ function arrived() {
   if (document.documentElement.classList.contains("landed")) { return; }
   landed = true;
   document.documentElement.classList.add("landed");
-  document.querySelectorAll("#hero [data-write]").forEach(show);
   awake = Math.max(awake, now_);
 }
 
@@ -551,7 +550,9 @@ async function live() {
 const FEEL = ["Nothing to feel right now", "Most people feel nothing", "Most people will not feel anything", "Very few people may feel it", "Some people may notice it",
               "Sensitive people may feel it", "Some people may feel a bit off", "Some people may feel tired", "Some people may sleep lighter", "Very rare. Some people may feel it"];
 
-if (landed) { document.documentElement.classList.add("landed"); document.querySelectorAll("#hero [data-write]").forEach(show); }
+if (landed) { document.documentElement.classList.add("landed"); }
+// The words of the first screen do not wait for the orb.
+setTimeout(() => { document.documentElement.classList.add("go"); document.querySelectorAll("#hero [data-write]").forEach(show); }, 60);
 measure();
 showStage();
 requestAnimationFrame(frame);
