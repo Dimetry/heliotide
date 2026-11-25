@@ -18,7 +18,7 @@ button { font-family: inherit; color: inherit; }
 .part { min-height: 100vh; min-height: 100svh; padding: 110px var(--edge) 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; text-align: center; position: relative; }
 .lead { max-width: 27em; }
 .lead p { margin-top: 14px; }
-.lead .segments { margin-top: 26px; }
+.lead .segments { margin: 26px auto 0; }
 
 /* Wordmark: the same gap between all letters. The O is a little sun; in the bar the orb itself is the O. */
 .word { display: flex; align-items: center; gap: .86em; font-weight: 600; line-height: 1; }
@@ -35,7 +35,7 @@ button { font-family: inherit; color: inherit; }
 #bar .word svg { width: 44px; height: 44px; margin: -22px; opacity: var(--in); }
 #bar .word line { stroke-width: 7; opacity: .42; }
 
-#orb { position: fixed; left: 0; top: 0; z-index: 6; padding: 0; border: 0; background: none; border-radius: 50%; cursor: grab; will-change: transform; touch-action: none; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+#orb { position: fixed; left: 0; top: 0; z-index: 6; padding: 0; border: 0; background: none; border-radius: 50%; cursor: grab; will-change: transform; touch-action: pan-y; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 #orb:active { cursor: grabbing; }
 #orb canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
 #orb svg { position: absolute; inset: 2%; width: 96%; height: 96%; overflow: visible; pointer-events: none; }
@@ -281,7 +281,7 @@ footer:hover, footer:focus-within { opacity: .8; }
   #bar { justify-content: flex-start; }
   .split { display: grid; grid-template-columns: minmax(280px, 5fr) 7fr; gap: 6vw; text-align: left; align-items: center; }
   .split > :last-child:not(footer), .split > .art { justify-self: center; }
-  .lead .segments { margin-left: -4px; }
+  .lead .segments { margin: 26px 0 0 -4px; }
   #hero .intro { align-items: flex-start; }
   #hero .slot { width: clamp(110px, 21vh, 180px); margin-left: -2px; }
   #hero .show { align-items: center; justify-content: flex-end; gap: 4.5%; }

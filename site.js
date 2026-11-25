@@ -92,7 +92,7 @@ function place() {
   const s = stage.getBoundingClientRect();
   to(c(slots.stage), ease((H * 0.8 - s.top) / (H * 0.55)) * ease((s.bottom - H * 0.5) / (H * 0.4)));
   // The last place: it goes into the bar's O and comes out below, it never flies over the content.
-  const e = c(slots.end), k = ease((H * 0.86 - e.top) / (H * 0.3));
+  const e = c(slots.end), k = ease((H * 0.86 - e.top) / (H * 0.22));
   at.rest = 1 - k;
   if (k > 0) { at = k < 0.5 ? { ...at, radius: at.radius * (1 - 2 * k) } : { x: e.x, y: e.y, radius: e.r * (2 * k - 1), inBar: 0, rest: 1 - k }; }
   return at;
@@ -322,7 +322,7 @@ function release(e) {
   moodUntil = now_ + 2.6;
 }
 orb.addEventListener("pointerup", release);
-orb.addEventListener("pointercancel", release);
+orb.addEventListener("pointercancel", () => { body.held = null; });   // the finger scrolls the page
 orb.addEventListener("click", (e) => {
   if (place().inBar > 0.5) { scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" }); }
   else if (e.detail === 0 && landed && !still.matches) { body.jump(big * 6.5, 0.4); mood = "joy"; moodUntil = now_ + 2.4; }   // keyboard
