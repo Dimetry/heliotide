@@ -109,123 +109,145 @@ function findOwner() {
   bar.classList.toggle("docked", owner.name === "bar");
 }
 
-// ---- The body of the orb: a soft glass ball with weight ----
+// ---- The body of the orb: a soft ball that floats, weightless. No ground, no fall: a push sends it off, it turns,
+// trembles like jelly and slowly drifts home ----
 
 const body = {
-  x: new Spring(150, 15), y: new Spring(150, 15),          // away from its place
-  squash: new Spring(330, 13),                             // + flat, − long; the volume stays the same
-  tilt: new Spring(120, 10),                               // which way it is squashed
-  spin: [new Spring(26, 7.2), new Spring(26, 7.2)], goal: [0, 0],   // turning; the goal is always a full turn
+  x: new Spring(17, 3.1), y: new Spring(17, 3.1),          // away from its place: a long soft string pulls it home
+  squash: new Spring(230, 7.5),                            // + flat, − long; the volume stays the same
+  tilt: new Spring(90, 14),                                // along which direction
+  spin: [new Spring(8.5, 2.9), new Spring(8.5, 2.9)], goal: [0, 0],   // turning; the goal is always a full turn
   air: false, held: null, charge: 0, hits: [],
-  /// A push: it jumps, turns away from the finger and lands with weight.
-  jump(power, side) {
-    this.air = true;
-    this.y.v = -power;
-    this.x.v += -side * power * 0.16;
-    this.squash.v -= 5.5;
-    this.goal[0] += (side < 0 ? 1 : -1) * 2 * Math.PI;
-    this.spin[0].v += (side < 0 ? 1 : -1) * 2.5;
-    this.goal[1] += Math.random() < 0.35 ? 2 * Math.PI : 0;        // sometimes head over heels
-    this.tilt.v += side * 2;
+  /// A push at the point (px, py) of the ball (−1...1 from its middle, y down), as a finger in zero gravity does it.
+  push(R, px, py, power) {
+    const far = Math.hypot(px, py), ux = far > 0.12 ? px / far : 0, uy = far > 0.12 ? py / far : 1;   // in the middle: upwards
+    this.x.v -= ux * power * R;
+    this.y.v -= uy * power * R * (far > 0.12 ? 0.9 : 1);
+    this.tilt.x = this.wrap(Math.atan2(ux, -uy));
+    this.tilt.v = 0;
+    this.squash.v += 2.6 + power * 0.5;
+    // Off the middle it turns, the more the farther out; a quick series of taps adds up.
+    const turns = far > 0.12 ? 1 : 0;
+    if (turns && Math.abs(ux) >= Math.abs(uy)) { this.goal[0] -= Math.sign(ux) * 2 * Math.PI; this.spin[0].v -= ux * 3.2; }
+    else { this.goal[1] += (turns ? Math.sign(uy) : 1) * 2 * Math.PI; this.spin[1].v += (turns ? uy : 1) * 3.2; }
   },
+  wrap(a) { return a > Math.PI / 2 ? a - Math.PI : a < -Math.PI / 2 ? a + Math.PI : a; },   // a squash has no front and back
   step(dt, R) {
-    const g = R * 26;
     if (this.held) {
       // Pulled: the farther, the heavier (rubber band); it gets long in the direction of the pull.
-      const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy), k = far ? R * 1.1 * (1 - 1 / (far * 0.62 / (R * 1.1) + 1)) / far : 0;
-      this.x.k = this.y.k = 420; this.x.d = this.y.d = 34;
+      const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy), k = far ? R * 1.3 * (1 - 1 / (far * 0.62 / (R * 1.3) + 1)) / far : 0;
+      this.x.k = this.y.k = 190; this.x.d = this.y.d = 20;
       this.x.step(dt, dx * k); this.y.step(dt, dy * k);
       this.charge = Math.min(1, this.charge + dt * 2.2);
-      this.squash.step(dt, far > 8 ? -Math.min(0.22, Math.hypot(this.x.x, this.y.x) / R * 0.2) : 0.1 + 0.1 * this.charge);
-      this.tilt.step(dt, far > 8 ? Math.atan2(dx, -dy) : 0);
-    } else if (this.air) {
-      for (let t = dt; t > 1e-6; t -= 1 / 240) {
-        const h = Math.min(t, 1 / 240);
-        this.y.v += g * h;
-        this.y.x += this.y.v * h;
-        if (this.y.x > 0 && this.y.v > 0) {
-          const v = this.y.v;
-          this.y.x = 0;
-          this.squash.v += clamp(v / R, 0, 14) * 0.95;      // the hit flattens it
-          this.spin[0].v *= 0.6;
-          face.blink();
-          if (v < R * 2.6) { this.air = false; this.y.v = v * 0.15; } else { this.y.v = -v * 0.46; }
-        }
-      }
-      this.x.k = 60; this.x.d = 9;
-      this.x.step(dt, 0);
-      this.squash.step(dt, -clamp(Math.abs(this.y.v) / R * 0.012, 0, 0.12));   // long while it flies
-      this.tilt.step(dt, clamp(Math.atan2(this.x.v, Math.abs(this.y.v) + R), -0.5, 0.5));
+      if (far > 8) { this.tilt.step(dt, this.wrap(Math.atan2(dx, -dy))); this.squash.step(dt, -Math.min(0.2, Math.hypot(this.x.x, this.y.x) / R * 0.17)); }
+      else { this.squash.step(dt, 0.05 + 0.07 * this.charge); }
+      this.air = false;
     } else {
-      this.x.k = this.y.k = 150; this.x.d = this.y.d = 13;
+      this.x.k = this.y.k = 17; this.x.d = this.y.d = 3.1;
       this.x.step(dt, 0); this.y.step(dt, 0);
-      this.squash.step(dt, -clamp(Math.hypot(this.x.v, this.y.v) / R * 0.016, 0, 0.18));
-      this.tilt.step(dt, Math.hypot(this.x.v, this.y.v) > R * 0.6 ? clamp(Math.atan(this.x.v / (Math.abs(this.y.v) + 1)), -1.2, 1.2) : 0);
+      const speed = Math.hypot(this.x.v, this.y.v) / R;
+      this.squash.step(dt, -clamp(speed * 0.014, 0, 0.09));
+      if (speed > 0.9) { this.tilt.step(dt, this.tilt.x + this.wrap(Math.atan2(this.x.v, -this.y.v) - this.tilt.x) * 0.4); }
+      this.air = speed > 1.3;
     }
-    for (let i = 0; i < 2; i++) { this.spin[i].step(dt, this.goal[i]); }
+    for (let i = 0; i < 2; i++) {
+      this.spin[i].step(dt, this.goal[i]);
+      if (Math.abs(this.goal[i]) > 40 && Math.abs(this.spin[i].x - this.goal[i]) < 0.01) { this.spin[i].x -= this.goal[i]; this.goal[i] = 0; }
+    }
   }
 };
 
-/// Which face: what happens to it comes first, then the level of the day; asleep when nobody is there.
-const OF_LEVEL = [["smile"], ["curious", "joy", "smirk"], ["worry", "grumpy", "worry"], ["wow", "scared", "wow"]];
+/// What it does belongs to what its face says. With closed eyes it never looks around and keeps still;
+/// open eyes look, and every feeling has its own small movement.
+const SHUT = new Set(["sleepy", "yawn", "content", "bliss", "squeeze"]);
+const OF_LEVEL = [["smile", "content"], ["curious", "smile", "curious", "smirk"], ["worry", "worry", "grumpy"], ["wow", "scared"]];
+const act = { name: "smile", since: 0, tilt: new Spring(60, 9), lean: new Spring(90, 10), stretch: new Spring(120, 11), shakeX: 0, shakeTurn: 0, wokeAt: -9 };
+const watching = () => pointer && now_ - awake < (touch.matches ? 2.2 : 4);
+
 function feeling() {
   if (body.held) { return body.held.far ? "wow" : "squeeze"; }
   if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
   const l = level(), idle = now_ - awake;
+  if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
   if (!inStage && l === 0) {
-    if (idle > 15) { return "sleepy"; }
-    if (idle > 13.2) { return "yawn"; }
-    if (idle > 9) { return "content"; }
-    if (idle > 6.5) { return "smirk"; }
+    if (watching()) { return "smile"; }
+    if (idle > 17) { return "sleepy"; }
+    if (idle > 14.6) { return "yawn"; }
+    if (idle > 9.5 && idle < 12) { return "content"; }
     return "smile";
   }
-  if (inStage && l === 0) { return Math.floor(now_ / 3.4) % 2 ? "content" : "smile"; }
-  return OF_LEVEL[l][Math.floor(now_ / 3.4) % OF_LEVEL[l].length];
+  const list = OF_LEVEL[l], name = list[Math.floor(now_ / 3.6) % list.length];
+  return watching() && SHUT.has(name) ? "smile" : name;              // it does not close its eyes while it watches you
 }
 /// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
 function looking(x, y, dt) {
   scrollLook *= Math.exp(-dt * 3);
-  const fresh = now_ - awake;
-  if (pointer && fresh < (touch.matches ? 2.2 : 6)) {
+  if (watching()) {
     const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 240);
     return [dx / d * k, dy / d * k];
   }
+  if (Math.abs(scrollLook) > 0.15) { return [glance[0] * 0.3, clamp(scrollLook, -0.9, 0.9)]; }
   if (now_ > glanceAt) {
-    const a = Math.random() * Math.PI * 2, far = Math.random() < 0.35 ? 0 : 0.35 + Math.random() * 0.55;
-    glance = [Math.cos(a) * far, Math.sin(a) * far * 0.8];
-    glanceAt = now_ + 0.7 + Math.random() * 2.4;
+    const a = Math.random() * Math.PI * 2, far = Math.random() < 0.4 ? 0 : 0.35 + Math.random() * 0.5;
+    glance = [Math.cos(a) * far, Math.sin(a) * far * 0.75];
+    glanceAt = now_ + 0.9 + Math.random() * 2.2;
+    if (far > 0.6) { face.blink(); }                                  // people blink when they look somewhere else
   }
-  return Math.abs(scrollLook) > 0.15 ? [glance[0] * 0.3, clamp(scrollLook, -0.9, 0.9)] : glance;
+  return glance;
+}
+function acting(name, dt, R) {
+  if (name !== act.name) {
+    if ((act.name === "sleepy" || act.name === "yawn") && name === "smile" && watching()) { act.wokeAt = now_; name = "curious"; }
+    if (name === "wow") { body.y.v -= R * 1.1; act.stretch.v -= 2.2; }          // a start
+    if (name === "joy" || name === "bliss") { act.stretch.v -= 1.6; }
+    if (name === "curious" && act.name !== "curious") { act.tiltTo = (Math.random() < 0.5 ? -1 : 1) * 0.13; }
+    act.name = name;
+    act.since = now_;
+  }
+  const t = now_ - act.since;
+  act.tilt.step(dt, { curious: act.tiltTo ?? 0.12, smirk: -0.09, worry: 0.05, yawn: 0, sleepy: 0.1 }[name] ?? 0);
+  act.stretch.step(dt, { yawn: -0.075 * Math.sin(Math.PI * clamp(t / 2.4, 0, 1)), sleepy: 0.022 * Math.sin(now_ * 1.7), worry: 0.03, scared: 0.045, grumpy: 0.035, content: 0.012 * Math.sin(now_ * 2.1) }[name] ?? 0);
+  act.lean.step(dt, { worry: 0.12, sleepy: 0.16 }[name] ?? 0);                    // the head hangs a little
+  act.shakeX = name === "scared" ? Math.sin(now_ * 46) * R * 0.012 : name === "worry" ? Math.sin(now_ * 24) * R * 0.004 : 0;
+  act.shakeTurn = name === "grumpy" ? Math.sin(t * 9) * 0.16 * Math.exp(-t * 1.6) : 0;   // "no"
+  return name;
 }
 
 function drawOrb(dt) {
   findOwner();
   tones();
   const rect = owner.el.getBoundingClientRect(), R = Math.max(8, rect.width / 2), inBar = owner.name === "bar";
-  let turn = [0, 0], x = 0, y = 0, size = 1, alpha = 1;
+  let turn = [0, 0], x = 0, y = 0, size = 1, alpha = 1, tilt = 0, stretch = 0;
   scrollLook = clamp(scrollLook + (scrollY - lastScroll) / 260, -1.2, 1.2);
   lastScroll = scrollY;
-  let aim = still.matches ? [0, 0] : looking(rect.left + R, rect.top + R, dt);
+  let name = landed ? feeling() : "content", aim = [0, 0];
   if (!landed) {
     filmTime += dt;
     const f = entrance(filmTime, W, H);
     x = f.x; y = f.y; size = f.scale; turn = f.turn; alpha = f.alpha;
-    aim = [0, 0];
     if (f.over || scrollY > H * 0.3) { arrived(); }
   } else if (!still.matches) {
+    name = acting(name, dt, R);
+    if (!SHUT.has(name)) { aim = looking(rect.left + R, rect.top + R, dt); }
     if (!inBar) { body.step(dt, R); }
-    x = body.x.x;
-    y = body.y.x + (body.air || body.held || inBar ? 0 : Math.sin(now_ * 1.15) * R * 0.022);   // it breathes in the air
+    const calm = SHUT.has(name) ? 0.35 : 1;
+    x = body.x.x + act.shakeX;
+    // Weightless: it drifts a little in slow loops, never quite still.
+    const drift = inBar ? 0 : R * 0.03 * calm * (body.held ? 0 : 1);
+    x += Math.sin(now_ * 0.53) * drift * 0.8;
+    y = body.y.x + Math.sin(now_ * 0.81 + 0.6) * drift + Math.sin(now_ * 1.9) * drift * 0.22;
     const up = face.head[1].x;
-    turn = [body.spin[0].x + face.head[0].x * 0.2 + Math.sin(now_ * 0.7) * 0.03, body.spin[1].x - up * (up < 0 ? 0.3 : 0.14)];
+    turn = [body.spin[0].x + face.head[0].x * 0.2 + act.shakeTurn, body.spin[1].x - up * (up < 0 ? 0.3 : 0.14) - act.lean.x];
+    tilt = act.tilt.x;
+    stretch = act.stretch.x;
   }
   const target = [0.1, 0.25, 0.5, 0.75][level()] + (body.air || body.held ? 0.35 : 0);
   orbEnergy += (target - orbEnergy) * (1 - Math.exp(-dt / (target > orbEnergy ? 0.25 : 1)));
-  orbTime += dt * (0.55 + orbEnergy * 1.1);
+  orbTime += dt * (0.55 + orbEnergy * 1.1) * (name === "sleepy" ? 0.5 : 1);
   ball?.draw({ time: orbTime, energy: orbEnergy, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
-  face.step(still.matches ? 1 : dt, landed ? feeling() : "content", aim);
-  const d = face.path(turn), q = clamp(body.squash.x, -0.3, 0.34), sy = 1 - q, sx = 1 / Math.sqrt(sy), a = body.tilt.x;
+  face.step(still.matches ? 1 : dt, name, aim);
+  const d = face.path(turn), q = clamp(body.squash.x, -0.3, 0.34), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
   for (const v of views) {
     const mine = v === owner;
     if (still.matches) { v.grow.x = mine ? 1 : 0; } else { v.grow.step(dt, mine ? 1 : 0); }
@@ -235,8 +257,7 @@ function drawOrb(dt) {
     if (ball) { v.ctx.clearRect(0, 0, v.canvas.width, v.canvas.height); v.ctx.drawImage(ball.canvas, 0, 0, v.canvas.width, v.canvas.height); }
     v.path.setAttribute("d", d);
     if (mine && !inBar) {
-      const sink = !body.held && q > 0 ? R * q : 0;      // squashed on the ground: the lowest point stays where it is
-      v.button.style.transform = `translate(${x.toFixed(2)}px, ${(y + sink).toFixed(2)}px) rotate(${a.toFixed(4)}rad) scale(${(g * size * sx).toFixed(4)}, ${(g * size * sy).toFixed(4)}) rotate(${(-a).toFixed(4)}rad)`;
+      v.button.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(a + tilt).toFixed(4)}rad) scale(${(g * size * sx).toFixed(4)}, ${(g * size * sy).toFixed(4)}) rotate(${(-a).toFixed(4)}rad)`;
       v.button.style.opacity = alpha;
     } else {
       v.button.style.transform = `scale(${g.toFixed(4)})`;
@@ -311,7 +332,7 @@ for (const v of views) {
   });
   v.button.addEventListener("dragstart", (e) => e.preventDefault());
   v.button.addEventListener("contextmenu", (e) => { if (touch.matches) { e.preventDefault(); } });
-  v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.jump(v.el.clientWidth * 3.3, 0.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
+  v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.push(v.el.clientWidth / 2, 0.4, 0.5, 3.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
 }
 // Everything that can end a pull is listened to on the whole window, so the orb can never stay in the hand.
 addEventListener("pointermove", (e) => {
@@ -329,18 +350,21 @@ function release(v) {
   const held = body.held;
   if (!held) { return; }
   body.held = null;
-  const r = v.el.getBoundingClientRect(), R = r.width / 2, side = clamp((held.from[0] - r.left - R) / R, -1, 1);
+  const r = v.button.getBoundingClientRect(), R = v.el.clientWidth / 2;
   if (held.far) {
-    // Let go: it shoots back over its place, rings out and rolls with the speed.
-    body.spin[0].v += clamp(-body.x.x / R * 9, -14, 14);
-    body.spin[1].v += clamp(body.y.x / R * 6, -10, 10);
-    mood = "bliss"; moodUntil = now_ + 1.3;
+    // Let go: it flies back over its place, rings out and rolls with the speed.
+    body.x.v -= body.x.x * 3.2;
+    body.y.v -= body.y.x * 3.2;
+    body.squash.v += 1.6;
+    body.goal[0] += Math.abs(body.x.x) > R * 0.6 ? -Math.sign(body.x.x) * 2 * Math.PI : 0;
+    body.goal[1] += Math.abs(body.y.x) > R * 0.6 ? Math.sign(body.y.x) * 2 * Math.PI : 0;
+    mood = "bliss"; moodUntil = now_ + 1.6;
     return;
   }
   body.hits = [...body.hits.filter((t) => now_ - t < 3), now_];
-  body.jump(R * (6.2 + 3.6 * body.charge), Math.abs(side) < 0.12 ? (Math.random() < 0.5 ? -0.4 : 0.4) : side);
+  body.push(R, clamp((held.from[0] - r.left - r.width / 2) / R, -1, 1), clamp((held.from[1] - r.top - r.height / 2) / R, -1, 1), 3 + 2.2 * body.charge);
   mood = body.hits.length > 4 ? "grumpy" : ["bliss", "wink", "joy", "content"][Math.floor(Math.random() * 4)];
-  moodUntil = now_ + 2.6;
+  moodUntil = now_ + 2.8;
 }
 for (const b of document.querySelectorAll(".store")) {
   b.addEventListener("pointerenter", () => { mood = "joy"; moodUntil = now_ + 60; });

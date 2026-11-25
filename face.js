@@ -91,7 +91,7 @@ class LivingFace {
     this.time += dt;
     if (name !== this.name && !["sleepy", "yawn"].includes(this.name) && Math.random() < 0.5) { this.blinkAt = Math.min(this.blinkAt, this.time); }
     this.name = name;
-    const to = EMOTIONS[name], up = ["smile", "content", "curious", "sleepy"].includes(name) && name !== "sleepy" ? clamp(-this.eye[1].x * 1.3 - 0.25, 0, 1) : 0;
+    const to = EMOTIONS[name], up = ["smile", "curious", "smirk"].includes(name) ? clamp(-this.eye[1].x * 1.3 - 0.25, 0, 1) : 0;
     const h = Math.min(dt, 0.034), steps = 2;
     for (let n = 0; n < steps; n++) {
       for (let i = 0; i < to.length; i++) {
