@@ -124,10 +124,10 @@ class LivingFace {
     if (Math.abs(t[0]) > 2.3 || Math.abs(t[1]) > 2.3) { return ""; }
     const shut = this.shut, gx = this.eye[0].x, gy = this.eye[1].x;
     return this.parts.map((part, i) => {
-      // Looking up, the eyes rise only a little: the whole ball turns up instead.
-      const sx = gx * (i < 2 ? 34 : i === 2 ? 22 : 28), sy = gy < 0 ? gy * (i < 2 ? 15 : i === 2 ? 8 : 24) : gy * (i < 2 ? 26 : i === 2 ? 16 : 22);
+      // Looking up, like in a cartoon: the head turns up and the eyes run up with it and grow taller.
+      const sx = gx * (i < 2 ? 34 : i === 2 ? 22 : 28), sy = gy < 0 ? gy * (i < 2 ? 66 : i === 2 ? 44 : 78) : gy * (i < 2 ? 26 : i === 2 ? 16 : 22), tall = gy < 0 ? 1 - gy * 0.14 : 1;
       return "M" + part.map(([x, y]) => {
-        if (i < 2) { y = EY + (y - EY) * shut; }
+        if (i < 2) { y = EY + (y - EY) * shut * tall; }
         x = (x + sx) / BALL_R; y = (y + sy) / BALL_R;
         const l = Math.max(0.0001, Math.hypot(x, y)), k = Math.asin(Math.min(1, l)) / l;
         const ax = x * k + t[0], ay = y * k - t[1], d = Math.max(0.0001, Math.hypot(ax, ay)), s = Math.sin(Math.min(Math.PI / 2, d)) / d;

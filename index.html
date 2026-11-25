@@ -28,84 +28,77 @@
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://dimetry.github.io/heliotide/#site","name":"Heliotide","url":"https://dimetry.github.io/heliotide/","inLanguage":"en"},{"@type":"MobileApplication","@id":"https://dimetry.github.io/heliotide/#app","name":"Heliotide: Space Weather","url":"https://dimetry.github.io/heliotide/","image":"https://dimetry.github.io/heliotide/img/favicon-512.png","description":"Space weather in plain words: live K-index, solar flares, solar wind, aurora, alerts and earthquakes near you.","operatingSystem":"iOS 18 or later, iPadOS 18 or later","applicationCategory":"WeatherApplication","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
   <link rel="stylesheet" href="site.css">
-  <noscript><style>.soft, #hero .word > span, #hero .say, #hero .show { opacity: 1; filter: none; transform: none; } #status { display: none; }</style></noscript>
+  <noscript><style>.soft, [data-write], #hero .intro > *, #hero .show, #bar .word > span { opacity: 1 !important; filter: none !important; transform: none !important; } #status { display: none; }</style></noscript>
 </head>
 <body>
-  <div id="bar"><div class="word" role="img" aria-label="Heliotide"><span style="--i:0">H</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">I</span><span class="sun_" style="--i:4"><svg viewBox="-100 -100 200 200" aria-hidden="true"><line style="--i:0" x1="0.0" y1="-62.0" x2="0.0" y2="-74.0"/><line style="--i:1" x1="43.8" y1="-43.8" x2="52.3" y2="-52.3"/><line style="--i:2" x1="62.0" y1="0.0" x2="74.0" y2="0.0"/><line style="--i:3" x1="43.8" y1="43.8" x2="52.3" y2="52.3"/><line style="--i:4" x1="0.0" y1="62.0" x2="0.0" y2="74.0"/><line style="--i:5" x1="-43.8" y1="43.8" x2="-52.3" y2="52.3"/><line style="--i:6" x1="-62.0" y1="0.0" x2="-74.0" y2="0.0"/><line style="--i:7" x1="-43.8" y1="-43.8" x2="-52.3" y2="-52.3"/></svg><div class="o" data-orb="bar"></div><b>O</b></span><span style="--i:5">T</span><span style="--i:6">I</span><span style="--i:7">D</span><span style="--i:8">E</span></div></div>
+  <div id="bar"><i class="haze a"></i><i class="haze b"></i><div class="word" role="img" aria-label="Heliotide"><span style="--i:0">H</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">I</span><span class="sun_" style="--i:4"><svg viewBox="-100 -100 200 200" aria-hidden="true"><line style="--i:0" x1="0.0" y1="-62.0" x2="0.0" y2="-74.0"/><line style="--i:1" x1="43.8" y1="-43.8" x2="52.3" y2="-52.3"/><line style="--i:2" x1="62.0" y1="0.0" x2="74.0" y2="0.0"/><line style="--i:3" x1="43.8" y1="43.8" x2="52.3" y2="52.3"/><line style="--i:4" x1="0.0" y1="62.0" x2="0.0" y2="74.0"/><line style="--i:5" x1="-43.8" y1="43.8" x2="-52.3" y2="52.3"/><line style="--i:6" x1="-62.0" y1="0.0" x2="-74.0" y2="0.0"/><line style="--i:7" x1="-43.8" y1="-43.8" x2="-52.3" y2="-52.3"/></svg><div class="o" data-orb="bar"></div><b>O</b></span><span style="--i:5">T</span><span style="--i:6">I</span><span style="--i:7">D</span><span style="--i:8">E</span></div></div>
 
   <main>
     <section class="part split" id="hero">
       <div class="intro">
         <div class="slot" data-orb="hero"></div>
-        <div class="word" role="img" aria-label="Heliotide"><span style="--i:0">H</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">I</span><span class="sun_" style="--i:4"><svg viewBox="-100 -100 200 200" aria-hidden="true"><line style="--i:0" x1="0.0" y1="-51.0" x2="0.0" y2="-65.0"/><line style="--i:1" x1="36.1" y1="-36.1" x2="46.0" y2="-46.0"/><line style="--i:2" x1="51.0" y1="0.0" x2="65.0" y2="0.0"/><line style="--i:3" x1="36.1" y1="36.1" x2="46.0" y2="46.0"/><line style="--i:4" x1="0.0" y1="51.0" x2="0.0" y2="65.0"/><line style="--i:5" x1="-36.1" y1="36.1" x2="-46.0" y2="46.0"/><line style="--i:6" x1="-51.0" y1="0.0" x2="-65.0" y2="0.0"/><line style="--i:7" x1="-36.1" y1="-36.1" x2="-46.0" y2="-46.0"/></svg>O</span><span style="--i:5">T</span><span style="--i:6">I</span><span style="--i:7">D</span><span style="--i:8">E</span></div>
-        <div class="say">
-          <h1>Space weather, in plain words</h1>
-          <p>See what the Sun and the Earth are doing right now: solar flares, magnetic storms, aurora, earthquakes.</p>
-          <a class="store" href="https://apps.apple.com/app/id6836600764"><picture><source media="(prefers-color-scheme: dark)" srcset="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/en-us"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us" width="150" height="50" alt="Download on the App Store" referrerpolicy="no-referrer"></picture></a>
-          <p class="free">Completely free. No ads. No subscription.</p>
-        </div>
+        <h1 data-write="char">Space weather, in plain words</h1>
+        <p data-write="word" style="--s:.5s">What the Sun and the Earth are doing right now: flares, storms, aurora, earthquakes.</p>
+        <a class="store" href="https://apps.apple.com/app/id6836600764"><picture><source media="(prefers-color-scheme: dark)" srcset="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/en-us"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us" width="150" height="50" alt="Download on the App Store" referrerpolicy="no-referrer"></picture></a>
+        <p class="free">Completely free. No ads. No subscription.</p>
       </div>
-      <div class="show" aria-hidden="true"><div class="dev phone" data-screen="phone"></div></div>
+      <div class="show holder" aria-hidden="true"><div class="dev phone" data-screen="phone"></div><div class="peek" data-orb="side"></div></div>
     </section>
 
     <section class="part" id="today">
-      <div class="lead soft"><h2>Your whole day with the Sun</h2><p>Flares, solar wind, aurora, earthquakes, weather. Every card says in plain words what is going on.</p></div>
-      <div class="bento soft" id="bento"></div>
+      <div class="lead"><h2 data-write="word">Your whole day with the Sun</h2><p data-write="word" style="--s:.25s">Every card says in plain words what is going on.</p></div>
+      <div class="bento" id="bento"></div>
     </section>
 
-    <section id="status" aria-label="Space weather now">
-      <div class="pin">
-        <div class="tell">
-          <div class="slot" data-orb="status"></div>
-          <p id="when"></p>
-          <p class="kp"><small>Kp</small><span id="kp"></span></p>
-          <h2 id="state"></h2>
-          <p id="means"></p>
-          <div class="segments" role="group" aria-label="Show"><div class="thumb"></div><button type="button">Quiet</button><button type="button">Active</button><button type="button">Storm</button><button type="button">Severe</button></div>
-        </div>
-        <div class="dev phone" data-screen="phone" aria-hidden="true"></div>
+    <section class="part split" id="status" aria-label="Space weather now">
+      <div class="tell">
+        <div class="soft"><p class="kp"><small>Kp</small><span id="kp"></span></p></div>
+        <div class="soft" style="--d:.08s"><h2 id="state"></h2></div>
+        <div class="soft" style="--d:.16s"><p id="means"></p></div>
+        <div class="soft" style="--d:.24s"><div class="segments" role="group" aria-label="Show"><div class="thumb"></div><button type="button">Quiet</button><button type="button">Active</button><button type="button">Storm</button><button type="button">Severe</button></div></div>
       </div>
+      <div class="holder soft rise" aria-hidden="true"><div class="dev phone" data-screen="phone"></div><div class="peek" data-orb="status"></div></div>
     </section>
 
     <section class="part split" id="events">
-      <div class="lead soft"><h2>What is happening on Earth right now</h2><p>Earthquakes, wildfires, volcanoes, storms. Look at them on the map or read them as a list: the same events, from official sources only.</p></div>
+      <div class="lead"><h2 data-write="word">What is happening on Earth right now</h2><p data-write="word" style="--s:.35s">Earthquakes, wildfires, volcanoes, storms. On the map or as a list, from official sources only.</p><div class="peek p-lead" data-orb="events" data-look="#events .pair" data-feel="curious wow smile curious"></div></div>
       <div class="pair">
-        <figure class="soft"><div class="dev phone"><img class="shot" data-tone="dark" src="img/map.jpg" alt="A globe with earthquakes and the aurora" loading="lazy"></div><figcaption>On the map</figcaption></figure>
-        <figure class="soft"><div class="peek p-right" data-orb="events" data-look="#events figure:nth-child(1) .dev.phone" data-feel="curious wow smile curious"></div><div class="dev phone"><picture><source media="(prefers-color-scheme: dark)" srcset="img/events-dark.jpg"><img class="shot" src="img/events-light.jpg" alt="A list of earthquakes and wildfires" loading="lazy"></picture></div><figcaption>As a list</figcaption></figure>
+        <div class="soft rise"><div class="dev phone"><img class="shot" data-tone="dark" src="img/map.jpg" alt="A globe with earthquakes and the aurora" loading="lazy"></div></div>
+        <div class="soft rise" style="--d:.14s"><div class="dev phone"><picture><source media="(prefers-color-scheme: dark)" srcset="img/events-dark.jpg"><img class="shot" src="img/events-light.jpg" alt="A list of earthquakes and wildfires" loading="lazy"></picture></div></div>
       </div>
     </section>
 
     <section class="part split" id="widgets">
-      <div class="lead soft"><h2>You will know first</h2><p>A widget shows the state of space weather at a glance. An alert comes only for what you choose: a strong flare, a magnetic storm, an earthquake near you.</p></div>
-      <div class="mosaic soft" aria-hidden="true">
-        <div class="w medium" data-widget="medium"></div>
-        <div class="w small" data-widget="small"></div>
-        <div class="dev clock_" data-screen="face"></div>
-        <div class="low"><div class="dev phone" data-screen="lock"></div></div>
-        <div class="peek p-low" data-orb="widgets" data-look="#widgets .clock_" data-feel="smile curious smile content"></div>
+      <div class="lead"><h2 data-write="word">Widgets</h2><p data-write="word" style="--s:.15s">The state of space weather at a glance. And an alert, only for what you choose: a strong flare, a magnetic storm, an earthquake near you.</p></div>
+      <div class="rail" aria-hidden="true">
+        <div class="low soft rise"><div class="dev phone" data-screen="lock"></div></div>
+        <div class="stack">
+          <div class="line"><div class="w medium soft rise" style="--d:.1s" data-widget="medium"></div><div class="peek p-line" data-orb="widgets" data-look="#widgets .w.medium" data-feel="smile curious smile content"></div></div>
+          <div class="line"><div class="soft rise" style="--d:.2s"><div class="dev clock_" data-screen="face"></div></div><div class="w medium soft rise" style="--d:.28s" data-widget="medium" data-shift="2"></div></div>
+        </div>
       </div>
     </section>
 
     <section class="part split" id="chat">
-      <div class="lead soft"><h2>World Chat</h2><p>For people who care about the sky and the ground under their feet, and for those who feel every storm. Talk with the whole world, or only with people near you.</p><div class="segments" role="group" aria-label="Room"><div class="thumb"></div><button type="button">Near me</button><button type="button">World</button></div></div>
-      <div class="soft withorb"><div class="dev phone" data-screen="chat" aria-hidden="true"></div><div class="peek p-right" data-orb="chat" data-look="#chat .bubbles" data-feel="smile joy curious smile wink"></div></div>
+      <div class="lead"><h2 data-write="word">World Chat</h2><p data-write="word" style="--s:.15s">For people who care about the sky and the ground under their feet, and for those who feel every storm. Talk with the whole world, or only with people near you.</p><div class="soft" style="--d:.3s"><div class="segments" role="group" aria-label="Room"><div class="thumb"></div><button type="button">Near me</button><button type="button">World</button></div></div></div>
+      <div class="holder soft rise"><div class="dev phone" data-screen="chat" aria-hidden="true"></div><div class="peek p-left" data-orb="chat" data-roam data-look="#chat .bubbles" data-feel="smile joy curious smile wink"></div></div>
     </section>
 
     <section class="part" id="devices">
-      <div class="lead soft"><h2>On every mobile screen</h2></div>
-      <div id="strip" role="region" tabindex="0" aria-label="Devices, scroll sideways">
-        <figure class="dtile"><figcaption><b>iPhone</b>What happened, one by one.</figcaption><div class="dv v-phone"><picture><source media="(prefers-color-scheme: dark)" srcset="img/device-phone-dark.png"><img src="img/device-phone-light.png" alt="Heliotide on an iPhone" loading="lazy" draggable="false"></picture></div></figure>
-        <figure class="dtile"><figcaption><b>iPhone Duo</b>The state on one half, the Sun on the other.</figcaption><div class="dv v-duo"><picture><source media="(prefers-color-scheme: dark)" srcset="img/device-duo-dark.png"><img src="img/device-duo-light.png" alt="Heliotide on a half open iPhone Duo" loading="lazy" draggable="false"></picture></div></figure>
-        <figure class="dtile"><figcaption><b>On its side</b>The map gets the whole width.</figcaption><div class="dv v-land"><img src="img/device-land-light.png" alt="The map on an iPhone held sideways" loading="lazy" draggable="false"></div></figure>
-        <figure class="dtile"><figcaption><b>iPad</b>Room for the whole Earth.</figcaption><div class="dv v-ipad"><img src="img/device-ipad-light.png" alt="The map on an iPad" loading="lazy" draggable="false"></div></figure>
-        <figure class="dtile"><figcaption><b>Apple Watch</b>Coming later.</figcaption><div class="dv v-watch"><div class="dev clock_"><img class="shot" src="img/watch.jpg" alt="Heliotide on an Apple Watch" loading="lazy" draggable="false"></div></div></figure>
+      <div class="lead"><h2 data-write="word">On every mobile screen</h2></div>
+      <div class="family">
+        <div class="m m-ipad soft rise"><img src="img/family-ipad-light.png" alt="The map of Heliotide on an iPad" loading="lazy" draggable="false"></div>
+        <div class="m m-land soft rise" style="--d:.12s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-land-dark.png"><img src="img/family-land-light.png" alt="Today on an iPhone held sideways" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-duo soft rise" style="--d:.22s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-duo-dark.png"><img src="img/family-duo-light.png" alt="Today and the chat on an open iPhone Duo" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-phone soft rise" style="--d:.32s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-phone-dark.png"><img src="img/family-phone-light.png" alt="Today on an iPhone" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-watch soft rise" style="--d:.44s"><img src="img/family-watch-light.png" alt="Heliotide on an Apple Watch" loading="lazy" draggable="false"></div>
       </div>
     </section>
 
     <section class="part split" id="end">
       <div class="lead">
-        <h2>Know what the Sun is up to</h2>
-        <p>Heliotide is a weather app for space. It tells you when a magnetic storm comes, when to look up for the aurora, and what just shook the ground. Anywhere in the world.</p>
+        <h2 data-write="word">Know what the Sun is up to</h2>
+        <p data-write="word" style="--s:.3s">Heliotide is a weather app for space. It tells you when a magnetic storm comes, when to look up for the aurora, and what just shook the ground. Anywhere in the world.</p>
         <a class="store" href="https://apps.apple.com/app/id6836600764"><picture><source media="(prefers-color-scheme: dark)" srcset="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/en-us"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us" width="150" height="50" alt="Download on the App Store" referrerpolicy="no-referrer"></picture></a>
         <p class="free">Completely free. No ads. No subscription.</p>
       </div>
@@ -113,7 +106,7 @@
     </section>
   </main>
   <footer>
-    <p>Data: NOAA Space Weather Prediction Center, NASA, USGS, GDACS, Environment and Climate Change Canada and Apple Weather. Pictures of the Sun: courtesy of NASA/SDO and the AIA, EVE, and HMI science teams. Heliotide is an independent app. These organisations do not endorse it.</p>
+    <p>Data: NOAA Space Weather Prediction Center, NASA, USGS, GDACS, Environment and Climate Change Canada and Apple Weather. Pictures of the Sun: courtesy of NASA/SDO and the AIA, EVE, and HMI science teams. Relief: NASA/METI ASTER GDEM. Heliotide is an independent app. These organisations do not endorse it.</p>
     <p>Heliotide shows what is measured and forecast. It is not medical advice and it is not an official warning service. In an emergency, follow your local authorities.</p>
     <nav aria-label="Pages"><a href="support/">Support</a><a href="privacy/">Privacy Policy</a></nav>
   </footer>

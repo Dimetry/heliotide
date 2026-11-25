@@ -76,7 +76,7 @@ const ICON = {
   list: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7 9h4v4H7zM14 9h3M14 12.5h3M7 16h10"/>',
   chat: '<path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M19.5 9.5h.5a2 2 0 0 1 2 2V16a2 2 0 0 1-2 2v2.6L17 18h-4"/>',
   arrow: '<path fill="currentColor" stroke="none" d="M20.500 3.500 3.800 10.700c-.9.4-.8 1.600.1 1.900l6.400 1.300 1.300 6.400c.2 1 1.500 1.100 1.900.2l7.200-16.600c.1-.3-.1-.5-.2-.4Z"/>',
-  right: '<path d="m9.500 5.500 6.500 6.500-6.500 6.500"/>', up: '<path d="m4.500 15.500 7.500-7 7.500 7"/>', down: '<path d="m4.500 8.500 7.500 7 7.500-7"/>',
+  left: '<path d="M14.500 5 7.500 12l7 7"/>', right: '<path d="m9.500 5.500 6.500 6.500-6.500 6.500"/>', up: '<path d="m4.500 15.500 7.500-7 7.500 7"/>', down: '<path d="m4.500 8.500 7.500 7 7.500-7"/>',
   wave: '<path d="M2.500 12h2.200l1.300-4 2 9 2-13 2.200 17 2-13 2 9 1.300-5h2"/>', info: '<circle cx="12" cy="12" r="9.300"/><path d="M12 11v5.600M12 7.300v.2"/>',
   flare: '<circle cx="10" cy="11" r="4"/><path d="M10 2.800v2M10 17.200v2M1.800 11h2M4.200 5.200l1.400 1.400M4.200 16.800l1.400-1.400M15.800 5.200l-1.400 1.400M17 13.500l4.200 7.200h-8.400Z"/>',
   wind: '<path d="M2.500 9h11a2.700 2.700 0 1 0-2.700-2.700M2.500 12.500h16a2.700 2.700 0 1 1-2.700 2.700M2.500 16h8.500a2.400 2.400 0 1 1-2.400 2.400"/>',
@@ -102,13 +102,14 @@ const SCREENS = {
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">${icon("arrow")}REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
   face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
-  lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-w="kp"></span></div><div class="rect"><b data-w="condition"></b><span data-w="watch"></span></div></div><div class="notes"></div></div>`,
-  chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field"><span>Message</span><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5.500M6 11.500l6-6 6 6"/></svg></em></div></div>`
+  lock: () => `<div class="scr lock" data-tone="dark"><div class="wall"><picture><source media="(prefers-color-scheme: dark)" srcset="img/wall-dark.jpg"><img src="img/wall-light.jpg" alt="" loading="lazy"></picture></div><div class="date">Wednesday, 25 November</div><div class="clock">9:41</div><div class="notes"></div><span class="torch l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.500h8a.8.8 0 0 1 .8.8v1.200H7.200V3.300a.8.8 0 0 1 .8-.8ZM7.200 6h9.600v.6c0 1.700-.7 2.600-1.400 3.500-.4.5-.6 1-.6 1.700v8.500a1.700 1.700 0 0 1-1.700 1.700h-2.200a1.700 1.700 0 0 1-1.700-1.700v-8.500c0-.7-.2-1.200-.6-1.700C7.900 9.200 7.200 8.300 7.200 6.600Zm4.800 6.600a1 1 0 0 0-1 1v1.600a1 1 0 0 0 2 0v-1.600a1 1 0 0 0-1-1Z" fill-rule="evenodd"/></svg></span><span class="torch r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.300 4h5.400c.5 0 .9.200 1.200.6l1 1.500h2.500A2.600 2.600 0 0 1 22 8.700v8.700a2.600 2.600 0 0 1-2.600 2.600H4.600A2.600 2.600 0 0 1 2 17.400V8.700a2.600 2.600 0 0 1 2.600-2.600h2.500l1-1.500c.3-.4.7-.6 1.200-.6ZM12 8.200a4.600 4.600 0 1 0 0 9.200 4.600 4.600 0 0 0 0-9.200Zm0 1.800a2.800 2.800 0 1 1 0 5.600 2.800 2.800 0 0 1 0-5.600Z" fill-rule="evenodd"/></svg></span><i class="homebar"></i></div>`,
+  chat: () => `<div class="scr chatapp"><canvas data-bg="chat"></canvas>${status_}<span class="round l">${icon("left")}</span><div class="ctitle"><b>Chat <i>BETA</i></b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field"><span>Message</span><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5.500M6 11.500l6-6 6 6"/></svg></em></div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
 // Frames: Apple's product bezels (Apple Design Resources).
 for (const el of document.querySelectorAll(".dev")) {
   if (el.classList.contains("phone")) { el.insertAdjacentHTML("beforeend", '<img class="frame" src="img/frame-phone.png" alt="" draggable="false">'); }
+  if (el.classList.contains("clock_")) { el.insertAdjacentHTML("beforeend", '<img class="frame" src="img/frame-watch.png" alt="" draggable="false">'); }
 }
 
 // ---- Widgets ----
@@ -173,9 +174,10 @@ function paintFlow(el, level) {
 }
 /// One day on the widgets, the watch and the Lock Screen.
 function showWidgets(day) {
-  const s = { ...day, peakText: "Kp " + day.peak, windText: day.wind + " km/s", bzText: minus(day.bz) + " nT" };
-  for (const el of document.querySelectorAll("[data-w]")) { put(el, s[el.dataset.w]); }
-  for (const el of document.querySelectorAll("[data-flow]")) { paintFlow(el, day.level); }
+  // A second widget shows another day, so two of them never look the same.
+  const of = (el) => DAYS[(day.level + Number(el.closest("[data-shift]")?.dataset.shift ?? 0)) % 4];
+  for (const el of document.querySelectorAll("[data-w]")) { put(el, of(el)[el.dataset.w]); }
+  for (const el of document.querySelectorAll("[data-flow]")) { paintFlow(el, of(el).level); }
   for (const el of document.querySelectorAll("[data-ring]")) { el.style.setProperty("--k", day.kp / 9); }
   for (const el of document.querySelectorAll("[data-ring2]")) { el.style.setProperty("--k", day.kp / 9); el.style.color = ["#8fd457", "#4bc6ff", "#ff9d2e", "#ff5fc0"][day.level]; }
   for (const el of document.querySelectorAll("[data-wchart]")) {
@@ -189,7 +191,7 @@ function showWidgets(day) {
 
 // ---- Alerts and chat: small loops ----
 
-const NOTES = [["Strong magnetic storm", "Aurora may be seen farther from the poles than usual. GPS and radio may be less accurate."], ["Earthquake near you", "Magnitude 4.8, near Grindavík, Iceland."], ["Aurora possible tonight", "Look north after dark, away from city lights. Best if the sky is clear."], ["Strong solar flare", "Short radio blackouts are possible on the sunlit side of Earth."]];
+const NOTES = [["Strong magnetic storm", "Kp 7 now. Aurora may be seen far from the poles."], ["Earthquake near you", "Magnitude 4.8, near Grindavík, Iceland."], ["Aurora possible tonight", "Look north after dark, away from city lights."], ["Strong solar flare", "X2.1. Short radio blackouts are possible."]];
 const NEAR = [["Freyja", "Grindavík", "Did anyone feel that just now?"], ["Óskar", "Reykjavík", "Yes! The lamp was swinging."], ["", "", "4.8, not far from us. It is on the map."], ["Birta", "Keflavík", "The dog woke up before it."], ["Freyja", "Grindavík", "Look north, the sky is green"], ["", "", "Going outside!"], ["Óskar", "Reykjavík", "Clouds here. Enjoy it for me."]];
 const WORLD = [["Mateo", "Santiago", "Small one here an hour ago. Nobody else woke up."], ["Yuki", "Sapporo", "Kp 4 already? I have had a headache all day."], ["Amara", "Nairobi", "Nothing here, only a beautiful sunset."], ["Ingrid", "Tromsø", "The aurora is dancing. I wish you all could see it."], ["", "", "Send us some of that sky!"], ["Liam", "Dunedin", "Aurora australis tonight too!"], ["Noor", "Amman", "Slept badly again. Is it the storm or the coffee?"], ["Chloé", "Lyon", "Coffee. But I check the Kp first too."], ["Kenji", "Osaka", "M5.1 off the coast. All fine here."]];
 const ROOMS = [{ name: "Reykjavík area · 12 online", talk: NEAR }, { name: "World · 214 online", talk: WORLD }];
@@ -201,57 +203,70 @@ function openRoom(i) {
   put(document.querySelector("#room"), ROOMS[i].name);
   document.querySelector(".bubbles").replaceChildren();
   fieldText("");
-  for (let k = 0; k < 4; k++) { say(true); }
+  for (let k = 0; k < 6; k++) { say(true); }
 }
 function fieldText(t) {
   const f = document.querySelector("#chat .field");
   f.classList.toggle("typing", t !== "");
   f.firstElementChild.textContent = t || "Message";
 }
-/// The conversation runs by itself: others show three dots first; we type letter by letter, then send.
+/// The conversation runs by itself, calmly and unevenly, as people write. Others' messages just come in;
+/// ours is typed letter by letter, then sent.
 async function talkLoop(active) {
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms)), some = (a, b) => a + Math.random() * (b - a);
   for (;;) {
     if (!active() || still.matches) { await wait(500); continue; }
     const mine = turnNo, next = ROOMS[room].talk[said % ROOMS[room].talk.length];
     if (next[0]) {
-      const dots = document.createElement("div");
-      dots.className = "bub dotsb";
-      dots.innerHTML = "<span><i></i><i></i><i></i></span>";
-      addBubble(dots);
-      await wait(700 + next[2].length * 14);
-      dots.remove();
-      if (mine === turnNo) { say(); }
-      await wait(1000);
+      // Mostly a pause to read, sometimes a quick answer, sometimes a long silence.
+      const luck = Math.random();
+      await wait(luck < 0.25 ? some(1100, 1700) : luck < 0.8 ? some(2300, 3700) : some(4200, 5600));
+      if (mine === turnNo && active()) { say(); }
     } else {
-      await wait(500);
-      for (let n = 1; n <= next[2].length && mine === turnNo; n++) { fieldText(next[2].slice(0, n)); await wait(next[2][n - 1] === " " ? 90 : 34 + Math.random() * 52); }
-      await wait(380);
+      await wait(some(1500, 2400));
+      for (let n = 1; n <= next[2].length && mine === turnNo; n++) {
+        fieldText(next[2].slice(0, n));
+        const c = next[2][n - 1];
+        await wait(/[.,!?]/.test(c) ? some(220, 380) : c === " " ? some(110, 190) : some(55, 125));
+      }
+      await wait(some(550, 900));
       if (mine === turnNo) { fieldText(""); say(); }
-      await wait(1100);
     }
   }
 }
 
+/// A new alert comes in on top of the list; the others move down, the third one leaves.
 function note(i) {
   for (const box of document.querySelectorAll(".notes")) {
-    const [t, b] = NOTES[i % NOTES.length], el = document.createElement("div"), old = box.firstElementChild;
+    const [t, b] = NOTES[i % NOTES.length], el = document.createElement("div"), before = new Map([...box.children].map((c) => [c, c.offsetTop]));
     el.className = "note";
     el.innerHTML = `<img src="img/icon.png" alt=""><div><b>${t}</b><p>${b}</p></div><time>now</time>`;
-    box.append(el);
-    if (!old || still.matches) { old?.remove(); continue; }
-    old.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.92)" }], { duration: 260, easing: "ease-in", fill: "forwards" }).onfinish = () => old.remove();
-    el.animate([{ opacity: 0, transform: "translateY(120%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 520, delay: 90, fill: "backwards", easing: "cubic-bezier(.16, 1.15, .3, 1)" });
+    box.prepend(el);
+    const old = box.children[2];
+    for (const c of [...box.children].slice(1, 2)) { c.querySelector("time").textContent = "2m ago"; }
+    if (!box.animate || still.matches || !before.size) { old?.remove(); continue; }
+    if (old) {
+      // It leaves from where it stands, under the others.
+      const ghost = old.cloneNode(true);
+      Object.assign(ghost.style, { position: "absolute", left: 0, right: 0, bottom: 0, zIndex: -1 });
+      old.remove();
+      box.append(ghost);
+      ghost.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(30%) scale(.9)" }], { duration: 420, easing: "cubic-bezier(.4, 0, .6, 1)", fill: "forwards" }).onfinish = () => ghost.remove();
+    }
+    const spring = "cubic-bezier(.22, 1.22, .36, 1)", grown = el.offsetHeight + parseFloat(getComputedStyle(box).rowGap || 0);
+    for (const c of box.children) { if (before.has(c) && c !== el && c.style.position !== "absolute") { c.animate([{ transform: `translateY(${-grown}px)` }, { transform: "none" }], { duration: 760, easing: spring }); } }
+    el.animate([{ opacity: 0, transform: "translateY(-46%) scale(.86)", filter: "blur(8px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: 760, easing: spring });
   }
 }
 function addBubble(el, quiet) {
   const box = document.querySelector(".bubbles");
   box.append(el);
-  while (box.children.length > 9) { box.firstElementChild.remove(); }
+  while (box.children.length > 10) { box.firstElementChild.remove(); }
   if (quiet || still.matches) { return; }
-  const h = el.offsetHeight + 10;
-  box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .9, .25, 1)" });
-  el.animate(el.classList.contains("mine") ? [{ opacity: 0.4, transform: "translate(-12%, 60%) scale(.8)" }, { opacity: 1, transform: "none" }] : [{ opacity: 0, transform: "scale(.86)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: "cubic-bezier(.16, 1.1, .3, 1)" });
+  const h = el.offsetHeight + 10, mine = el.classList.contains("mine"), soft = "cubic-bezier(.22, 1, .36, 1)";
+  box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 720, easing: soft });
+  el.style.transformOrigin = mine ? "100% 100%" : "0 100%";
+  el.animate([{ opacity: 0, transform: mine ? "translateY(26%) scale(.92)" : "translateY(8%) scale(.95)" }, { opacity: 1, transform: "none" }], { duration: 760, easing: soft });
 }
 function say(quiet) {
   const talk = ROOMS[room].talk, [who, from, text] = talk[said++ % talk.length], el = document.createElement("div");
@@ -282,24 +297,24 @@ function stepCharts(dt, to, force) {
 // ---- The cards of Today ----
 
 const tick = Array.from({ length: 60 }, (_, i) => { const t = (i * 6 - 90) * Math.PI / 180; return i > 27 && i < 33 ? "" : `<line x1="${(50 * Math.cos(t)).toFixed(1)}" y1="${(50 * Math.sin(t)).toFixed(1)}" x2="${(44 * Math.cos(t)).toFixed(1)}" y2="${(44 * Math.sin(t)).toFixed(1)}"/>`; }).join("");
-const SUNS = [["94 Å", "Flaring regions, hottest corona"], ["131 Å", "Hottest flare plasma"], ["193 Å", "Hot corona, coronal holes"], ["304 Å", "Flares and filaments"]];
 const head = (i, t) => `<div class="head">${icon(i)}${t}</div>`;
 document.querySelector("#bento").innerHTML = `
-  <article class="tile t-sun">${head("flare", "SOLAR FLARES")}<p class="big">B1.4 <b>Low</b></p><div class="pic" data-tone="dark">${[0, 1, 2, 3].map((n) => `<img src="img/sun${n}.jpg" alt="${n ? "" : "The Sun"}" class="${n ? "" : "on"}"${n ? ' loading="lazy"' : ""} draggable="false">`).join("")}</div><p class="cap_"><b id="wave">94 Å · Flaring regions, hottest corona</b><span>NASA SDO</span></p></article>
-  <article class="tile t-aur">${head("aurora", "AURORA")}<p class="big">34 % <b>chance tonight</b></p><div class="pic" data-tone="dark"><img class="on ov" src="https://services.swpc.noaa.gov/images/aurora-forecast-northern-hemisphere.jpg" alt="Aurora forecast for the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"></div><p class="cap_"><b>OVATION model, live</b><span>NOAA SWPC</span></p></article>
-  <article class="tile">${head("quake", "EARTHQUAKES")}<div class="rings" aria-hidden="true"><i></i><i></i><i></i><b>4.6</b></div><p class="mid">3 near you</p><p class="small_">Closest: M4.6, 320 km away</p></article>
-  <article class="tile">${head("fire", "WILDFIRES")}<p class="mid top_">None nearby</p><p class="small_">No large fires within 300 km. 227 tracked worldwide.</p></article>
-  <article class="tile">${head("sun", "UV INDEX")}<p class="big"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="small_">Clear sky: up to 4 at 13:00.</p></article>
+  <article class="tile t-sun">${head("flare", "SOLAR FLARES")}<p class="big">B1.4 <b>Low</b></p><div class="pic" data-tone="dark"><video id="sunfilm" src="img/sun.mp4" poster="img/sun3.jpg" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div><p class="cap_"><b>304 Å · Flares and filaments</b><span>NASA SDO</span></p></article>
+  <article class="tile t-aur">${head("aurora", "AURORA")}<p class="big">34 % <b>tonight</b></p><div class="pic" data-tone="dark"><img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" width="560" height="560" style="opacity:0"></canvas></div><p class="cap_"><b>Last 24 hours, live</b><span>NOAA SWPC</span></p></article>
+  <article class="tile"><div class="relief"></div>${head("quake", "EARTHQUAKES")}<div class="pinn quake" aria-hidden="true"><i></i><i></i><i></i><b>4.6</b></div><p class="mid">3 near you</p><p class="small_">Closest: M4.6, 320 km away</p></article>
+  <article class="tile"><div class="relief two"></div>${head("fire", "WILDFIRES")}<div class="pinn fire" aria-hidden="true"><i></i><i></i><b>${icon("fire")}</b></div><p class="mid">2 near you</p><p class="small_">Closest: 84 km away</p></article>
+  <article class="tile">${head("sun", "UV INDEX")}<p class="big"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="small_" style="margin-top:auto">Clear sky: up to 4 at 13:00.</p></article>
   <article class="tile t-press">${head("gauge", "PRESSURE")}<div class="dial"><svg viewBox="-56 -56 112 112" aria-hidden="true">${tick}<line id="needle" class="needle" x1="0" y1="-52" x2="0" y2="-40"/></svg><p><span id="hpa">1015</span><small>hPa</small></p></div></article>
   <article class="tile t-wide">${head("cloud", "WEATHER")}<p class="big">8° <b>Rain</b></p><div class="hours">${["Now", "14", "15", "16", "17", "18", "19", "20"].map((t, i) => `<div><b>${t}</b><svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${i < 5 ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg><span>${[90, 84, 80, 62, 40, 20, 10, 5][i]}%</span><b>${[8, 8, 9, 9, 8, 8, 7, 7][i]}°</b></div>`).join("")}</div></article>
   <article class="tile t-wide">${head("bell", "ALERTS")}<div class="rows_">${[["Magnetic storm", "", "Calm"], ["Radio", "", "Calm"], ["Radiation", "", "Calm"], ["Solar wind", "353 km/s", "Calm"]].map(([l, n, w]) => `<div><span>${l}</span><small${l === "Solar wind" ? ' id="tw"' : ""}>${n}</small><b>${w}</b></div>`).join("")}</div></article>`;
+// The cards rise one after another.
+document.querySelectorAll("#bento .tile").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
 let todayStep = 0;
 /// One small change at a time, slowly.
 function stepToday() {
   todayStep++;
-  const w = todayStep % 4;
-  document.querySelectorAll(".t-sun .pic img").forEach((e, i) => e.classList.toggle("on", i === w));
-  put(document.querySelector("#wave"), SUNS[w].join(" · "));
-  if (todayStep % 2) { const p = 1015 + [0, 1, 2, 1, 0, -1][(todayStep >> 1) % 6]; put(document.querySelector("#hpa"), p); document.querySelector("#needle").style.transform = `rotate(${(p - 1013) * 5}deg)`; }
-  else { const u = [3, 4, 3, 2][(todayStep >> 1) % 4]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : "Moderate"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
+  const p = [1015, 1004, 988, 996, 1021, 1034, 1027, 1009][todayStep % 8];
+  put(document.querySelector("#hpa"), p);
+  document.querySelector("#needle").style.transform = `rotate(${(p - 1013) * 4.6}deg)`;
+  if (todayStep % 2) { const u = [3, 5, 8, 4, 2][(todayStep >> 1) % 5]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : u < 6 ? "Moderate" : "Very high"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
 }

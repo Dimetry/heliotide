@@ -26,6 +26,8 @@ const LOOKS = LIGHT.map((row, i) => {
            energy: ENERGY[i], speed: SPEED[i], ballHigh: ball[0], ballMain: ball[1], ballMid: ball[2], ballLow: ball[3] };
 });
 const ZOOM = 3.08, LIFT = 0.22;
+/// Where the app puts the clouds in the chat: their edge at the navigation bar (CloudBackground.lift; bar 116 of 874 pt).
+const CHAT_LIFT = 1 - (0.5 + (116 / 874 - 0.5) / 1.03) - (0.33 + (ZOOM - 1) * 0.5) / ZOOM;
 
 // ---- Which level is shown ----
 
@@ -64,11 +66,12 @@ const face = new LivingFace();
 const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
   el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>`;
   const button = el.querySelector("button"), canvas = el.querySelector("canvas");
-  return { el, look: el.dataset.look ? document.querySelector(el.dataset.look) : null, feel: el.dataset.feel?.split(" "), name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
+  return { el, look: el.dataset.look ? document.querySelector(el.dataset.look) : null, feel: el.dataset.feel?.split(" "), roam: "roam" in el.dataset, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
 });
 const viewOf = (name) => views.find((v) => v.name === name);
-let owner = viewOf("hero");
+let owner = viewOf(matchMedia("(min-width: 900px), (orientation: landscape) and (min-width: 700px)").matches ? "side" : "hero");
 owner.grow.x = 1;
+$(".p-lead").classList.add("at" + Math.floor(Math.random() * 3));     // every visit in another corner next to the words
 
 const screens = [...document.querySelectorAll("canvas[data-bg]")];
 const onScreen = new Set();
@@ -86,11 +89,11 @@ function measure() {
   big = Math.max(...views.map((v) => v.el.clientWidth)) / 2;
   ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
   for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
-  for (const c of screens) { const [cw, ch] = c.dataset.bg === "tall" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
+  for (const c of screens) { const [cw, ch] = c.dataset.bg !== "wide" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
   dirty = true;
 }
 
-let cloudTime = 20, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
+let cloudTime = 20, chatTime = 34, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
 let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
 const touch = matchMedia("(hover: none)");
 
@@ -99,12 +102,14 @@ function findOwner() {
   let best = null, near = 1e9;
   for (const v of views) {
     if (v.name === "bar") { continue; }
-    const r = v.el.getBoundingClientRect(), y = r.top + r.height / 2, x = r.left + r.width / 2, room = v === owner ? 0.02 : 0.1;
+    const r = v.el.getBoundingClientRect();
+    if (!r.width) { continue; }
+    const y = r.top + r.height / 2, x = r.left + r.width / 2, room = v === owner ? 0.02 : 0.1;
     if (y > H * room && y < H * (1 - room) && x > 10 && x < W - 10) { const d = Math.abs(y - H * 0.45); if (d < near) { near = d; best = v; } }
   }
   const next = best ?? viewOf("bar");
   if (next !== owner) { owner = next; body.held = null; body.air = false; for (const p of [body.x, body.y, body.squash, body.tilt]) { p.x = p.v = 0; } }
-  bar.classList.toggle("shown", owner.name !== "end" && (owner.name !== "hero" || scrollY > 90));
+  bar.classList.toggle("shown", owner.name !== "end");
   bar.classList.toggle("docked", owner.name === "bar");
 }
 
@@ -245,7 +250,9 @@ function drawOrb(dt) {
     x += Math.sin(now_ * 0.53) * drift * 0.8;
     y = body.y.x + Math.sin(now_ * 0.81 + 0.6) * drift + Math.sin(now_ * 1.9) * drift * 0.22;
     const up = face.head[1].x;
-    turn = [body.spin[0].x + face.head[0].x * 0.2 + act.shakeTurn, body.spin[1].x - up * (up < 0 ? 0.3 : 0.14) - act.lean.x];
+    if (owner.roam) { x += (Math.sin(now_ * 0.43) * 0.42 + Math.sin(now_ * 1.07 + 2) * 0.1) * R; y += (Math.sin(now_ * 0.61 + 1) * 0.36 + Math.sin(now_ * 0.97) * 0.08) * R; }
+    if (up < 0) { y += up * R * 0.07; }                        // it stretches its neck to look up
+    turn = [body.spin[0].x + face.head[0].x * 0.22 + act.shakeTurn, body.spin[1].x - up * (up < 0 ? 0.46 : 0.16) - act.lean.x];
     tilt = act.tilt.x;
     stretch = act.stretch.x;
   }
@@ -274,6 +281,7 @@ function arrived() {
   if (document.documentElement.classList.contains("landed")) { return; }
   landed = true;
   document.documentElement.classList.add("landed");
+  document.querySelectorAll("#hero [data-write]").forEach(show);
   awake = Math.max(awake, now_);
 }
 
@@ -283,6 +291,13 @@ const cloudValues = (lift, zoom = ZOOM) => ({ time: cloudTime, energy: look.ener
 /// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
 function drawScreens() {
   if (!inside) { return; }
+  for (const c of screens) {
+    if (c.dataset.bg !== "chat" || !onScreen.has(c)) { continue; }
+    const l = LOOKS[2];                                  // the chat: orange, the clouds up at the bar, always calm (as in the app)
+    inside.resize(c.width, c.height);
+    inside.draw({ time: chatTime, energy: 0, zoom: ZOOM, lift: CHAT_LIFT, dark: darkMode.matches ? 1 : 0, cMain: l.main, cLow: l.low, cMid: l.mid, cHigh: l.high, deep: l.deep, dmid: l.dmid, glow: l.glow, skyShift: l.skyShift });
+    c.getContext("2d").drawImage(inside.canvas, 0, 0);
+  }
   for (const kind of ["tall", "wide"]) {
     // In the strip of devices the picture stands still: drawn once per level and theme.
     const key = level() + "" + darkMode.matches;
@@ -297,7 +312,8 @@ function drawScreens() {
 let last = performance.now() / 1000, sinceScreens = 1;
 function frame(ms) {
   requestAnimationFrame(frame);
-  if (ms / 1000 - last < 0.012) { return; }
+  // Another window is in front: draw less, the computer needs its power elsewhere.
+  if (ms / 1000 - last < (document.hasFocus() || touch.matches ? 0.012 : 0.06)) { return; }
   const now = ms / 1000, real = clamp(now - last, 0, 0.25), dt = Math.min(real, 0.05);
   last = now;
   now_ += real;
@@ -311,6 +327,7 @@ function frame(ms) {
   }
   glide(real);
   cloudTime += dt * look.speed;
+  chatTime += dt * SPEED[0];
   sinceScreens += real;
   if (sinceScreens >= 1 / 31) { sinceScreens = 0; drawScreens(); }
   stepCharts(real, day().curve);
@@ -384,16 +401,12 @@ let inStage = false, handsUntil = 0;
 let liveDay = null;                               // filled by NOAA
 const day = () => inStage ? DAYS[stageDay] : liveDay ?? DAYS[0];
 const buttons = [...document.querySelectorAll("#status .segments button")];
-const WHEN = ["On a quiet day", "On an active day", "During a storm", "During a severe storm"];
-const MEANS = ["The Sun is calm. Nothing unusual is on its way.", "The Sun is restless. Near the poles the sky may light up tonight.",
-               "Aurora may be seen farther from the poles than usual. GPS and radio may be less accurate.", "A rare, strong storm. Aurora may be seen far from the poles, and GPS and radio can fail for a while."];
+const MEANS = ["The Sun is calm. Nothing is on its way.", "Aurora is possible near the poles.", "GPS and radio may be less accurate.", "GPS and radio can fail for a while."];
 function showStage() {
   stageLevel = inStage ? stageDay : null;
   showScreens(day());
   dirty = true;
   const d = DAYS[stageDay];
-  stage.dataset.level = stageDay;
-  put($("#when"), WHEN[stageDay]);
   put($("#kp"), d.kp);
   put($("#state"), d.state);
   put($("#means"), MEANS[stageDay]);
@@ -439,51 +452,70 @@ function tones() {
 
 // ---- Loops and soft entrances ----
 
-let widgetDay = 0, noted = 1;
+let widgetDay = 0, noted = 2;
 showWidgets(DAYS[0]);
-note(0);
+note(0); note(1);
 const loops = new Map([["#widgets", false], ["#chat", false], ["#today", false]]);
 const loopWatch = new IntersectionObserver((list) => { for (const e of list) { loops.set("#" + e.target.id, e.isIntersecting); } });
 for (const id of loops.keys()) { loopWatch.observe($(id)); }
 const every = (ms, id, run) => setInterval(() => { if (!document.hidden && !still.matches && id.some((i) => loops.get(i))) { run(); } }, ms);
 every(3600, ["#widgets"], () => { widgetDay = (widgetDay + 1) % 4; showWidgets(DAYS[widgetDay]); });
-every(4200, ["#widgets"], () => note(noted++));
-every(5200, ["#today"], () => stepToday());
+every(3300, ["#widgets"], () => note(noted++));
+every(2600, ["#today"], () => stepToday());
 talkLoop(() => loops.get("#chat") && !document.hidden);
 const rooms = [...document.querySelectorAll("#chat .segments button")];
 rooms.forEach((b, i) => b.addEventListener("click", () => openRoom(i)));
 openRoom(1);
 
-// The strip of devices: starts at the left margin, runs off the right edge; a mouse drags it like a finger.
-const strip = $("#strip");
-let drag = null, glideV = 0;
-strip.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse" && e.button === 0) { drag = { x: e.clientX, left: strip.scrollLeft, last: e.clientX, v: 0, moved: false }; glideV = 0; strip.classList.add("drag"); } });
-addEventListener("pointermove", (e) => {
-  if (!drag) { return; }
-  if (e.buttons === 0) { endDrag(); return; }
-  drag.v = mix(drag.v, e.clientX - drag.last, 0.5);
-  drag.last = e.clientX;
-  strip.scrollLeft = drag.left - (e.clientX - drag.x);
-});
-function endDrag() {
-  if (!drag) { return; }
-  glideV = -drag.v;
-  drag = null;
-  (function go() {
-    glideV *= 0.94;
-    if (Math.abs(glideV) < 0.4 || drag) { strip.classList.remove("drag"); return; }
-    strip.scrollLeft += glideV;
-    requestAnimationFrame(go);
-  })();
-}
-addEventListener("pointerup", endDrag);
-addEventListener("blur", endDrag);
-strip.addEventListener("dragstart", (e) => e.preventDefault());
-
+function show(el) { el.classList.add("seen"); if (el.dataset.write) { setTimeout(() => el.classList.add("done"), 2600); } }
 const appear = new IntersectionObserver((list) => {
-  for (const e of list) { if (e.isIntersecting) { e.target.classList.add("seen"); appear.unobserve(e.target); } }
+  for (const e of list) { if (e.isIntersecting) { show(e.target); appear.unobserve(e.target); } }
 }, { rootMargin: "0px 0px -10% 0px" });
+// Words: every heading and paragraph is cut into letters or words; they come out of a blur one after another.
+for (const el of document.querySelectorAll("[data-write]")) {
+  const text = el.textContent.trim(), byLetter = el.dataset.write === "char";
+  let n = 0;
+  el.setAttribute("aria-label", text);
+  if (el.tagName === "P") { el.setAttribute("role", "text"); }
+  el.innerHTML = text.split(/\s+/).map((w) => `<span class="nb" aria-hidden="true">${byLetter ? [...w].map((c) => `<span class="u" style="--n:${n++}">${c}</span>`).join("") : `<span class="u" style="--n:${n++}">${w}</span>`}</span>`).join(" ");
+  if (!el.closest("#hero")) { appear.observe(el); }
+}
 document.querySelectorAll(".soft").forEach((e) => appear.observe(e));
+
+// ---- The Sun and the aurora: they move only while they are on screen ----
+
+const sunFilm = $("#sunfilm"), auroraCanvas = $("#aurorafilm");
+let auroraOn = false, auroraFrames = null, auroraAsked = false;
+new IntersectionObserver(([e]) => {
+  if (e.isIntersecting && !still.matches) { sunFilm.preload = "auto"; sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
+}).observe(sunFilm);
+new IntersectionObserver(([e]) => { auroraOn = e.isIntersecting; if (auroraOn) { askAurora(); } }, { rootMargin: "200px" }).observe(auroraCanvas);
+/// The last 24 hours of NOAA's aurora model, 20 of its pictures, one melting into the next.
+async function askAurora() {
+  if (auroraAsked || navigator.connection?.saveData) { return; }
+  auroraAsked = true;
+  const list = await load("products/animations/ovation_north_24h.json");
+  if (!Array.isArray(list) || list.length < 20) { return; }
+  const step = (list.length - 1) / 19, shots = await Promise.all(Array.from({ length: 20 }, (_, i) => new Promise((done) => {
+    const im = new Image();
+    im.referrerPolicy = "no-referrer";
+    im.onload = () => done(im);
+    im.onerror = () => done(null);
+    im.src = SWPC.slice(0, -1) + list[Math.round(i * step)].url;
+  })));
+  auroraFrames = shots.filter(Boolean);
+}
+let auroraDrawn = 0;
+setInterval(() => {
+  if (!auroraOn || !auroraFrames || auroraFrames.length < 8 || document.hidden || still.matches) { return; }
+  const n = auroraFrames.length, hold = 5, t = (now_ * 3.2) % (n + hold), i = Math.min(n - 1, Math.floor(t)), k = i < n - 1 ? t - i : 0;
+  if (t === auroraDrawn) { return; }
+  auroraDrawn = t;
+  const c = auroraCanvas.getContext("2d"), side = auroraCanvas.width;
+  c.globalAlpha = 1; c.drawImage(auroraFrames[i], 0, 0, side, side);
+  if (k) { c.globalAlpha = k; c.drawImage(auroraFrames[i + 1], 0, 0, side, side); }
+  auroraCanvas.style.opacity = 1;
+}, 66);
 
 // ---- Live numbers from NOAA, the same rule as in the app: the highest measured signal wins ----
 
@@ -519,7 +551,7 @@ async function live() {
 const FEEL = ["Nothing to feel right now", "Most people feel nothing", "Most people will not feel anything", "Very few people may feel it", "Some people may notice it",
               "Sensitive people may feel it", "Some people may feel a bit off", "Some people may feel tired", "Some people may sleep lighter", "Very rare. Some people may feel it"];
 
-if (landed) { document.documentElement.classList.add("landed"); }
+if (landed) { document.documentElement.classList.add("landed"); document.querySelectorAll("#hero [data-write]").forEach(show); }
 measure();
 showStage();
 requestAnimationFrame(frame);
