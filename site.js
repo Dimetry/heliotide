@@ -253,7 +253,7 @@ function arrived() {
 }
 
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
-const cloudValues = (lift) => ({ time: cloudTime, energy: look.energy, zoom: ZOOM, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
+const cloudValues = (lift, zoom = ZOOM) => ({ time: cloudTime, energy: look.energy, zoom, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
                                 deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
 /// Clouds only behind the states: a part of that section, so they lie under the bars of the browser too.
 /// The horizon stands high, as in a header.
@@ -262,18 +262,20 @@ new IntersectionObserver((list) => { stageSeen = list[list.length - 1].isInterse
 function drawClouds() {
   if (!field || !stageSeen) { return; }
   const over = (cloudH - stage.clientHeight) / 2, edge = over + Math.max(96, stage.clientHeight * 0.17);
-  const y = 0.5 + (edge / cloudH - 0.5) / 1.03, top = 1 - y - (0.33 + 0.16 * look.energy + (ZOOM - 1) * 0.5) / ZOOM;
-  field.draw(cloudValues(Math.max(top, 0)));
+  const y = 0.5 + (edge / cloudH - 0.5) / 1.03, zoom = W > H ? 2.6 : ZOOM, top = 1 - y - (0.33 + 0.16 * look.energy + (zoom - 1) * 0.5) / zoom;   // sizes of the app: upright, on its side
+  field.draw(cloudValues(Math.max(top, 0), zoom));
 }
 /// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
 function drawScreens() {
   if (!inside) { return; }
   for (const kind of ["tall", "wide"]) {
-    const list = screens.filter((c) => c.dataset.bg === kind && onScreen.has(c));
+    // In the strip of devices the picture stands still: drawn once per level and theme.
+    const key = level() + "" + darkMode.matches;
+    const list = screens.filter((c) => c.dataset.bg === kind && onScreen.has(c) && (!c.closest("[data-still]") || c.dataset.key !== key));
     if (!list.length) { continue; }
     inside.resize(list[0].width, list[0].height);
-    inside.draw(cloudValues(kind === "wide" ? 0.34 : LIFT));
-    for (const c of list) { c.getContext("2d").drawImage(inside.canvas, 0, 0); }
+    inside.draw(kind === "wide" ? cloudValues(0.34, 2.6) : cloudValues(LIFT));
+    for (const c of list) { c.dataset.key = key; c.getContext("2d").drawImage(inside.canvas, 0, 0); }
   }
 }
 
