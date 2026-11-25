@@ -33,11 +33,7 @@ float fbm(vec2 p) {
 vec3 burn(vec3 base, vec3 blend, float amount) { return mix(base, max(base + blend - 1.0, 0.0), amount); }
 
 float cloudHeight(vec2 u, float t) {
-#ifdef MARBLE
-  return 0.95 + (fbm(u * 2.6 + vec2(t * 0.05, -t * 0.04)) - 0.5) * 3.2;
-#else
   return u.y;
-#endif
 }
 
 vec3 cloudPaint(vec2 uv, out float sky) {
@@ -106,29 +102,34 @@ void main() {
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`;
 
-const ORB = "#define MARBLE\n" + CLOUDS + `
+const ORB = CLOUDS + `
 uniform vec2 roll;
 void main() {
   float side = min(size.x, size.y);
-  vec2 position = vec2(gl_FragCoord.x, size.y - gl_FragCoord.y);
-  vec2 st = (position - size * 0.5) / side;
-  float radius = 0.48;
+  vec2 st = (vec2(gl_FragCoord.x, size.y - gl_FragCoord.y) - size * 0.5) / side;
+  float ang = atan(st.y, st.x);
+  float wob = sin(ang * 3.0 + time * 1.6) * 0.55 + sin(ang * 5.0 - time * 2.2 + 1.3) * 0.3;
+  float radius = 0.48 * (1.0 + wob * (0.003 + energy * 0.012));
   float shape = 1.0 - smoothstep(-0.8 / side, 0.8 / side, length(st) - radius);
   if (shape <= 0.0) { gl_FragColor = vec4(0.0); return; }
   vec2 disc = st / radius;
   float r = clamp(length(disc), 0.0001, 0.9999);
-  vec2 a = disc / r * asin(r);
-  a.y = -a.y;
-  a -= roll;
+  vec2 p = disc * mix(1.0, asin(r) / (r * 1.5707963), 0.45);
+  float tw = energy * 0.8 * (1.0 - smoothstep(0.0, 1.0, r));
+  p = vec2(cos(tw) * p.x - sin(tw) * p.y, sin(tw) * p.x + cos(tw) * p.y);
+  vec2 uv = p * 0.62 + 0.5;
+  uv.y = 1.0 - uv.y;
+  uv = (uv - 0.5) * mix(1.05, 0.95, energy) + 0.5;
+  uv -= sin(roll) * vec2(0.42, 0.16);
   float sky;
-  vec3 col = cloudPaint(a * 0.5 + 0.5, sky);
+  vec3 col = cloudPaint(uv, sky);
 
   float z = sqrt(1.0 - r * r);
   vec3 n = vec3(disc.x, -disc.y, z);
   col *= mix(0.88, 1.06, clamp(dot(n, normalize(vec3(-0.42, 0.62, 0.66))), 0.0, 1.0));
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
   col = clamp(mix(vec3(lum), col, 1.18), 0.0, 1.0);
-  col = mix(col, cHigh, (1.0 - smoothstep(0.0, 0.9, r)) * (0.05 + energy * 0.2));
+  col = mix(col, cHigh, (1.0 - smoothstep(0.0, 0.9, r)) * (0.05 + energy * 0.3));
   float rim = pow(1.0 - z, 3.2) * 0.6;
   float pool = smoothstep(0.62, 0.98, r) * smoothstep(0.2, 0.9, -n.y) * 0.2;
   vec3 R = vec3(2.0 * n.z * n.x, 2.0 * n.z * n.y, 2.0 * n.z * n.z - 1.0);
@@ -172,6 +173,7 @@ function shaderCanvas(canvas, fragment) {
   canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); lost = true; });
   canvas.addEventListener("webglcontextrestored", () => { lost = !build(); });
   return {
+    canvas,
     resize(w, h) {
       w = Math.max(8, Math.round(w)); h = Math.max(8, Math.round(h));
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
