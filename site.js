@@ -120,7 +120,7 @@ function measure() {
 }
 
 let cloudTime = 20, filmTime = 0, dirty = true, landed = still.matches;
-let rolled = 0, lastX = null, lastY = null;       // rolling that comes from moving over the page
+let rolled = 0, lastY = null;       // rolling that comes from moving over the page
 let aim = [0, 0], look2 = [0, 0];                  // the orb looks a little towards the pointer
 let hop = null;                                    // a tap: one small jump
 const SMALL = 17;                                  // radius in the bar
@@ -144,7 +144,7 @@ function drawOrb(dt, now) {
   const p = place();
   let turn = [0, 0], scale = p.radius / big, x = p.x, y = p.y;
   if (!landed) {
-    filmTime += Math.min(0.05, dt);
+    filmTime += dt;
     const f = entrance(filmTime, W, H, big);
     x += f.x; y += f.y; scale *= f.scale; turn = f.turn;
     orb.style.opacity = f.shown ? 1 : 0;
@@ -159,19 +159,17 @@ function drawOrb(dt, now) {
       hop += dt;
       const u = hop / 0.62;
       if (u >= 1) { hop = null; }
-      else { y -= Math.sin(Math.PI * u) * p.radius * 0.85; turn[0] += 2 * Math.PI * (u < 0.5 ? 0 : 1) - 2 * Math.PI * ease(u); }
+      else { y -= Math.sin(Math.PI * u) * p.radius * 0.85; turn[0] += Math.sin(2 * Math.PI * u) * 1.1 * (1 - u); }
     }
   }
-  // A full turn: the face is drawn for the nearest way round.
-  const near = [Math.atan2(Math.sin(turn[0]), Math.cos(turn[0])), turn[1]];
   const half = big / 0.48 / 2;
   orb.style.transform = `translate3d(${(x - half).toFixed(2)}px, ${(y - half).toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
   bar.style.opacity = ease((p.inBar - 0.6) / 0.4);
   if (ball) {
-    ball.draw({ time: 43.5 + now * 0.12, energy: 0.12, roll: [3.892 + near[0], 3.819 + near[1]],
+    ball.draw({ time: 43.5 + now * 0.12, energy: 0.12, roll: [3.892 + turn[0], 3.819 + turn[1]],
                 cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
   }
-  face.setAttribute("d", facePath(near));
+  face.setAttribute("d", facePath(turn));
 }
 
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
@@ -185,10 +183,10 @@ function drawClouds() {
                deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
 }
 
-let last = 0, sinceClouds = 1, clock = 0;
+let last = performance.now() / 1000, sinceClouds = 1, clock = 0;
 function frame(ms) {
   requestAnimationFrame(frame);
-  const now = ms / 1000, dt = clamp(now - last, 0, 0.05);
+  const now = ms / 1000, real = clamp(now - last, 0, 0.25), dt = Math.min(real, 0.05);
   last = now;
   if (still.matches) {
     // Nothing moves by itself: draw only when something has changed.
@@ -200,11 +198,11 @@ function frame(ms) {
     return;
   }
   clock += dt;
-  glide(dt);
+  glide(real);
   cloudTime += dt * look.speed;
-  sinceClouds += dt;
+  sinceClouds += real;
   if (sinceClouds >= 1 / 31) { sinceClouds = 0; drawClouds(); }
-  drawOrb(dt, clock);
+  drawOrb(landed ? dt : Math.min(real, 0.1), clock);
 }
 
 addEventListener("resize", measure);
@@ -311,6 +309,11 @@ function chart(points, now) {
   }
   document.querySelectorAll("#now path").forEach((e) => e.setAttribute("d", path));
   $("#now .dot").style.top = y / h * 100 + "%";
+  // The word "Now" stands over the line, not on it: above the highest place under its width.
+  let peak = y;
+  const line = $("#now path"), long = line.getTotalLength(), word = 26 / Math.max(320, W) * w;
+  for (let i = 0; i <= 400; i++) { const p = line.getPointAtLength(long * i / 400); if (Math.abs(p.x - w / 2) < word) { peak = Math.min(peak, p.y); } }
+  $("#now .dot span").style.bottom = 22 + (y - peak) / h * $("#now svg").clientHeight + "px";
 }
 
 if (landed) { document.documentElement.classList.add("landed"); }
@@ -318,4 +321,6 @@ measure();
 stageScroll();
 requestAnimationFrame(frame);
 live();
+// A slow device must not hold the words back.
+setTimeout(() => { landed = true; document.documentElement.classList.add("landed"); orb.style.opacity = 1; }, 4000);
 setInterval(() => { if (!document.hidden) { live(); } }, 5 * 60e3);
