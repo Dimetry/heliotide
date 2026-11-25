@@ -59,14 +59,14 @@ html:not(.landed) .orb { pointer-events: none; }
 #hero .slot { width: 136px; margin-bottom: 34px; }
 #hero .word { font-size: 19px; margin-bottom: 34px; }
 #hero .word > span { opacity: 0; }
-.landed #hero .word > span { animation: letter .4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i) * 45ms); }
+.landed #hero .word > span { animation: letter .34s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(var(--i) * 26ms); }
 @keyframes letter { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: none; } }
 #hero .say { max-width: 25em; }
 #hero .say > p:not(.free) { margin: 14px 0 24px; }
 #hero .show { width: 100%; display: flex; justify-content: center; }
 #hero .show .phone { width: min(66vw, 280px); }
 #hero .say, #hero .show { opacity: 0; transform: translateY(14px); }
-.landed #hero .say, .landed #hero .show { opacity: 1; transform: none; transition: opacity .9s .35s, transform .9s .35s cubic-bezier(.2, .8, .2, 1); }
+.landed #hero .say, .landed #hero .show { opacity: 1; transform: none; transition: opacity .5s .12s, transform .6s .12s cubic-bezier(.16, 1, .3, 1); }
 
 /* Devices. --p is one point of the app's screen. */
 .dev { container-type: inline-size; position: relative; }
@@ -139,7 +139,7 @@ html:not(.landed) .orb { pointer-events: none; }
 .val { font-size: calc(var(--p) * 33); margin: calc(var(--p) * 10) 0 calc(var(--p) * 8); white-space: nowrap; }
 .val small { font-size: calc(var(--p) * 20); font-weight: 500; }
 .sun { position: relative; aspect-ratio: 1; border-radius: calc(var(--p) * 15); background: #000; overflow: hidden; }
-.sun img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .9s; transform: translateY(4%) scale(1.1); }
+.sun img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s; transform: translateY(4%) scale(1.1); }
 .sun img.on { opacity: 1; }
 .cap { font-size: calc(var(--p) * 11.5); color: var(--quiet); margin-top: calc(var(--p) * 7); }
 .row_ { display: flex; justify-content: space-between; font-size: calc(var(--p) * 13.5); margin: 0 0 calc(var(--p) * 10); }
@@ -172,7 +172,7 @@ html:not(.landed) .orb { pointer-events: none; }
 
 /* Status */
 /* The colour of the day: plain, no drawing. It fades out in its own empty space above and below. */
-#status { position: relative; min-height: 100vh; min-height: 100lvh; margin: 16vh 0; margin: 16lvh 0; --sky: #dfeed4; --deep: #add78a; transition: --sky 1.1s ease, --deep 1.1s ease; }
+#status { position: relative; min-height: 100vh; min-height: 100lvh; margin: 16vh 0; margin: 16lvh 0; --sky: #dfeed4; --deep: #add78a; transition: --sky .6s ease, --deep .6s ease; }
 #status::before { content: ""; position: absolute; left: 0; right: 0; top: -16vh; top: -16lvh; bottom: -16vh; bottom: -16lvh; z-index: -1; background: linear-gradient(var(--sky) 20%, var(--deep) 70%); -webkit-mask: linear-gradient(transparent, #000 13%, #000 87%, transparent); mask: linear-gradient(transparent, #000 13%, #000 87%, transparent); }
 #status[data-level="1"] { --sky: #94e3fd; --deep: #56c7e8; } #status[data-level="2"] { --sky: #f7c640; --deep: #efa21c; } #status[data-level="3"] { --sky: #ff9afd; --deep: #f18df5; }
 @media (prefers-color-scheme: dark) { #status { --sky: #295b29; --deep: #0c150b; } #status[data-level="1"] { --sky: #366980; --deep: #00323a; } #status[data-level="2"] { --sky: #8e260d; --deep: #340c04; } #status[data-level="3"] { --sky: #5f0076; --deep: #341c3c; } }
@@ -187,7 +187,7 @@ html:not(.landed) .orb { pointer-events: none; }
 .segments { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: min(440px, 100%); padding: 4px; border-radius: 99px; background: var(--track); }
 #status .segments { margin-top: 18px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .segments button { position: relative; font-size: var(--small); font-weight: 600; line-height: 1; background: none; border: 0; padding: 13px 0; border-radius: 99px; cursor: pointer; }
-.thumb { position: absolute; left: 4px; top: 4px; bottom: 4px; width: calc((100% - 8px) / var(--n, 4)); border-radius: 99px; background: var(--thumb); transition: transform .5s cubic-bezier(.3, 1.25, .4, 1); }
+.thumb { position: absolute; left: 4px; top: 4px; bottom: 4px; width: calc((100% - 8px) / var(--n, 4)); border-radius: 99px; background: var(--thumb); transition: transform .34s cubic-bezier(.3, 1.2, .4, 1); }
 #chat .segments { width: 230px; --n: 2; }
 
 /* Map and list */
@@ -280,7 +280,7 @@ figcaption span { font-weight: 400; color: var(--quiet); }
 #devices .lead { padding: 0 var(--edge); }
 #strip { display: flex; align-items: center; gap: clamp(36px, 7vw, 120px); width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 0 calc(50% - 130px); --h: min(56vh, 560px); }
 #strip::-webkit-scrollbar { display: none; }
-#strip figure { margin: 0; flex: none; scroll-snap-align: center; opacity: .35; transform: scale(.94); transition: opacity .5s, transform .6s cubic-bezier(.2, .8, .2, 1); }
+#strip figure { margin: 0; flex: none; scroll-snap-align: center; opacity: .35; transform: scale(.94); transition: opacity .3s, transform .4s cubic-bezier(.16, 1, .3, 1); }
 #strip figure.on { opacity: 1; transform: none; }
 #strip .phone { width: min(calc(var(--h) * .489), 70vw); } #strip .fold { width: min(calc(var(--h) * 1.24), 84vw); } #strip .land { width: min(calc(var(--h) * 1.35), 86vw); } #strip .pad { width: min(calc(var(--h) * 1.3), 86vw); } #strip .clock_ { width: min(calc(var(--h) * .42), 46vw); }
 .steer { display: flex; align-items: center; justify-content: center; gap: 22px; }
@@ -336,7 +336,7 @@ footer:hover, footer:focus-within { opacity: .8; }
 }
 .swap { position: relative; } .swap > span { display: inline-block; will-change: transform, filter, opacity; } .swap > .ghost { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
 .kp .swap, .km .swap { display: inline-block; }
-.soft { opacity: 0; transform: translateY(14px); transition: opacity .8s, transform .8s cubic-bezier(.2, .8, .2, 1); }
+.soft { opacity: 0; transform: translateY(14px); transition: opacity .45s, transform .55s cubic-bezier(.16, 1, .3, 1); }
 .soft.seen { opacity: 1; transform: none; }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { *, *::before { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; transition-delay: 0s !important; } }

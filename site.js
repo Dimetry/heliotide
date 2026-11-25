@@ -36,7 +36,7 @@ const level = () => stageLevel ?? liveLevel;
 const copy = (look) => Object.fromEntries(Object.entries(look).map(([k, v]) => [k, Array.isArray(v) ? v.slice() : v]));
 let look = copy(LOOKS[0]);
 function glide(dt) {
-  const to = LOOKS[level()], f = 1 - Math.exp(-dt * 1.8);
+  const to = LOOKS[level()], f = 1 - Math.exp(-dt * 3.2);
   for (const k in to) {
     if (Array.isArray(to[k])) { for (let i = 0; i < 3; i++) { look[k][i] += (to[k][i] - look[k][i]) * f; } }
     else { look[k] += (to[k] - look[k]) * f; }
@@ -45,7 +45,7 @@ function glide(dt) {
 
 // ---- The orb's way in: it glides in calmly from below and turns to us ----
 
-const LEAD = 0.2, WAY = 1.5;
+const LEAD = 0.1, WAY = 0.95;
 function entrance(t, w, h) {
   const u = clamp((t - LEAD) / WAY, 0, 1), k = 1 - Math.pow(1 - u, 4);          // fast at first, a long soft arrival
   return { x: -0.1 * Math.min(w, 900) * (1 - k), y: 0.2 * h * (1 - k), scale: mix(0.55, 1, k), turn: [-1.9 * (1 - k), 0.9 * (1 - k)], alpha: ease(u * 2.6), over: u >= 1 };
@@ -64,7 +64,7 @@ const face = new LivingFace();
 const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
   el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>`;
   const button = el.querySelector("button"), canvas = el.querySelector("canvas");
-  return { el, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 300 : 190, el.dataset.orb === "bar" ? 24 : 21, 0) };
+  return { el, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
 });
 const viewOf = (name) => views.find((v) => v.name === name);
 let owner = viewOf("hero");
@@ -113,10 +113,10 @@ function findOwner() {
 // trembles like jelly and slowly drifts home ----
 
 const body = {
-  x: new Spring(17, 3.1), y: new Spring(17, 3.1),          // away from its place: a long soft string pulls it home
-  squash: new Spring(230, 7.5),                            // + flat, − long; the volume stays the same
-  tilt: new Spring(90, 14),                                // along which direction
-  spin: [new Spring(8.5, 2.9), new Spring(8.5, 2.9)], goal: [0, 0],   // turning; the goal is always a full turn
+  x: new Spring(46, 7), y: new Spring(46, 7),          // away from its place: a long soft string pulls it home
+  squash: new Spring(430, 13),                            // + flat, − long; the volume stays the same
+  tilt: new Spring(160, 20),                                // along which direction
+  spin: [new Spring(34, 7.6), new Spring(34, 7.6)], goal: [0, 0],   // turning; the goal is always a full turn
   air: false, held: null, charge: 0, hits: [],
   /// A push at the point (px, py) of the ball (−1...1 from its middle, y down), as a finger in zero gravity does it.
   push(R, px, py, power) {
@@ -128,27 +128,27 @@ const body = {
     this.squash.v += 1.1 + power * 0.16;
     // Off the middle it turns, the more the farther out; a quick series of taps adds up.
     const turns = far > 0.12 ? 1 : 0;
-    if (turns && Math.abs(ux) >= Math.abs(uy)) { this.goal[0] -= Math.sign(ux) * 2 * Math.PI; this.spin[0].v -= ux * 3.2; }
-    else { this.goal[1] += (turns ? Math.sign(uy) : 1) * 2 * Math.PI; this.spin[1].v += (turns ? uy : 1) * 3.2; }
+    if (turns && Math.abs(ux) >= Math.abs(uy)) { this.goal[0] -= Math.sign(ux) * 2 * Math.PI; this.spin[0].v -= ux * 6; }
+    else { this.goal[1] += (turns ? Math.sign(uy) : 1) * 2 * Math.PI; this.spin[1].v += (turns ? uy : 1) * 6; }
   },
   wrap(a) { return a > Math.PI / 2 ? a - Math.PI : a < -Math.PI / 2 ? a + Math.PI : a; },   // a squash has no front and back
   step(dt, R) {
     if (this.held) {
       // Pulled: the farther, the heavier (rubber band); it gets long in the direction of the pull.
       const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy), k = far ? R * 1.3 * (1 - 1 / (far * 0.62 / (R * 1.3) + 1)) / far : 0;
-      this.x.k = this.y.k = 190; this.x.d = this.y.d = 20;
+      this.x.k = this.y.k = 420; this.x.d = this.y.d = 34;
       this.x.step(dt, dx * k); this.y.step(dt, dy * k);
       this.charge = Math.min(1, this.charge + dt * 2.2);
       if (far > 8) { this.tilt.step(dt, this.wrap(Math.atan2(dx, -dy))); this.squash.step(dt, -Math.min(0.085, Math.hypot(this.x.x, this.y.x) / R * 0.07)); }
       else { this.squash.step(dt, 0.025 + 0.035 * this.charge); }
       this.air = false;
     } else {
-      this.x.k = this.y.k = 17; this.x.d = this.y.d = 3.1;
+      this.x.k = this.y.k = 46; this.x.d = this.y.d = 7;
       this.x.step(dt, 0); this.y.step(dt, 0);
       const speed = Math.hypot(this.x.v, this.y.v) / R;
       this.squash.step(dt, -clamp(speed * 0.007, 0, 0.04));
       if (speed > 0.9) { this.tilt.step(dt, this.tilt.x + this.wrap(Math.atan2(this.x.v, -this.y.v) - this.tilt.x) * 0.4); }
-      this.air = speed > 0.9;
+      this.air = speed > 1.4;
     }
     for (let i = 0; i < 2; i++) {
       this.spin[i].step(dt, this.goal[i]);
@@ -161,7 +161,7 @@ const body = {
 /// open eyes look, and every feeling has its own small movement.
 const SHUT = new Set(["sleepy", "yawn", "content", "bliss", "squeeze"]);
 const OF_LEVEL = [["smile", "content"], ["curious", "smile", "curious", "smirk"], ["worry", "worry", "grumpy"], ["wow", "scared"]];
-const act = { name: "smile", since: 0, tilt: new Spring(60, 9), lean: new Spring(90, 10), stretch: new Spring(120, 11), shakeX: 0, shakeTurn: 0, wokeAt: -9 };
+const act = { name: "smile", since: 0, tilt: new Spring(140, 16), lean: new Spring(150, 17), stretch: new Spring(240, 18), shakeX: 0, shakeTurn: 0, wokeAt: -9 };
 const watching = () => pointer && now_ - awake < (touch.matches ? 2.2 : 4);
 
 function feeling() {
@@ -332,7 +332,7 @@ for (const v of views) {
   });
   v.button.addEventListener("dragstart", (e) => e.preventDefault());
   v.button.addEventListener("contextmenu", (e) => { if (touch.matches) { e.preventDefault(); } });
-  v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.push(v.el.clientWidth / 2, 0.4, 0.5, 3.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
+  v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.push(v.el.clientWidth / 2, 0.4, 0.5, 5.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
 }
 // Everything that can end a pull is listened to on the whole window, so the orb can never stay in the hand.
 addEventListener("pointermove", (e) => {
@@ -353,8 +353,8 @@ function release(v) {
   const r = v.button.getBoundingClientRect(), R = v.el.clientWidth / 2;
   if (held.far) {
     // Let go: it flies back over its place, rings out and rolls with the speed.
-    body.x.v -= body.x.x * 3.2;
-    body.y.v -= body.y.x * 3.2;
+    body.x.v -= body.x.x * 4;
+    body.y.v -= body.y.x * 4;
     body.squash.v += 0.7;
     body.goal[0] += Math.abs(body.x.x) > R * 0.6 ? -Math.sign(body.x.x) * 2 * Math.PI : 0;
     body.goal[1] += Math.abs(body.y.x) > R * 0.6 ? Math.sign(body.y.x) * 2 * Math.PI : 0;
@@ -362,9 +362,9 @@ function release(v) {
     return;
   }
   body.hits = [...body.hits.filter((t) => now_ - t < 3), now_];
-  body.push(R, clamp((held.from[0] - r.left - r.width / 2) / R, -1, 1), clamp((held.from[1] - r.top - r.height / 2) / R, -1, 1), 3 + 2.2 * body.charge);
+  body.push(R, clamp((held.from[0] - r.left - r.width / 2) / R, -1, 1), clamp((held.from[1] - r.top - r.height / 2) / R, -1, 1), 5.2 + 3 * body.charge);
   mood = body.hits.length > 4 ? "grumpy" : ["bliss", "wink", "joy", "content"][Math.floor(Math.random() * 4)];
-  moodUntil = now_ + 2.8;
+  moodUntil = now_ + 2;
 }
 for (const b of document.querySelectorAll(".store")) {
   b.addEventListener("pointerenter", () => { mood = "joy"; moodUntil = now_ + 60; });

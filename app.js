@@ -30,8 +30,8 @@ function put(el, text) {
   el.classList.add("swap");
   el.replaceChildren(fresh, ghost);
   const big = text.length <= 3, blur = big ? 16 : 7, way = big ? ".22em" : ".35em";
-  ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 420, easing: "cubic-bezier(.4, 0, .7, .2)", fill: "forwards" }).onfinish = () => ghost.remove();
-  fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 640, delay: 90, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
+  ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 220, easing: "cubic-bezier(.4, 0, 1, 1)", fill: "forwards" }).onfinish = () => ghost.remove();
+  fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 420, delay: 50, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
 }
 
 // ---- Charts ----
@@ -187,7 +187,7 @@ function paintFlow(el, level) {
   el.append(layer);
   const old = [...el.children].slice(0, -1);
   if (!old.length || still.matches) { old.forEach((o) => o.remove()); return; }
-  layer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, easing: "ease" }).onfinish = () => old.forEach((o) => o.remove());
+  layer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, easing: "cubic-bezier(.25, .1, .25, 1)" }).onfinish = () => old.forEach((o) => o.remove());
 }
 /// One day on the widgets, the watch and the Lock Screen.
 function showWidgets(day) {
@@ -227,7 +227,7 @@ function note(i) {
     box.append(el);
     if (!old || still.matches) { old?.remove(); continue; }
     old.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.92)" }], { duration: 260, easing: "ease-in", fill: "forwards" }).onfinish = () => old.remove();
-    el.animate([{ opacity: 0, transform: "translateY(120%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 720, delay: 160, fill: "backwards", easing: "cubic-bezier(.16, 1.15, .3, 1)" });
+    el.animate([{ opacity: 0, transform: "translateY(120%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 520, delay: 90, fill: "backwards", easing: "cubic-bezier(.16, 1.15, .3, 1)" });
   }
 }
 function say(quiet) {

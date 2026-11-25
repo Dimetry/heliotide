@@ -82,8 +82,8 @@ class LivingFace {
   constructor() {
     this.parts = EMOTIONS.sleepy.map((p) => p.map((q) => [q[0], q[1], 0, 0]));
     this.name = "sleepy";
-    this.eye = [new Spring(210, 22), new Spring(210, 22)];     // the eyes are quick
-    this.head = [new Spring(70, 13), new Spring(70, 13)];      // the ball follows, a touch too far and back
+    this.eye = [new Spring(360, 31), new Spring(360, 31)];     // the eyes are quick
+    this.head = [new Spring(130, 18), new Spring(130, 18)];      // the ball follows, a touch too far and back
     this.blinkAt = 3;
     this.time = 0;
   }
@@ -92,7 +92,7 @@ class LivingFace {
     if (name !== this.name && !["sleepy", "yawn"].includes(this.name) && Math.random() < 0.5) { this.blinkAt = Math.min(this.blinkAt, this.time); }
     this.name = name;
     const to = EMOTIONS[name], up = ["smile", "curious", "smirk"].includes(name) ? clamp(-this.eye[1].x * 1.3 - 0.25, 0, 1) : 0;
-    const h = Math.min(dt, 0.034), steps = 2;
+    const h = Math.min(dt, 0.034), steps = 3;
     for (let n = 0; n < steps; n++) {
       for (let i = 0; i < to.length; i++) {
         for (let k = 0; k < to[i].length; k++) {
@@ -100,8 +100,8 @@ class LivingFace {
           let tx = q[0], ty = q[1];
           if (i === 2 && up) { tx = mix(tx, AGAPE[k][0], up); ty = mix(ty, AGAPE[k][1], up); }
           // Each point is a spring too: an expression arrives with a tiny overshoot, like skin.
-          p[2] += ((tx - p[0]) * 420 - p[2] * 31) * h / steps;
-          p[3] += ((ty - p[1]) * 420 - p[3] * 31) * h / steps;
+          p[2] += ((tx - p[0]) * 720 - p[2] * 43) * h / steps;
+          p[3] += ((ty - p[1]) * 720 - p[3] * 43) * h / steps;
           p[0] += p[2] * h / steps;
           p[1] += p[3] * h / steps;
         }
@@ -114,7 +114,7 @@ class LivingFace {
   blink() { this.blinkAt = this.time; }
   /// How closed the eyes are: quick down, a moment, softly up.
   get shut() {
-    const b = (this.time - this.blinkAt) / 0.24;
+    const b = (this.time - this.blinkAt) / 0.2;
     if (b <= 0 || b >= 1 || ["sleepy", "yawn", "bliss", "content", "squeeze"].includes(this.name)) { return 1; }
     return b < 0.28 ? 1 - 0.93 * ease(b / 0.28) : b < 0.42 ? 0.07 : 0.07 + 0.93 * ease((b - 0.42) / 0.58);
   }
