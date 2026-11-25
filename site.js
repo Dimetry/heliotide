@@ -64,7 +64,7 @@ const face = new LivingFace();
 const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
   el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>`;
   const button = el.querySelector("button"), canvas = el.querySelector("canvas");
-  return { el, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
+  return { el, look: el.dataset.look ? document.querySelector(el.dataset.look) : null, feel: el.dataset.feel?.split(" "), name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
 });
 const viewOf = (name) => views.find((v) => v.name === name);
 let owner = viewOf("hero");
@@ -90,7 +90,7 @@ function measure() {
   dirty = true;
 }
 
-let cloudTime = 20, orbTime = 20, orbEnergy = 0, filmTime = 0, dirty = true, landed = still.matches;
+let cloudTime = 20, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
 let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
 const touch = matchMedia("(hover: none)");
 
@@ -168,6 +168,7 @@ function feeling() {
   if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
   const l = level(), idle = now_ - awake;
+  if (owner.feel) { return owner.feel[Math.floor(now_ / 3.2) % owner.feel.length]; }
   if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
   if (!inStage && l === 0) {
     if (watching()) { return "smile"; }
@@ -186,6 +187,13 @@ function looking(x, y, dt) {
     const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 240);
     return [dx / d * k, dy / d * k];
   }
+  // Next to a screen it watches the screen, with a short look at us from time to time.
+  const at = owner.look && Math.floor(now_ / 1.7) % 4 !== 3 ? owner.look.getBoundingClientRect() : null;
+  if (at) {
+    const dx = at.left + at.width * (0.5 + 0.22 * Math.sin(now_ * 0.9)) - x, dy = at.top + at.height * (0.4 + 0.2 * Math.sin(now_ * 0.63)) - y, d = Math.hypot(dx, dy) || 1;
+    return [dx / d * 0.95, dy / d * 0.95];
+  }
+  if (owner.look) { return [0, 0.05]; }
   if (Math.abs(scrollLook) > 0.15) { return [glance[0] * 0.3, clamp(scrollLook, -0.9, 0.9)]; }
   if (now_ > glanceAt) {
     const a = Math.random() * Math.PI * 2, far = Math.random() < 0.4 ? 0 : 0.35 + Math.random() * 0.5;
@@ -241,10 +249,8 @@ function drawOrb(dt) {
     tilt = act.tilt.x;
     stretch = act.stretch.x;
   }
-  const target = [0.1, 0.25, 0.5, 0.75][level()] + (body.air || body.held ? 0.35 : 0);
-  orbEnergy += (target - orbEnergy) * (1 - Math.exp(-dt / (target > orbEnergy ? 0.25 : 1)));
-  orbTime += dt * (0.55 + orbEnergy * 1.1) * (name === "sleepy" ? 0.5 : 1);
-  ball?.draw({ time: orbTime, energy: orbEnergy, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
+  orbTime += dt * (name === "sleepy" ? 0.2 : 0.42);       // always the same calm flow: touching it does not stir the clouds
+  ball?.draw({ time: orbTime, energy: 0.06, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
   face.step(still.matches ? 1 : dt, name, aim);
   const d = face.path(turn), q = clamp(body.squash.x, -0.1, 0.1), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
   for (const v of views) {
@@ -291,6 +297,7 @@ function drawScreens() {
 let last = performance.now() / 1000, sinceScreens = 1;
 function frame(ms) {
   requestAnimationFrame(frame);
+  if (ms / 1000 - last < 0.012) { return; }
   const now = ms / 1000, real = clamp(now - last, 0, 0.25), dt = Math.min(real, 0.05);
   last = now;
   now_ += real;
@@ -344,7 +351,7 @@ addEventListener("pointermove", (e) => {
 addEventListener("pointerup", (e) => { if (body.held && e.pointerId === body.held.id) { release(body.held.view); } });
 for (const name of ["pointercancel", "blur"]) { addEventListener(name, () => { body.held = null; }); }
 document.addEventListener("visibilitychange", () => { body.held = null; });
-document.addEventListener("pointerleave", () => { if (body.held) { release(body.held.view); } });
+document.documentElement.addEventListener("pointerleave", () => { if (body.held) { release(body.held.view); } });
 function release(v) {
   const held = body.held;
   if (!held) { return; }
@@ -413,14 +420,15 @@ setInterval(() => {
   showStage();
 }, 200);
 // The person plays: the page waits a while before it goes on.
-buttons.forEach((b, i) => b.addEventListener("click", () => { stageDay = i; inStage = true; handsUntil = now_ + 15; showStage(); }));
+buttons.forEach((b, i) => b.addEventListener("click", () => { stageDay = i; inStage = true; handsUntil = now_ + 20; showStage(); }));
 
 // ---- The wordmark in the bar: every letter is black or white, by what lies under it ----
 
 const letters = [...document.querySelectorAll("#bar .word > span")];
-let toneAt = 0;
+let toneAt = 0, toneY = -1;
 function tones() {
-  if (now_ < toneAt || !bar.classList.contains("shown")) { return; }
+  if (now_ < toneAt || !bar.classList.contains("shown") || (scrollY === toneY && now_ - toneAt < 1.5)) { return; }
+  toneY = scrollY;
   toneAt = now_ + 0.08;
   for (const l of letters) {
     const r = l.getBoundingClientRect(), under = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2).find((e) => !bar.contains(e));
@@ -434,34 +442,43 @@ function tones() {
 let widgetDay = 0, noted = 1;
 showWidgets(DAYS[0]);
 note(0);
-for (let i = 0; i < 5; i++) { say(true); }
-const loops = new Map([["#widgets", false], ["#chat", false], ["#devices", false]]);
+const loops = new Map([["#widgets", false], ["#chat", false], ["#today", false]]);
 const loopWatch = new IntersectionObserver((list) => { for (const e of list) { loops.set("#" + e.target.id, e.isIntersecting); } });
 for (const id of loops.keys()) { loopWatch.observe($(id)); }
 const every = (ms, id, run) => setInterval(() => { if (!document.hidden && !still.matches && id.some((i) => loops.get(i))) { run(); } }, ms);
-every(3600, ["#widgets", "#devices"], () => { widgetDay = (widgetDay + 1) % 4; showWidgets(DAYS[widgetDay]); });
+every(3600, ["#widgets"], () => { widgetDay = (widgetDay + 1) % 4; showWidgets(DAYS[widgetDay]); });
 every(4200, ["#widgets"], () => note(noted++));
-every(1700, ["#chat"], () => say());
+every(5200, ["#today"], () => stepToday());
+talkLoop(() => loops.get("#chat") && !document.hidden);
 const rooms = [...document.querySelectorAll("#chat .segments button")];
 rooms.forEach((b, i) => b.addEventListener("click", () => openRoom(i)));
 openRoom(1);
 
-// The strip of devices.
-const strip = $("#strip"), slides = [...strip.children], dots = $("#dots");
-dots.innerHTML = slides.map(() => "<i></i>").join("");
-let slide = 0;
-const toSlide = (i) => { const s = slides[clamp(i, 0, slides.length - 1)]; strip.scrollTo({ left: s.offsetLeft - (strip.clientWidth - s.clientWidth) / 2, behavior: still.matches ? "auto" : "smooth" }); };
-function onStrip() {
-  const mid = strip.scrollLeft + strip.clientWidth / 2;
-  slide = slides.reduce((b, s, i) => Math.abs(s.offsetLeft + s.clientWidth / 2 - mid) < Math.abs(slides[b].offsetLeft + slides[b].clientWidth / 2 - mid) ? i : b, 0);
-  slides.forEach((s, i) => s.classList.toggle("on", i === slide));
-  [...dots.children].forEach((d, i) => d.classList.toggle("on", i === slide));
-  $("#prev").disabled = slide === 0; $("#next").disabled = slide === slides.length - 1;
+// The strip of devices: starts at the left margin, runs off the right edge; a mouse drags it like a finger.
+const strip = $("#strip");
+let drag = null, glideV = 0;
+strip.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse" && e.button === 0) { drag = { x: e.clientX, left: strip.scrollLeft, last: e.clientX, v: 0, moved: false }; glideV = 0; strip.classList.add("drag"); } });
+addEventListener("pointermove", (e) => {
+  if (!drag) { return; }
+  if (e.buttons === 0) { endDrag(); return; }
+  drag.v = mix(drag.v, e.clientX - drag.last, 0.5);
+  drag.last = e.clientX;
+  strip.scrollLeft = drag.left - (e.clientX - drag.x);
+});
+function endDrag() {
+  if (!drag) { return; }
+  glideV = -drag.v;
+  drag = null;
+  (function go() {
+    glideV *= 0.94;
+    if (Math.abs(glideV) < 0.4 || drag) { strip.classList.remove("drag"); return; }
+    strip.scrollLeft += glideV;
+    requestAnimationFrame(go);
+  })();
 }
-strip.addEventListener("scroll", onStrip, { passive: true });
-$("#prev").addEventListener("click", () => toSlide(slide - 1));
-$("#next").addEventListener("click", () => toSlide(slide + 1));
-onStrip();
+addEventListener("pointerup", endDrag);
+addEventListener("blur", endDrag);
+strip.addEventListener("dragstart", (e) => e.preventDefault());
 
 const appear = new IntersectionObserver((list) => {
   for (const e of list) { if (e.isIntersecting) { e.target.classList.add("seen"); appear.unobserve(e.target); } }

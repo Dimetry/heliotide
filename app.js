@@ -4,13 +4,13 @@
 /// Example days: the same samples as in the app's widget gallery.
 const DAYS = [
   { level: 0, kp: 2, state: "Space weather is quiet now", feel: "Most people will not feel anything", condition: "Quiet space weather", watch: "Calm next 24 hours", outlook: "Calm", peak: 3, flare: "B6.2", m: "5%", x: "1%", flareWord: "Low", wind: 362, windWord: "Calm", bz: 1, field: "Calm", radio: "Normal", radiation: "Normal",
-    curve: [1.3, 1.7, 2, 1.3, 1, 1.7, 2.3, 2, 1.7, 1.3, 2, 2, 2.3, 2.7, 2, 1.7, 1.7, 2, 2.3, 2, 1.7, 1.7, 2, 2] },
+    curve: [1.33, 1.33, 0.67, 1.67, 1.33, 1.33, 0.67, 0.67, 1.33, 1.67, 1.67, 2, 1.67, 1.67, 1.67, 1.33, 1.67, 2.33, 2.33, 1.33, 0.67, 1.33, 2, 2.33] },
   { level: 1, kp: 4, state: "Space weather is active now", feel: "Some people may notice it", condition: "Active space weather", watch: "Storm tomorrow", outlook: "Storm expected", peak: 5, flare: "C4.1", m: "25%", x: "5%", flareWord: "Moderate", wind: 468, windWord: "Raised", bz: -6, field: "Unsettled", radio: "Normal", radiation: "Normal",
-    curve: [2, 2.3, 2.7, 3, 2.7, 3.3, 3.7, 3.3, 3, 3.7, 4, 4, 4.3, 4.7, 5, 5.3, 4.7, 4, 3.7, 3.3, 3, 3, 2.7, 2.7] },
+    curve: [2, 1.33, 1.33, 2.67, 2.33, 3.33, 2, 3.67, 3, 2.67, 3.67, 4, 4.33, 4, 3.33, 4.67, 3.67, 3, 3.33, 2.33, 2.67, 1.67, 2, 1.67] },
   { level: 2, kp: 6, state: "Magnetic storm now", feel: "Some people may feel a bit off", condition: "Magnetic storm", watch: "Storm possible", outlook: "Storm expected", peak: 6, flare: "M1.8", m: "55%", x: "15%", flareWord: "Medium", wind: 612, windWord: "High", bz: -14, field: "Stormy", radio: "Minor issues", radiation: "Normal",
-    curve: [3, 3.3, 4, 4.7, 5, 5.7, 6, 6.3, 6, 5.7, 6, 6.3, 6, 5.3, 5, 4.7, 4.3, 4, 3.7, 3.3, 3, 3, 2.7, 2.3] },
+    curve: [1.67, 2.33, 2, 3.33, 2.67, 4.33, 3.33, 5, 4.67, 6.33, 5.33, 6, 5.67, 6.33, 5, 4.33, 4.67, 3.33, 3.67, 2.67, 3, 2, 2.33, 1.67] },
   { level: 3, kp: 8, state: "Severe magnetic storm now", feel: "Some people may sleep lighter", condition: "Severe magnetic storm", watch: "Storm today", outlook: "Storm expected", peak: 8, flare: "X2.1", m: "85%", x: "40%", flareWord: "Strong", wind: 925, windWord: "High", bz: -32, field: "Stormy", radio: "Disrupted", radiation: "Raised",
-    curve: [4, 5, 6, 7, 7.7, 8, 8.3, 8.7, 8.3, 8, 8, 8.3, 7.7, 7, 6.3, 6, 5.3, 5, 4.7, 4.3, 4, 3.7, 3.3, 3] }
+    curve: [2.33, 3, 2.67, 4, 5.33, 4.67, 6.67, 6, 7.67, 8.33, 7.33, 8, 8.67, 7.33, 7.67, 6, 6.33, 5, 4.33, 4.67, 3.33, 3.67, 2.67, 2.33] }
 ];
 const minus = (v) => v < 0 ? "−" + -v : "" + v;
 
@@ -22,14 +22,15 @@ function put(el, text) {
   if (el.dataset.text === text) { return; }
   const before = el.dataset.text;
   el.dataset.text = text;
-  if (before === undefined || still.matches || !el.animate) { el.textContent = text; return; }
+  const box = el.getBoundingClientRect();
+  if (before === undefined || still.matches || !el.animate || box.bottom < -60 || box.top > innerHeight + 60 || box.right < 0 || box.left > innerWidth) { el.textContent = text; return; }
   const fresh = document.createElement("span"), ghost = document.createElement("span");
   fresh.textContent = text;
   ghost.textContent = before;
   ghost.className = "ghost";
   el.classList.add("swap");
   el.replaceChildren(fresh, ghost);
-  const big = text.length <= 3, blur = big ? 16 : 7, way = big ? ".22em" : ".35em";
+  const big = text.length <= 3, blur = big ? 10 : 5, way = big ? ".22em" : ".35em";
   ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 220, easing: "cubic-bezier(.4, 0, 1, 1)", fill: "forwards" }).onfinish = () => ghost.remove();
   fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 420, delay: 50, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
 }
@@ -79,6 +80,9 @@ const ICON = {
   wave: '<path d="M2.500 12h2.200l1.300-4 2 9 2-13 2.200 17 2-13 2 9 1.300-5h2"/>', info: '<circle cx="12" cy="12" r="9.300"/><path d="M12 11v5.600M12 7.300v.2"/>',
   flare: '<circle cx="10" cy="11" r="4"/><path d="M10 2.800v2M10 17.200v2M1.800 11h2M4.200 5.200l1.400 1.400M4.200 16.800l1.400-1.400M15.800 5.200l-1.400 1.400M17 13.500l4.200 7.200h-8.400Z"/>',
   wind: '<path d="M2.500 9h11a2.700 2.700 0 1 0-2.700-2.700M2.500 12.500h16a2.700 2.700 0 1 1-2.700 2.700M2.500 16h8.500a2.400 2.400 0 1 1-2.400 2.400"/>',
+  aurora: '<path d="M12 4.500l1.500 3.800 3.800 1.500-3.800 1.500L12 15l-1.500-3.700-3.800-1.500 3.800-1.500ZM18.500 14.500l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8ZM5.500 15.500l.6 1.500 1.500.6-1.500.6-.6 1.500-.6-1.500-1.500-.6 1.500-.6Z"/>',
+  quake: '<path d="M2.500 12h4l2-6 3.500 13 3-10 1.500 3h5"/>', fire: '<path d="M12 3c.5 3.500 5.500 5.500 5.500 10.500A5.500 5.500 0 0 1 12 20a5.500 5.500 0 0 1-5.500-6C6.500 11 8.500 9.500 9 7.500c1.500.8 2 2 2 3C12.500 9 12.500 6 12 3Z"/>',
+  gauge: '<circle cx="12" cy="12" r="9"/><path d="M12 12l3.500-4.500"/><circle cx="12" cy="12" r="1.200"/>', cloud: '<path d="M7 18a4 4 0 0 1-.3-8A5.500 5.500 0 0 1 17 9.500 4 4 0 0 1 17.500 18Z"/>', bell: '<path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 1.500h-15ZM10 20a2 2 0 0 0 4 0"/>',
   heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.4 4.2 4.2 0 0 1 19.5 10c0 5.400-7.500 10-7.500 10Z"/>',
   gear: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2.600v2.400M12 19v2.400M2.600 12H5M19 12h2.400M5.400 5.400 7 7M17 17l1.600 1.600M5.400 18.600 7 17M17 7l1.600-1.600"/>'
 };
@@ -97,36 +101,14 @@ const SCREENS = {
   phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}<span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span>${hero_()}${flares_()}${tabs_(0)}</div>`,
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">${icon("arrow")}REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
-  fold: () => `<div class="half l">${SCREENS.wide()}</div><div class="half r">${SCREENS.wide()}</div><div class="foldshade"></div>`,
   face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
-  lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-d="kp"></span></div><div class="rect"><b data-d="condition"></b><span data-d="watch"></span></div></div><div class="notes"></div></div>`,
-  chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field">Message</div></div>`
+  lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-w="kp"></span></div><div class="rect"><b data-w="condition"></b><span data-w="watch"></span></div></div><div class="notes"></div></div>`,
+  chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field"><span>Message</span><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5.500M6 11.500l6-6 6 6"/></svg></em></div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
-// Pictures from the real app (light and dark), no drawing: the strip of devices.
-const shot = (n) => `<picture><source media="(prefers-color-scheme: dark)" srcset="img/shot-${n}-dark.jpg"><img class="shot" src="img/shot-${n}-light.jpg" alt="" loading="lazy"></picture>`;
-for (const el of document.querySelectorAll("[data-shot]")) {
-  el.innerHTML = el.classList.contains("fold") ? `<div class="half l">${shot(el.dataset.shot)}</div><div class="half r">${shot(el.dataset.shot)}</div><div class="foldshade"></div>` : shot(el.dataset.shot);
-}
 // Frames: Apple's product bezels (Apple Design Resources).
 for (const el of document.querySelectorAll(".dev")) {
-  const kind = ["phone", "land", "pad", "duo", "fold"].find((k) => el.classList.contains(k));
-  if (kind) { el.insertAdjacentHTML("beforeend", `<img class="frame" src="img/frame-${kind === "pad" ? "ipad" : kind}.png" alt="">`); }
-}
-/// The half-folded Duo: each half of the screen is laid exactly on its half of the frame.
-function foldScreens() {
-  const solve = (w, h, q) => {                       // rectangle w × h -> four corners (tl, tr, br, bl)
-    const [x0, y0] = q[0], [x1, y1] = q[1], [x2, y2] = q[2], [x3, y3] = q[3];
-    const dx1 = x1 - x2, dx2 = x3 - x2, sx = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, sy = y0 - y1 + y2 - y3, den = dx1 * dy2 - dx2 * dy1;
-    const g = (sx * dy2 - dx2 * sy) / den, k = (dx1 * sy - sx * dy1) / den;
-    const m = [x1 - x0 + g * x1, y1 - y0 + g * y1, g, x3 - x0 + k * x3, y3 - y0 + k * y3, k, x0, y0];
-    return `matrix3d(${m[0] / w},${m[1] / w},0,${m[2] / w},${m[3] / h},${m[4] / h},0,${m[5] / h},0,0,1,0,${m[6]},${m[7]},0,1)`;
-  };
-  for (const el of document.querySelectorAll(".dev.fold")) {
-    const k = el.clientWidth / 5600, w = 500, h = 703, at = (x, y) => [x * k, y * k];
-    el.querySelector(".half.l").style.transform = solve(w, h, [at(203, 148), at(2802, 381), at(2802, 4119), at(203, 4352)]);
-    el.querySelector(".half.r").style.transform = solve(w, h, [at(2798, 381), at(5397, 148), at(5397, 4352), at(2798, 4119)]);
-  }
+  if (el.classList.contains("phone")) { el.insertAdjacentHTML("beforeend", '<img class="frame" src="img/frame-phone.png" alt="" draggable="false">'); }
 }
 
 // ---- Widgets ----
@@ -194,6 +176,7 @@ function showWidgets(day) {
   const s = { ...day, peakText: "Kp " + day.peak, windText: day.wind + " km/s", bzText: minus(day.bz) + " nT" };
   for (const el of document.querySelectorAll("[data-w]")) { put(el, s[el.dataset.w]); }
   for (const el of document.querySelectorAll("[data-flow]")) { paintFlow(el, day.level); }
+  for (const el of document.querySelectorAll("[data-ring]")) { el.style.setProperty("--k", day.kp / 9); }
   for (const el of document.querySelectorAll("[data-ring2]")) { el.style.setProperty("--k", day.kp / 9); el.style.color = ["#8fd457", "#4bc6ff", "#ff9d2e", "#ff5fc0"][day.level]; }
   for (const el of document.querySelectorAll("[data-wchart]")) {
     const lo = Math.min(...day.curve) - 0.3, hi = Math.max(...day.curve) + 0.3;
@@ -210,15 +193,46 @@ const NOTES = [["Strong magnetic storm", "Aurora may be seen farther from the po
 const NEAR = [["Freyja", "Grindavík", "Did anyone feel that just now?"], ["Óskar", "Reykjavík", "Yes! The lamp was swinging."], ["", "", "4.8, not far from us. It is on the map."], ["Birta", "Keflavík", "The dog woke up before it."], ["Freyja", "Grindavík", "Look north, the sky is green"], ["", "", "Going outside!"], ["Óskar", "Reykjavík", "Clouds here. Enjoy it for me."]];
 const WORLD = [["Mateo", "Santiago", "Small one here an hour ago. Nobody else woke up."], ["Yuki", "Sapporo", "Kp 4 already? I have had a headache all day."], ["Amara", "Nairobi", "Nothing here, only a beautiful sunset."], ["Ingrid", "Tromsø", "The aurora is dancing. I wish you all could see it."], ["", "", "Send us some of that sky!"], ["Liam", "Dunedin", "Aurora australis tonight too!"], ["Noor", "Amman", "Slept badly again. Is it the storm or the coffee?"], ["Chloé", "Lyon", "Coffee. But I check the Kp first too."], ["Kenji", "Osaka", "M5.1 off the coast. All fine here."]];
 const ROOMS = [{ name: "Reykjavík area · 12 online", talk: NEAR }, { name: "World · 214 online", talk: WORLD }];
-let room = 1, said = 0;
+let room = 1, said = 0, turnNo = 0;
 function openRoom(i) {
-  room = i; said = 0;
+  room = i; said = 0; turnNo++;
   document.querySelectorAll("#chat .segments button").forEach((b, k) => b.setAttribute("aria-pressed", k === i));
   document.querySelector("#chat .thumb").style.transform = `translateX(${i * 100}%)`;
   put(document.querySelector("#room"), ROOMS[i].name);
   document.querySelector(".bubbles").replaceChildren();
-  for (let k = 0; k < 5; k++) { say(true); }
+  fieldText("");
+  for (let k = 0; k < 4; k++) { say(true); }
 }
+function fieldText(t) {
+  const f = document.querySelector("#chat .field");
+  f.classList.toggle("typing", t !== "");
+  f.firstElementChild.textContent = t || "Message";
+}
+/// The conversation runs by itself: others show three dots first; we type letter by letter, then send.
+async function talkLoop(active) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  for (;;) {
+    if (!active() || still.matches) { await wait(500); continue; }
+    const mine = turnNo, next = ROOMS[room].talk[said % ROOMS[room].talk.length];
+    if (next[0]) {
+      const dots = document.createElement("div");
+      dots.className = "bub dotsb";
+      dots.innerHTML = "<span><i></i><i></i><i></i></span>";
+      addBubble(dots);
+      await wait(700 + next[2].length * 14);
+      dots.remove();
+      if (mine === turnNo) { say(); }
+      await wait(1000);
+    } else {
+      await wait(500);
+      for (let n = 1; n <= next[2].length && mine === turnNo; n++) { fieldText(next[2].slice(0, n)); await wait(next[2][n - 1] === " " ? 90 : 34 + Math.random() * 52); }
+      await wait(380);
+      if (mine === turnNo) { fieldText(""); say(); }
+      await wait(1100);
+    }
+  }
+}
+
 function note(i) {
   for (const box of document.querySelectorAll(".notes")) {
     const [t, b] = NOTES[i % NOTES.length], el = document.createElement("div"), old = box.firstElementChild;
@@ -230,17 +244,20 @@ function note(i) {
     el.animate([{ opacity: 0, transform: "translateY(120%) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 520, delay: 90, fill: "backwards", easing: "cubic-bezier(.16, 1.15, .3, 1)" });
   }
 }
+function addBubble(el, quiet) {
+  const box = document.querySelector(".bubbles");
+  box.append(el);
+  while (box.children.length > 9) { box.firstElementChild.remove(); }
+  if (quiet || still.matches) { return; }
+  const h = el.offsetHeight + 10;
+  box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .9, .25, 1)" });
+  el.animate(el.classList.contains("mine") ? [{ opacity: 0.4, transform: "translate(-12%, 60%) scale(.8)" }, { opacity: 1, transform: "none" }] : [{ opacity: 0, transform: "scale(.86)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: "cubic-bezier(.16, 1.1, .3, 1)" });
+}
 function say(quiet) {
-  const box = document.querySelector(".bubbles"), talk = ROOMS[room].talk, [who, from, text] = talk[said++ % talk.length], el = document.createElement("div");
+  const talk = ROOMS[room].talk, [who, from, text] = talk[said++ % talk.length], el = document.createElement("div");
   el.className = who ? "bub" : "bub mine";
   el.innerHTML = (who ? `<small>${who} · ${from}</small>` : "") + `<span>${text}</span>`;
-  box.append(el);
-  while (box.children.length > 8) { box.firstElementChild.remove(); }
-  if (!quiet && !still.matches) {
-    const h = el.offsetHeight + 10;
-    box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 460, easing: "cubic-bezier(.2, .9, .25, 1)" });
-    el.animate([{ opacity: 0, transform: "scale(.86)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.2, 1.2, .3, 1)" });
-  }
+  addBubble(el, quiet);
 }
 
 // ---- What the screens show ----
@@ -249,7 +266,6 @@ const view = { curve: DAYS[0].curve.slice() };
 function showScreens(day) {
   const s = { ...day, bz: minus(day.bz) + " nT" };
   for (const el of document.querySelectorAll("[data-d]")) { put(el, s[el.dataset.d]); }
-  for (const el of document.querySelectorAll("[data-ring]")) { el.style.setProperty("--k", clamp(day.kp / 9, 0, 1)); }
   for (const el of document.querySelectorAll("[data-sun]")) { el.classList.toggle("on", +el.dataset.sun === day.level); }
 }
 const charts = [...document.querySelectorAll("[data-chart]")];
@@ -262,6 +278,28 @@ function stepCharts(dt, to, force) {
   chartsStill = move < 0.0005 ? chartsStill + 1 : 0;
   for (const c of charts) { drawChart(c, view.curve); }
 }
-// The halves follow every change of the frame's size (a late style sheet, a turn of the phone).
-const foldWatch = new ResizeObserver(() => foldScreens());
-document.querySelectorAll(".dev.fold").forEach((el) => foldWatch.observe(el));
+
+// ---- The cards of Today ----
+
+const tick = Array.from({ length: 60 }, (_, i) => { const t = (i * 6 - 90) * Math.PI / 180; return i > 27 && i < 33 ? "" : `<line x1="${(50 * Math.cos(t)).toFixed(1)}" y1="${(50 * Math.sin(t)).toFixed(1)}" x2="${(44 * Math.cos(t)).toFixed(1)}" y2="${(44 * Math.sin(t)).toFixed(1)}"/>`; }).join("");
+const SUNS = [["94 Å", "Flaring regions, hottest corona"], ["131 Å", "Hottest flare plasma"], ["193 Å", "Hot corona, coronal holes"], ["304 Å", "Flares and filaments"]];
+const head = (i, t) => `<div class="head">${icon(i)}${t}</div>`;
+document.querySelector("#bento").innerHTML = `
+  <article class="tile t-sun">${head("flare", "SOLAR FLARES")}<p class="big">B1.4 <b>Low</b></p><div class="pic" data-tone="dark">${[0, 1, 2, 3].map((n) => `<img src="img/sun${n}.jpg" alt="${n ? "" : "The Sun"}" class="${n ? "" : "on"}"${n ? ' loading="lazy"' : ""} draggable="false">`).join("")}</div><p class="cap_"><b id="wave">94 Å · Flaring regions, hottest corona</b><span>NASA SDO</span></p></article>
+  <article class="tile t-aur">${head("aurora", "AURORA")}<p class="big">34 % <b>chance tonight</b></p><div class="pic" data-tone="dark"><img class="on ov" src="https://services.swpc.noaa.gov/images/aurora-forecast-northern-hemisphere.jpg" alt="Aurora forecast for the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"></div><p class="cap_"><b>OVATION model, live</b><span>NOAA SWPC</span></p></article>
+  <article class="tile">${head("quake", "EARTHQUAKES")}<div class="rings" aria-hidden="true"><i></i><i></i><i></i><b>4.6</b></div><p class="mid">3 near you</p><p class="small_">Closest: M4.6, 320 km away</p></article>
+  <article class="tile">${head("fire", "WILDFIRES")}<p class="mid top_">None nearby</p><p class="small_">No large fires within 300 km. 227 tracked worldwide.</p></article>
+  <article class="tile">${head("sun", "UV INDEX")}<p class="big"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="small_">Clear sky: up to 4 at 13:00.</p></article>
+  <article class="tile t-press">${head("gauge", "PRESSURE")}<div class="dial"><svg viewBox="-56 -56 112 112" aria-hidden="true">${tick}<line id="needle" class="needle" x1="0" y1="-52" x2="0" y2="-40"/></svg><p><span id="hpa">1015</span><small>hPa</small></p></div></article>
+  <article class="tile t-wide">${head("cloud", "WEATHER")}<p class="big">8° <b>Rain</b></p><div class="hours">${["Now", "14", "15", "16", "17", "18", "19", "20"].map((t, i) => `<div><b>${t}</b><svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${i < 5 ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg><span>${[90, 84, 80, 62, 40, 20, 10, 5][i]}%</span><b>${[8, 8, 9, 9, 8, 8, 7, 7][i]}°</b></div>`).join("")}</div></article>
+  <article class="tile t-wide">${head("bell", "ALERTS")}<div class="rows_">${[["Magnetic storm", "", "Calm"], ["Radio", "", "Calm"], ["Radiation", "", "Calm"], ["Solar wind", "353 km/s", "Calm"]].map(([l, n, w]) => `<div><span>${l}</span><small${l === "Solar wind" ? ' id="tw"' : ""}>${n}</small><b>${w}</b></div>`).join("")}</div></article>`;
+let todayStep = 0;
+/// One small change at a time, slowly.
+function stepToday() {
+  todayStep++;
+  const w = todayStep % 4;
+  document.querySelectorAll(".t-sun .pic img").forEach((e, i) => e.classList.toggle("on", i === w));
+  put(document.querySelector("#wave"), SUNS[w].join(" · "));
+  if (todayStep % 2) { const p = 1015 + [0, 1, 2, 1, 0, -1][(todayStep >> 1) % 6]; put(document.querySelector("#hpa"), p); document.querySelector("#needle").style.transform = `rotate(${(p - 1013) * 5}deg)`; }
+  else { const u = [3, 4, 3, 2][(todayStep >> 1) % 4]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : "Moderate"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
+}
