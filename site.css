@@ -253,3 +253,15 @@ footer nav { display: flex; justify-content: center; gap: 28px; } footer nav a {
 .soft.seen { opacity: 1; filter: none; transform: none; }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { *, *::before { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; transition-delay: 0s !important; } }
+/* Phone on its side: the orb stands left of the words. */
+@media (max-height: 480px) {
+  #status .pin { padding: 62px 24px 14px; }
+  #status .tell { display: grid; grid-template-columns: auto minmax(0, 480px); grid-auto-rows: auto; column-gap: 40px; align-items: center; justify-content: center; justify-items: start; text-align: left; }
+  #status .slot { grid-row: 1 / span 5; width: 150px; margin: 0; }
+  #status .tell > :not(.slot) { grid-column: 2; }
+  #status .tell .kp { font-size: 76px; }
+  #status h2 { font-size: 28px; }
+  #means { min-height: 2.9em; margin-top: 4px; max-width: none; }
+  .segments { margin-top: 6px; }
+  .segments button { padding: 11px 0; }
+}
