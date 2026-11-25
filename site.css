@@ -312,6 +312,7 @@ figcaption span { font-weight: 400; color: var(--quiet); }
 /* The orb next to a screen */
 .peek { position: absolute; aspect-ratio: 1; z-index: 4; width: clamp(72px, 34%, 112px); } figure:has(> .peek), .withorb, .mosaic { position: relative; }
 .p-left { left: -13%; bottom: 8%; } .p-right { right: -17%; bottom: 13%; width: clamp(72px, 32%, 108px); } .p-low { grid-area: 1 / 3 / 3 / 4; align-self: end; justify-self: end; position: relative; width: 84px; margin: 0 -10px -8px 0; }
+.withorb .p-right { right: -25%; bottom: 1%; } @media (max-width: 760px) { .withorb .p-right { right: -13%; bottom: -5%; } }
 .withorb { display: flex; justify-content: center; } .withorb .phone { flex: none; }
 
 /* The end */
