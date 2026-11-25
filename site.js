@@ -53,27 +53,43 @@ function entrance(t, w, h) {
 
 // ---- Scene ----
 
-const field = shaderCanvas($("#clouds"), FIELD), ball = shaderCanvas($("#orb canvas"), ORB);
+const field = shaderCanvas($("#clouds"), FIELD), ball = shaderCanvas(document.createElement("canvas"), ORB);
 const inside = shaderCanvas(document.createElement("canvas"), FIELD);   // the clouds on the screens of the devices
 if (!field) { $("#clouds").remove(); }
 if (!ball) { document.documentElement.classList.add("no-orb"); }
-const shade = $("#shade"), orb = $("#orb"), facePath = $("#orb path"), bar = $("#bar"), stage = $("#status");
-const slots = { hero: $("#hero .slot"), stage: $("#status .slot"), end: $("#end .slot"), bar: $("#bar .o") };
+const bar = $("#bar"), stage = $("#status");
 const face = new LivingFace();
+
+/// The orb lives in several places of the page. Each place scrolls with the page by itself (nothing follows the scroll
+/// with a delay); the orb is shown in one place at a time and grows out of it softly.
+const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
+  el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>`;
+  const button = el.querySelector("button"), canvas = el.querySelector("canvas");
+  return { el, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 300 : 190, el.dataset.orb === "bar" ? 24 : 21, 0) };
+});
+const viewOf = (name) => views.find((v) => v.name === name);
+let owner = viewOf("hero");
+owner.grow.x = 1;
+
 const screens = [...document.querySelectorAll("canvas[data-bg]")];
 const onScreen = new Set();
 const seen = new IntersectionObserver((list) => { for (const e of list) { e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target); } }, { rootMargin: "80px" });
 screens.forEach((c) => seen.observe(c));
 
-let W = 0, H = 0, big = 100;
+let W = 0, H = 0, big = 100, cloudW = 0, cloudH = 0;
+/// Only a new width makes new canvases: the browser bars of a phone change the height all the time while one scrolls.
 function measure() {
-  W = document.documentElement.clientWidth; H = innerHeight;
-  big = Math.max(slots.hero.clientWidth, slots.stage.clientWidth, slots.end.clientWidth) / 2;
+  H = innerHeight;
+  const w = document.documentElement.clientWidth;
+  if (w === W) { return; }
+  W = w;
   const dpr = Math.min(2, devicePixelRatio || 1);
-  field?.resize(W / 3, H / 3);
+  big = Math.max(...views.map((v) => v.el.clientWidth)) / 2;
   ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
-  orb.style.width = orb.style.height = big / 0.48 + "px";
-  for (const c of screens) { c.width = c.dataset.bg === "tall" ? 132 : 240; c.height = c.dataset.bg === "tall" ? 286 : 168; }
+  for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
+  cloudW = W; cloudH = $("#clouds")?.clientHeight ?? H;
+  field?.resize(cloudW / 3, cloudH / 3);
+  for (const c of screens) { const [cw, ch] = c.dataset.bg === "tall" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
   foldScreens();
   dirty = true;
 }
@@ -82,20 +98,18 @@ let cloudTime = 20, orbTime = 20, orbEnergy = 0, filmTime = 0, dirty = true, lan
 let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
 const touch = matchMedia("(hover: none)");
 
-/// Where the page wants the orb: centre, radius, and how far it is in the bar (0...1).
-function place() {
-  const c = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width / 2, top: r.top, bottom: r.bottom }; };
-  const b = c(slots.bar), h = c(slots.hero);
-  let at = { x: b.x, y: b.y, radius: b.r, inBar: 1, rest: 1 };
-  const to = (p, k) => { at = { x: mix(at.x, p.x, k), y: mix(at.y, p.y, k), radius: mix(at.radius, p.r, k), inBar: mix(at.inBar, 0, k), rest: 1 }; };
-  to(h, 1 - ease(scrollY / Math.max(120, h.top + scrollY + h.r * 2 - 70)));
-  const s = stage.getBoundingClientRect();
-  to(c(slots.stage), ease((H * 0.8 - s.top) / (H * 0.55)) * ease((s.bottom - H * 0.5) / (H * 0.4)));
-  // The last place: it goes into the bar's O and comes out below, it never flies over the content.
-  const e = c(slots.end), k = ease((H * 0.86 - e.top) / (H * 0.22));
-  at.rest = 1 - k;
-  if (k > 0) { at = k < 0.5 ? { ...at, radius: at.radius * (1 - 2 * k) } : { x: e.x, y: e.y, radius: e.r * (2 * k - 1), inBar: 0, rest: 1 - k }; }
-  return at;
+/// Who shows the orb: the big place in the middle of the screen, or the O of the bar.
+function findOwner() {
+  let best = null, near = 1e9;
+  for (const v of views) {
+    if (v.name === "bar") { continue; }
+    const r = v.el.getBoundingClientRect(), y = r.top + r.height / 2, room = v === owner ? 0.02 : 0.1;
+    if (y > H * room && y < H * (1 - room)) { const d = Math.abs(y - H * 0.45); if (d < near) { near = d; best = v; } }
+  }
+  const next = best ?? viewOf("bar");
+  if (next !== owner) { owner = next; body.held = null; body.air = false; for (const p of [body.x, body.y, body.squash, body.tilt]) { p.x = p.v = 0; } }
+  bar.classList.toggle("shown", owner.name !== "hero" || scrollY > 90);
+  bar.classList.toggle("docked", owner.name === "bar");
 }
 
 // ---- The body of the orb: a soft glass ball with weight ----
@@ -161,14 +175,14 @@ function feeling() {
   if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
   const l = level(), idle = now_ - awake;
-  if (stageDay === null && l === 0) {
+  if ((!inStage || stageDay === 0) && l === 0) {
     if (idle > 15) { return "sleepy"; }
     if (idle > 13.2) { return "yawn"; }
     if (idle > 9) { return "content"; }
     if (idle > 6.5) { return "smirk"; }
     return "smile";
   }
-  if (stageDay === 1) { return Math.floor(now_ / 4) % 3 === 2 ? "content" : "smile"; }
+  if (inStage && stageDay === 1) { return Math.floor(now_ / 4) % 3 === 2 ? "content" : "smile"; }
   return OF_LEVEL[l][Math.floor(now_ / 3.4) % OF_LEVEL[l].length];
 }
 /// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
@@ -188,43 +202,48 @@ function looking(x, y, dt) {
 }
 
 function drawOrb(dt) {
-  const p = place(), R = Math.max(12, p.radius);
-  let turn = [0, 0], scale = p.radius / big, x = p.x, y = p.y, alpha = 1;
+  findOwner();
+  const rect = owner.el.getBoundingClientRect(), R = Math.max(8, rect.width / 2), inBar = owner.name === "bar";
+  let turn = [0, 0], x = 0, y = 0, size = 1, alpha = 1;
   scrollLook = clamp(scrollLook + (scrollY - lastScroll) / 260, -1.2, 1.2);
   lastScroll = scrollY;
-  let aim = still.matches ? [0, 0] : looking(x, y, dt);
+  let aim = still.matches ? [0, 0] : looking(rect.left + R, rect.top + R, dt);
   if (!landed) {
     filmTime += dt;
     const f = entrance(filmTime, W, H);
-    x += f.x; y += f.y; scale *= f.scale; turn = f.turn; alpha = f.alpha;
+    x = f.x; y = f.y; size = f.scale; turn = f.turn; alpha = f.alpha;
     aim = [0, 0];
     if (f.over || scrollY > H * 0.3) { arrived(); }
   } else if (!still.matches) {
-    body.step(dt, R);
-    const calm = 1 - p.inBar, float = Math.sin(now_ * 1.15) * R * 0.022 * calm;   // it breathes in the air
-    x += body.x.x;
-    y += body.y.x + (body.air || body.held ? 0 : float);
+    if (!inBar) { body.step(dt, R); }
+    x = body.x.x;
+    y = body.y.x + (body.air || body.held || inBar ? 0 : Math.sin(now_ * 1.15) * R * 0.022);   // it breathes in the air
     const up = face.head[1].x;
     turn = [body.spin[0].x + face.head[0].x * 0.2 + Math.sin(now_ * 0.7) * 0.03, body.spin[1].x - up * (up < 0 ? 0.3 : 0.14)];
   }
-  const half = big / 0.48 / 2, q = clamp(body.squash.x, -0.3, 0.34), sy = 1 - q, sx = 1 / Math.sqrt(sy), a = body.tilt.x;
-  // Squashed on the ground: the lowest point stays where it is.
-  const sink = !body.held && q > 0 ? R * q : 0;
-  orb.style.transform = `translate3d(${(x - half).toFixed(2)}px, ${(y - half + sink).toFixed(2)}px, 0) rotate(${a.toFixed(4)}rad) scale(${(scale * sx).toFixed(4)}, ${(scale * sy).toFixed(4)}) rotate(${(-a).toFixed(4)}rad)`;
-  orb.style.opacity = alpha;
-  const high = clamp(-body.y.x / R, 0, 2), size = R * (1.15 - 0.22 * high);
-  shade.style.transform = `translate3d(${(x - 100).toFixed(1)}px, ${(p.y + R * 1.12 - 100).toFixed(1)}px, 0) scale(${(size / 100).toFixed(3)}, ${(size / 1000 * 0.9).toFixed(3)})`;
-  shade.style.opacity = landed ? ((1 - p.inBar) * (0.3 - 0.13 * high) * (1 - ease(colour * 2))).toFixed(3) : 0;
-  orb.setAttribute("aria-label", p.inBar > 0.5 ? "Back to the top" : "Heliotide");
-  bar.style.setProperty("--in", ease((p.inBar - 0.5) / 0.5).toFixed(3));
-  bar.style.setProperty("--rest", p.rest.toFixed(3));
-  bar.style.setProperty("--glass", ease((scrollY - 40) / 160).toFixed(3));
   const target = [0.1, 0.25, 0.5, 0.75][level()] + (body.air || body.held ? 0.35 : 0);
   orbEnergy += (target - orbEnergy) * (1 - Math.exp(-dt / (target > orbEnergy ? 0.25 : 1)));
   orbTime += dt * (0.55 + orbEnergy * 1.1);
   ball?.draw({ time: orbTime, energy: orbEnergy, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
   face.step(still.matches ? 1 : dt, landed ? feeling() : "content", aim);
-  facePath.setAttribute("d", face.path(turn));
+  const d = face.path(turn), q = clamp(body.squash.x, -0.3, 0.34), sy = 1 - q, sx = 1 / Math.sqrt(sy), a = body.tilt.x;
+  for (const v of views) {
+    const mine = v === owner;
+    if (still.matches) { v.grow.x = mine ? 1 : 0; } else { v.grow.step(dt, mine ? 1 : 0); }
+    const g = Math.max(0, v.grow.x);
+    if (g < 0.01) { if (v.on !== false) { v.on = false; v.el.style.visibility = "hidden"; } continue; }
+    if (v.on !== true) { v.on = true; v.el.style.visibility = "visible"; }
+    if (ball) { v.ctx.clearRect(0, 0, v.canvas.width, v.canvas.height); v.ctx.drawImage(ball.canvas, 0, 0, v.canvas.width, v.canvas.height); }
+    v.path.setAttribute("d", d);
+    if (mine && !inBar) {
+      const sink = !body.held && q > 0 ? R * q : 0;      // squashed on the ground: the lowest point stays where it is
+      v.button.style.transform = `translate(${x.toFixed(2)}px, ${(y + sink).toFixed(2)}px) rotate(${a.toFixed(4)}rad) scale(${(g * size * sx).toFixed(4)}, ${(g * size * sy).toFixed(4)}) rotate(${(-a).toFixed(4)}rad)`;
+      v.button.style.opacity = alpha;
+    } else {
+      v.button.style.transform = `scale(${g.toFixed(4)})`;
+      v.button.style.opacity = 1;
+    }
+  }
 }
 function arrived() {
   if (document.documentElement.classList.contains("landed")) { return; }
@@ -236,16 +255,15 @@ function arrived() {
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
 const cloudValues = (lift) => ({ time: cloudTime, energy: look.energy, zoom: ZOOM, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
                                 deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
-let colour = 0;
+/// Clouds only behind the states: a part of that section, so they lie under the bars of the browser too.
+/// The horizon stands high, as in a header.
+let stageSeen = false;
+new IntersectionObserver((list) => { stageSeen = list[list.length - 1].isIntersecting; dirty = true; }, { rootMargin: "20%" }).observe(stage);
 function drawClouds() {
-  if (!field) { return; }
-  // Clouds only behind the states; the rest of the page is plain white or black. The horizon stands high, as in a header.
-  const s = stage.getBoundingClientRect(), edge = Math.max(96, H * 0.17);
-  colour = ease((H * 0.75 - s.top) / (H * 0.55)) * ease((s.bottom - H * 0.3) / (H * 0.5));
-  document.documentElement.style.setProperty("--colour", colour.toFixed(3));
-  if (colour <= 0) { return; }
-  const y = 0.5 + (edge / H - 0.5) / 1.03, top = 1 - y - (0.33 + 0.16 * look.energy + (ZOOM - 1) * 0.5) / ZOOM;
-  field.draw(cloudValues(Math.max(top, LIFT)));
+  if (!field || !stageSeen) { return; }
+  const over = (cloudH - stage.clientHeight) / 2, edge = over + Math.max(96, stage.clientHeight * 0.17);
+  const y = 0.5 + (edge / cloudH - 0.5) / 1.03, top = 1 - y - (0.33 + 0.16 * look.energy + (ZOOM - 1) * 0.5) / ZOOM;
+  field.draw(cloudValues(Math.max(top, 0)));
 }
 /// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
 function drawScreens() {
@@ -285,30 +303,36 @@ function frame(ms) {
 function aimAt(e) { pointer = [e.clientX, e.clientY]; awake = now_; }
 addEventListener("resize", measure);
 addEventListener("load", measure);
-addEventListener("scroll", () => { dirty = true; if (now_ - awake > 3) { awake = now_ - 3; } stageScroll(); }, { passive: true });
+addEventListener("scroll", () => { dirty = true; if (now_ - awake > 3) { awake = now_ - 3; } }, { passive: true });
 darkMode.addEventListener("change", () => { dirty = true; showWidgets(DAYS[widgetDay]); });
 addEventListener("pointermove", aimAt, { passive: true });
 addEventListener("pointerdown", aimAt, { passive: true });
 document.addEventListener("pointerleave", () => { pointer = null; });
 
 // Press, pull and let go.
-orb.addEventListener("pointerdown", (e) => {
-  if (!landed || place().inBar > 0.5 || still.matches) { return; }
-  orb.setPointerCapture(e.pointerId);
-  body.held = { from: [e.clientX, e.clientY], pull: [0, 0], far: false };
-  body.air = false;
-  body.charge = 0;
-});
-orb.addEventListener("pointermove", (e) => {
-  if (!body.held) { return; }
-  body.held.pull = [e.clientX - body.held.from[0], e.clientY - body.held.from[1]];
-  if (Math.hypot(...body.held.pull) > 8) { body.held.far = true; }
-});
-function release(e) {
+for (const v of views) {
+  if (v.name === "bar") { v.button.addEventListener("click", () => scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" })); continue; }
+  v.button.addEventListener("pointerdown", (e) => {
+    if (!landed || v !== owner || still.matches) { return; }
+    v.button.setPointerCapture(e.pointerId);
+    body.held = { from: [e.clientX, e.clientY], pull: [0, 0], far: false };
+    body.air = false;
+    body.charge = 0;
+  });
+  v.button.addEventListener("pointermove", (e) => {
+    if (!body.held) { return; }
+    body.held.pull = [e.clientX - body.held.from[0], e.clientY - body.held.from[1]];
+    if (Math.hypot(...body.held.pull) > 8) { body.held.far = true; }
+  });
+  v.button.addEventListener("pointerup", () => release(v));
+  v.button.addEventListener("pointercancel", () => { body.held = null; });   // the finger scrolls the page
+  v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.jump(v.el.clientWidth * 3.3, 0.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
+}
+function release(v) {
   const held = body.held;
   if (!held) { return; }
   body.held = null;
-  const r = orb.getBoundingClientRect(), R = r.width * 0.48, side = clamp((held.from[0] - r.left - r.width / 2) / R, -1, 1);
+  const r = v.el.getBoundingClientRect(), R = r.width / 2, side = clamp((held.from[0] - r.left - R) / R, -1, 1);
   if (held.far) {
     // Let go: it shoots back over its place, rings out and rolls with the speed.
     body.spin[0].v += clamp(-body.x.x / R * 9, -14, 14);
@@ -321,48 +345,54 @@ function release(e) {
   mood = body.hits.length > 4 ? "grumpy" : ["bliss", "wink", "joy", "content"][Math.floor(Math.random() * 4)];
   moodUntil = now_ + 2.6;
 }
-orb.addEventListener("pointerup", release);
-orb.addEventListener("pointercancel", () => { body.held = null; });   // the finger scrolls the page
-orb.addEventListener("click", (e) => {
-  if (place().inBar > 0.5) { scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" }); }
-  else if (e.detail === 0 && landed && !still.matches) { body.jump(big * 6.5, 0.4); mood = "joy"; moodUntil = now_ + 2.4; }   // keyboard
-});
 for (const b of document.querySelectorAll(".store")) {
   b.addEventListener("pointerenter", () => { mood = "joy"; moodUntil = now_ + 60; });
   b.addEventListener("pointerleave", () => { moodUntil = now_ + 0.4; });
 }
 
-// ---- Status: right now, then four example days ----
+// ---- Status: right now, then four example days; they change by themselves ----
 
-let stageDay = null;                              // null: not on this part of the page; 0 = right now, 1...4 = example days
+let stageDay = 0;                                 // 0 = right now, 1...4 = example days
+let inStage = false, handsUntil = 0;
 let liveDay = null;                               // filled by NOAA
-const day = () => stageDay ? DAYS[stageDay - 1] : liveDay ?? DAYS[0];
+const day = () => inStage && stageDay ? DAYS[stageDay - 1] : liveDay ?? DAYS[0];
 const buttons = [...document.querySelectorAll("#status .segments button")];
 const WHEN = ["Right now", "On a quiet day", "On an active day", "During a storm", "During a severe storm"];
 const MEANS = ["The Sun is calm. Nothing unusual is on its way.", "The Sun is restless. Near the poles the sky may light up tonight.",
                "Aurora may be seen farther from the poles than usual. GPS and radio may be less accurate.", "A rare, strong storm. Aurora may be seen far from the poles, and GPS and radio can fail for a while."];
 function showStage() {
   const d = day();
-  put($("#when"), WHEN[stageDay ?? 0]);
+  stageLevel = inStage && stageDay ? d.level : null;
+  showScreens(d);
+  dirty = true;
+  put($("#when"), WHEN[stageDay]);
   put($("#kp"), d.kp);
   put($("#state"), d.state);
   put($("#means"), MEANS[d.level]);
-  showScreens(d);
-  buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === (stageDay ?? 0)));
-  $("#status .thumb").style.transform = `translateX(${(stageDay ?? 0) * 100}%)`;
-  stageLevel = stageDay ? d.level : null;
-  dirty = true;
+  buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === stageDay));
+  $("#status .thumb").style.transform = `translateX(${stageDay * 100}%)`;
 }
-function stageScroll() {
-  const r = stage.getBoundingClientRect(), way = r.height - H, on = r.top < H * 0.45 && r.bottom > H * 0.55;
-  const next = on ? clamp(Math.floor(clamp(-r.top / way, 0, 0.999) * 5), 0, 4) : null;
-  if (next === stageDay) { return; }
-  stageDay = next;
+new IntersectionObserver((list) => {
+  if (!list[list.length - 1].isIntersecting || inStage) { return; }
+  inStage = true; stageDay = 0; autoAt = now_ + 3;
   showStage();
-}
-buttons.forEach((b, i) => b.addEventListener("click", () => {
-  scrollTo({ top: stage.offsetTop + (stage.offsetHeight - H) * (i + 0.5) / 5, behavior: still.matches ? "auto" : "smooth" });
-}));
+}, { rootMargin: "-40% 0px -40% 0px" }).observe(stage);
+// It goes back to today's colour only when nothing of it can be seen any more.
+new IntersectionObserver((list) => {
+  if (list[list.length - 1].isIntersecting || !inStage) { return; }
+  inStage = false; stageDay = 0; handsUntil = 0;
+  look = copy(LOOKS[liveLevel]);
+  showStage();
+}, { rootMargin: "16%" }).observe(stage);
+let autoAt = 0;
+setInterval(() => {
+  if (!inStage || document.hidden || still.matches || now_ < handsUntil || now_ < autoAt) { return; }
+  stageDay = (stageDay + 1) % 5;
+  autoAt = now_ + 2.9;
+  showStage();
+}, 200);
+// The person plays: the page waits a while before it goes on.
+buttons.forEach((b, i) => b.addEventListener("click", () => { stageDay = i; inStage = true; handsUntil = now_ + 15; showStage(); }));
 
 // ---- Loops and soft entrances ----
 
@@ -438,9 +468,7 @@ const FEEL = ["Nothing to feel right now", "Most people feel nothing", "Most peo
               "Sensitive people may feel it", "Some people may feel a bit off", "Some people may feel tired", "Some people may sleep lighter", "Very rare. Some people may feel it"];
 
 if (landed) { document.documentElement.classList.add("landed"); }
-foldScreens();
 measure();
-stageScroll();
 showStage();
 requestAnimationFrame(frame);
 live();

@@ -92,6 +92,11 @@ const SCREENS = {
   chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field">Message</div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
+// Pictures from the real app (light and dark), no drawing: the strip of devices.
+const shot = (n) => `<picture><source media="(prefers-color-scheme: dark)" srcset="img/shot-${n}-dark.jpg"><img class="shot" src="img/shot-${n}-light.jpg" alt="" loading="lazy"></picture>`;
+for (const el of document.querySelectorAll("[data-shot]")) {
+  el.innerHTML = el.classList.contains("fold") ? `<div class="half l">${shot(el.dataset.shot)}</div><div class="half r">${shot(el.dataset.shot)}</div><div class="foldshade"></div>` : shot(el.dataset.shot);
+}
 // Frames: Apple's product bezels (Apple Design Resources).
 for (const el of document.querySelectorAll(".dev")) {
   const kind = ["phone", "land", "pad", "duo", "fold"].find((k) => el.classList.contains(k));
