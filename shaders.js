@@ -114,13 +114,19 @@ void main() {
   if (shape <= 0.0) { gl_FragColor = vec4(0.0); return; }
   vec2 disc = st / radius;
   float r = clamp(length(disc), 0.0001, 0.9999);
-  vec2 p = disc * mix(1.0, asin(r) / (r * 1.5707963), 0.45);
+  // The clouds lie on the ball and really turn with it, all the way round: the point under this pixel, turned back.
+  float front = sqrt(1.0 - r * r);
+  vec3 b = vec3(disc.x, -disc.y, front);
+  float cp = cos(roll.y), sp = sin(roll.y), cw = cos(roll.x), sw = sin(roll.x);
+  b = vec3(b.x, b.y * cp - b.z * sp, b.y * sp + b.z * cp);
+  b = vec3(b.x * cw - b.z * sw, b.y, b.x * sw + b.z * cw);
+  float rr_ = clamp(length(b.xy), 0.0001, 0.9999);
+  vec2 p = b.xy * mix(1.0, asin(rr_) / (rr_ * 1.5707963), 0.45);
+  p.x += 1.25 * (1.0 - smoothstep(-0.5, 0.5, b.z));     // the back has other clouds
+  p.y += 0.3 * (1.0 - smoothstep(-0.6, 0.4, b.z));
   float tw = energy * 0.8 * (1.0 - smoothstep(0.0, 1.0, r));
   p = vec2(cos(tw) * p.x - sin(tw) * p.y, sin(tw) * p.x + cos(tw) * p.y);
-  vec2 uv = p * 0.62 + 0.5;
-  uv.y = 1.0 - uv.y;
-  uv = (uv - 0.5) * mix(1.05, 0.95, energy) + 0.5;
-  uv -= sin(roll) * vec2(0.42, 0.16);
+  vec2 uv = p * 0.62 * mix(1.05, 0.95, energy) + 0.5;
   float sky;
   vec3 col = cloudPaint(uv, sky);
 

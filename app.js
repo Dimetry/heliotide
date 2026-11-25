@@ -16,16 +16,22 @@ const minus = (v) => v < 0 ? "−" + -v : "" + v;
 
 // ---- Text that changes softly ----
 
+/// The old word blurs away upwards while the new one comes out of the blur from below, both at once.
 function put(el, text) {
   text = String(text);
   if (el.dataset.text === text) { return; }
-  const first = el.dataset.text === undefined;
+  const before = el.dataset.text;
   el.dataset.text = text;
-  if (first || still.matches || !el.animate) { el.textContent = text; return; }
-  el.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0, filter: "blur(6px)" }], { duration: 160, easing: "ease-in" }).onfinish = () => {
-    el.textContent = el.dataset.text;
-    el.animate([{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], { duration: 320, easing: "ease-out" });
-  };
+  if (before === undefined || still.matches || !el.animate) { el.textContent = text; return; }
+  const fresh = document.createElement("span"), ghost = document.createElement("span");
+  fresh.textContent = text;
+  ghost.textContent = before;
+  ghost.className = "ghost";
+  el.classList.add("swap");
+  el.replaceChildren(fresh, ghost);
+  const big = text.length <= 3, blur = big ? 16 : 7, way = big ? ".22em" : ".35em";
+  ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 420, easing: "cubic-bezier(.4, 0, .7, .2)", fill: "forwards" }).onfinish = () => ghost.remove();
+  fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 640, delay: 90, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
 }
 
 // ---- Charts ----
@@ -77,9 +83,9 @@ const icon = (n) => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC
 
 const tabs_ = (n) => `<div class="tabs">${[["sun", "Today"], ["globe", "Map"], ["list", "Events"], ["chat", "Chat"]].map(([i, t], k) => `<span class="${k === n ? "on" : ""}">${icon(i)}${t}</span>`).join("")}</div>`;
 const hero_ = () => `<div class="place">MY LOCATION</div><div class="city">Reykjavík</div><div class="kp"><small>Kp</small><span data-d="kp"></span></div><div class="state" data-d="state"></div><div class="feel" data-d="feel"></div>${chartHTML()}<div class="ends"><span>36h ago</span><span>K-index</span><span>in 36h</span></div>`;
-const sun_ = () => `<div class="sun">${[0, 1, 2, 3].map((i) => `<img src="img/sun${i}.jpg" alt="" data-sun="${i}" loading="lazy">`).join("")}</div>`;
+const sun_ = () => `<div class="sun" data-tone="dark">${[0, 1, 2, 3].map((i) => `<img src="img/sun${i}.jpg" alt="" data-sun="${i}" loading="lazy">`).join("")}</div>`;
 const flares_ = () => `<div class="card_"><div class="head">SOLAR FLARES</div><div class="val"><span data-d="flare"></span> <small data-d="flareWord"></small></div>${sun_()}<div class="cap">NASA SDO</div><div class="chance"><div class="head">Chance of a flare in the next 24 hours</div><div class="row_"><span>Medium · M</span><span data-d="m"></span></div><div class="row_"><span>Strong · X</span><span data-d="x"></span></div></div></div>`;
-const wind_ = () => `<div class="card_"><div class="head">SOLAR WIND</div><div class="val"><span data-d="wind"></span> <small>km/s <span data-d="windWord"></span></small></div><div class="row_"><span>Field direction · Bz</span><span data-d="bz"></span></div><div class="sun"><img class="on" src="img/wind.jpg" alt="" loading="lazy"></div><div class="cap">NOAA SWPC · WSA-Enlil</div></div>`;
+const wind_ = () => `<div class="card_"><div class="head">SOLAR WIND</div><div class="val"><span data-d="wind"></span> <small>km/s <span data-d="windWord"></span></small></div><div class="row_"><span>Field direction · Bz</span><span data-d="bz"></span></div><div class="sun" data-tone="dark"><img class="on" src="img/wind.jpg" alt="" loading="lazy"></div><div class="cap">NOAA SWPC · WSA-Enlil</div></div>`;
 const status_ = '<div class="status"><b>9:41</b><span><svg viewBox="0 0 66 14" aria-hidden="true"><rect x="0" y="8" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="7" rx="1"/><rect x="10" y="3.500" width="3" height="9.500" rx="1"/><rect x="15" y="1" width="3" height="12" rx="1"/><path d="M32 12.600 29.600 10a3.400 3.400 0 0 1 4.800 0ZM27.600 8a6.200 6.200 0 0 1 8.800 0l1.500-1.600a8.400 8.400 0 0 0-11.800 0ZM24.900 5.200a10 10 0 0 1 14.200 0l1.500-1.600a12.200 12.200 0 0 0-17.200 0Z"/><rect x="45" y="1.500" width="19" height="11" rx="3.200"/></svg></span></div>';
 
 const SCREENS = {
@@ -87,7 +93,7 @@ const SCREENS = {
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
   fold: () => `<div class="half l">${SCREENS.wide()}</div><div class="half r">${SCREENS.wide()}</div><div class="foldshade"></div>`,
-  face: () => `<div class="scr watchface"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
+  face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
   lock: () => `<div class="scr lock"><canvas data-bg="tall"></canvas><div class="date">Tuesday, 24 November</div><div class="clock">9:41</div><div class="acc"><div class="ring" data-ring><span data-d="kp"></span></div><div class="rect"><b data-d="condition"></b><span data-d="watch"></span></div></div><div class="notes"></div></div>`,
   chat: () => `<div class="scr chatapp"><canvas data-bg="tall"></canvas>${status_}<div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field">Message</div></div>`
 };

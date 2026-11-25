@@ -12,7 +12,8 @@ h1, h2 { font-size: var(--big); line-height: 1.1; font-weight: 600; letter-spaci
 section p { color: var(--quiet); text-wrap: pretty; }
 a { color: inherit; }
 button { font-family: inherit; color: inherit; }
-#clouds { position: absolute; left: 0; top: -16vh; top: -16lvh; width: 100%; height: 132vh; height: 132lvh; z-index: -1; pointer-events: none; -webkit-mask: linear-gradient(transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(transparent, #000 12%, #000 88%, transparent); }
+@property --sky { syntax: "<color>"; inherits: true; initial-value: #dfeed4; }
+@property --deep { syntax: "<color>"; inherits: true; initial-value: #add78a; }
 
 /* Every part is one screen. Upright: centred. Wide: words on the left, as in the app on its side. */
 .part { min-height: 100vh; min-height: 100lvh; padding: 110px var(--edge) 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; text-align: center; position: relative; }
@@ -24,12 +25,13 @@ button { font-family: inherit; color: inherit; }
 .word { display: flex; align-items: center; gap: .86em; font-weight: 600; line-height: 1; }
 .word > span { display: block; position: relative; }
 .word svg { position: absolute; left: 50%; top: 50%; width: 2em; height: 2em; margin: -1em; overflow: visible; }
-.word line { stroke: currentColor; stroke-width: 10; stroke-linecap: round; opacity: .25; animation: ray 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * .4s); }
+.word line { stroke: currentColor; stroke-width: 8.5; stroke-linecap: round; opacity: .25; animation: ray 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * .4s); }
 @keyframes ray { 0%, 60%, 100% { opacity: .22; } 25% { opacity: .6; } }
 #bar { position: fixed; inset: 0 0 auto; height: 68px; z-index: 5; display: flex; justify-content: center; align-items: center; padding: 0 var(--edge); pointer-events: none; }
-#bar::before { content: ""; position: absolute; inset: 0 0 -16px; opacity: 0; transition: opacity .35s; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); -webkit-mask: linear-gradient(#000 62%, transparent); mask: linear-gradient(#000 62%, transparent); }
 #bar .word { position: relative; font-size: 15px; opacity: 0; transition: opacity .35s; }
-#bar.shown::before, #bar.shown .word { opacity: 1; }
+#bar.shown .word { opacity: 1; }
+#bar .word > span { transition: color .25s; color: #10120f; } #bar .word > span[data-on="dark"] { color: #fff; }
+#bar .orb path { stroke: #000; stroke-width: 6; stroke-linejoin: round; }
 #bar .sun_ { width: 20px; height: 20px; margin: 0 -1px; }
 #bar .o { position: absolute; inset: -.5px; }
 #bar .sun_ b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: inherit; transition: opacity .25s; }
@@ -44,7 +46,7 @@ button { font-family: inherit; color: inherit; }
 .orb:active { cursor: grabbing; }
 .orb canvas { position: absolute; left: -2.083%; top: -2.083%; width: 104.17%; height: 104.17%; pointer-events: none; }
 .orb svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-@media (prefers-color-scheme: dark) { .no-orb .orb { background: #9ddd60; }
+.no-orb .orb { background: #9ddd60; }
 html:not(.landed) .orb { pointer-events: none; }
 .slot { aspect-ratio: 1; flex: none; }
 .store { display: inline-block; line-height: 0; }
@@ -62,7 +64,6 @@ html:not(.landed) .orb { pointer-events: none; }
 #hero .say { max-width: 25em; }
 #hero .say > p:not(.free) { margin: 14px 0 24px; }
 #hero .show { width: 100%; display: flex; justify-content: center; }
-#hero .show .fold { display: none; }
 #hero .show .phone { width: min(66vw, 280px); }
 #hero .say, #hero .show { opacity: 0; transform: translateY(14px); }
 .landed #hero .say, .landed #hero .show { opacity: 1; transform: none; transition: opacity .9s .35s, transform .9s .35s cubic-bezier(.2, .8, .2, 1); }
@@ -164,20 +165,23 @@ html:not(.landed) .orb { pointer-events: none; }
 .land .wide .place { margin-top: calc(var(--p) * 2); }
 
 /* Status */
-/* The clouds fade out in their own empty space above and below, never over the neighbours. */
-#status { position: relative; min-height: 100vh; min-height: 100lvh; margin: 16vh 0; margin: 16lvh 0; }
-#status .pin { min-height: 100vh; min-height: 100lvh; padding: 96px var(--edge) 72px; display: flex; align-items: center; justify-content: center; gap: 8vw; }
+/* The colour of the day: plain, no drawing. It fades out in its own empty space above and below. */
+#status { position: relative; min-height: 100vh; min-height: 100lvh; margin: 16vh 0; margin: 16lvh 0; --sky: #dfeed4; --deep: #add78a; transition: --sky 1.1s ease, --deep 1.1s ease; }
+#status::before { content: ""; position: absolute; left: 0; right: 0; top: -16vh; top: -16lvh; bottom: -16vh; bottom: -16lvh; z-index: -1; background: linear-gradient(var(--sky) 20%, var(--deep) 70%); -webkit-mask: linear-gradient(transparent, #000 13%, #000 87%, transparent); mask: linear-gradient(transparent, #000 13%, #000 87%, transparent); }
+#status[data-level="1"] { --sky: #94e3fd; --deep: #56c7e8; } #status[data-level="2"] { --sky: #f7c640; --deep: #efa21c; } #status[data-level="3"] { --sky: #ff9afd; --deep: #f18df5; }
+@media (prefers-color-scheme: dark) { #status { --sky: #295b29; --deep: #0c150b; } #status[data-level="1"] { --sky: #366980; --deep: #00323a; } #status[data-level="2"] { --sky: #8e260d; --deep: #340c04; } #status[data-level="3"] { --sky: #5f0076; --deep: #341c3c; } }
+#status .pin { min-height: 100vh; min-height: 100lvh; padding: 96px var(--edge) 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; }
 #status .tell { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; max-width: 480px; }
 #status .slot { width: clamp(84px, 19lvh, 190px); margin-bottom: 20px; }
 #status .tell .kp { display: flex; align-items: baseline; justify-content: center; gap: .05em; font-weight: 200; font-size: clamp(76px, 16lvh, 150px); line-height: .95; letter-spacing: -.03em; color: var(--ink); }
 #status .tell .kp small { font-size: .3em; font-weight: 300; letter-spacing: 0; }
-#status h2 { min-height: 2.2em; display: flex; align-items: center; justify-content: center; }
+#status h2 { min-height: 2.2em; }
 #means { min-height: 4.4em; max-width: 23em; margin-top: 8px; }
-#status .phone { display: none; flex: none; width: min(340px, calc((100vh - 150px) * .489)); }
+#status .phone { flex: none; width: min(64vw, 300px); }
 .segments { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: min(440px, 100%); padding: 4px; border-radius: 99px; background: var(--track); }
 #status .segments { margin-top: 18px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .segments button { position: relative; font-size: var(--small); font-weight: 600; line-height: 1; background: none; border: 0; padding: 13px 0; border-radius: 99px; cursor: pointer; }
-.thumb { position: absolute; left: 4px; top: 4px; bottom: 4px; width: calc((100% - 8px) / var(--n, 5)); border-radius: 99px; background: var(--thumb); transition: transform .5s cubic-bezier(.3, 1.25, .4, 1); }
+.thumb { position: absolute; left: 4px; top: 4px; bottom: 4px; width: calc((100% - 8px) / var(--n, 4)); border-radius: 99px; background: var(--thumb); transition: transform .5s cubic-bezier(.3, 1.25, .4, 1); }
 #chat .segments { width: 230px; --n: 2; }
 
 /* Map and list */
@@ -290,23 +294,27 @@ footer:hover, footer:focus-within { opacity: .8; }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 700px) {
   #bar { justify-content: center; }
   .split { display: grid; grid-template-columns: minmax(280px, 400px) auto; gap: clamp(48px, 6.5vw, 110px); text-align: left; align-items: center; justify-content: center; }
-  #hero { grid-template-columns: minmax(300px, 400px) minmax(0, 640px); }
+  #hero { grid-template-columns: minmax(300px, 400px) auto; }
   .split > :last-child:not(footer), .split > .art { justify-self: center; }
   .lead .segments { margin: 26px 0 0 -4px; }
   #hero .intro { align-items: flex-start; }
   #hero .slot { width: clamp(110px, 21lvh, 180px); margin-left: -2px; }
-  #hero .show { align-items: center; justify-content: flex-end; gap: 4.5%; }
-  #hero .show .fold { display: block; width: 72%; } #hero .show .phone { width: 22%; min-width: 0; }
+  #hero .show { width: auto; } #hero .show .phone { width: min(340px, calc((100vh - 170px) * .489)); }
   #status .pin { justify-content: center; gap: clamp(48px, 7.5vw, 130px); } #status .tell { width: 430px; }
   #status .tell { align-items: flex-start; text-align: left; }
-  #status .tell .kp, #status h2 { justify-content: flex-start; text-align: left; }
+  #status .tell .kp { justify-content: flex-start; }
+  #status .pin { flex-direction: row; }
   #status .segments { margin-left: -4px; }
-  #status .phone { display: block; }
+  #status .phone { width: min(340px, calc((100vh - 150px) * .489)); }
   .pair { overflow: visible; margin: 0; padding: 0; justify-content: center; gap: clamp(24px, 4vw, 64px); align-self: auto; } .pair figure { width: min(24vw, calc((100vh - 190px) * .46), 320px); }
   .mosaic { width: min(58vw, 760px); grid-template-columns: 1fr 1fr 1.9fr; gap: 22px; margin: 0; padding: 0; overflow: visible; align-self: center; } .mosaic .medium { grid-area: 1 / 1 / 2 / 3; } .mosaic .low { grid-area: 1 / 3 / 3 / 4; aspect-ratio: .84; height: auto; align-self: end; } .low .phone { left: 4%; width: 92%; }
   #chat .phone { width: min(26vw, calc((100vh - 170px) * .489), 340px); }
   #devices { align-items: stretch; } #devices .lead { text-align: center; max-width: none; }
   #end .slot { width: min(26vw, 40lvh, 340px); }
+}
+@media (min-width: 700px) and (min-height: 481px) {
+  #strip { --mm: calc(min(60vh, 620px) / 221); }
+  #strip .phone { width: calc(var(--mm) * 74.5); } #strip .fold { width: calc(var(--mm) * 166); } #strip .land { width: calc(var(--mm) * 152.4); } #strip .pad { width: calc(var(--mm) * 288.6); } #strip .clock_ { width: calc(var(--mm) * 41); }
 }
 /* Phone on its side */
 @media (max-height: 480px) and (orientation: landscape) {
@@ -320,6 +328,8 @@ footer:hover, footer:focus-within { opacity: .8; }
   .pair figure { width: calc((100vh - 120px) * .46); } #chat .phone { width: calc((100vh - 96px) * .489); } .mosaic { width: min(100%, 440px); gap: 12px; }
   #end .slot { width: 40vh; } #end { padding-bottom: 96px; }
 }
+.swap { position: relative; } .swap > span { display: inline-block; will-change: transform, filter, opacity; } .swap > .ghost { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
+.kp .swap, .km .swap { display: inline-block; }
 .soft { opacity: 0; transform: translateY(14px); transition: opacity .8s, transform .8s cubic-bezier(.2, .8, .2, 1); }
 .soft.seen { opacity: 1; transform: none; }
 :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }

@@ -53,9 +53,8 @@ function entrance(t, w, h) {
 
 // ---- Scene ----
 
-const field = shaderCanvas($("#clouds"), FIELD), ball = shaderCanvas(document.createElement("canvas"), ORB);
+const ball = shaderCanvas(document.createElement("canvas"), ORB);
 const inside = shaderCanvas(document.createElement("canvas"), FIELD);   // the clouds on the screens of the devices
-if (!field) { $("#clouds").remove(); }
 if (!ball) { document.documentElement.classList.add("no-orb"); }
 const bar = $("#bar"), stage = $("#status");
 const face = new LivingFace();
@@ -76,7 +75,7 @@ const onScreen = new Set();
 const seen = new IntersectionObserver((list) => { for (const e of list) { e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target); } }, { rootMargin: "80px" });
 screens.forEach((c) => seen.observe(c));
 
-let W = 0, H = 0, big = 100, cloudW = 0, cloudH = 0;
+let W = 0, H = 0, big = 100;
 /// Only a new width makes new canvases: the browser bars of a phone change the height all the time while one scrolls.
 function measure() {
   H = innerHeight;
@@ -87,8 +86,6 @@ function measure() {
   big = Math.max(...views.map((v) => v.el.clientWidth)) / 2;
   ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
   for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
-  cloudW = W; cloudH = $("#clouds")?.clientHeight ?? H;
-  field?.resize(cloudW / 3, cloudH / 3);
   for (const c of screens) { const [cw, ch] = c.dataset.bg === "tall" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
   foldScreens();
   dirty = true;
@@ -128,6 +125,7 @@ const body = {
     this.squash.v -= 5.5;
     this.goal[0] += (side < 0 ? 1 : -1) * 2 * Math.PI;
     this.spin[0].v += (side < 0 ? 1 : -1) * 2.5;
+    this.goal[1] += Math.random() < 0.35 ? 2 * Math.PI : 0;        // sometimes head over heels
     this.tilt.v += side * 2;
   },
   step(dt, R) {
@@ -175,14 +173,14 @@ function feeling() {
   if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
   const l = level(), idle = now_ - awake;
-  if ((!inStage || stageDay === 0) && l === 0) {
+  if (!inStage && l === 0) {
     if (idle > 15) { return "sleepy"; }
     if (idle > 13.2) { return "yawn"; }
     if (idle > 9) { return "content"; }
     if (idle > 6.5) { return "smirk"; }
     return "smile";
   }
-  if (inStage && stageDay === 1) { return Math.floor(now_ / 4) % 3 === 2 ? "content" : "smile"; }
+  if (inStage && l === 0) { return Math.floor(now_ / 3.4) % 2 ? "content" : "smile"; }
   return OF_LEVEL[l][Math.floor(now_ / 3.4) % OF_LEVEL[l].length];
 }
 /// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
@@ -203,6 +201,7 @@ function looking(x, y, dt) {
 
 function drawOrb(dt) {
   findOwner();
+  tones();
   const rect = owner.el.getBoundingClientRect(), R = Math.max(8, rect.width / 2), inBar = owner.name === "bar";
   let turn = [0, 0], x = 0, y = 0, size = 1, alpha = 1;
   scrollLook = clamp(scrollLook + (scrollY - lastScroll) / 260, -1.2, 1.2);
@@ -255,16 +254,6 @@ function arrived() {
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
 const cloudValues = (lift, zoom = ZOOM) => ({ time: cloudTime, energy: look.energy, zoom, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
                                 deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
-/// Clouds only behind the states: a part of that section, so they lie under the bars of the browser too.
-/// The horizon stands high, as in a header.
-let stageSeen = false;
-new IntersectionObserver((list) => { stageSeen = list[list.length - 1].isIntersecting; dirty = true; }, { rootMargin: "20%" }).observe(stage);
-function drawClouds() {
-  if (!field || !stageSeen) { return; }
-  const over = (cloudH - stage.clientHeight) / 2, edge = over + Math.max(96, stage.clientHeight * 0.17);
-  const y = 0.5 + (edge / cloudH - 0.5) / 1.03, zoom = W > H ? 2.6 : ZOOM, top = 1 - y - (0.33 + 0.16 * look.energy + (zoom - 1) * 0.5) / zoom;   // sizes of the app: upright, on its side
-  field.draw(cloudValues(Math.max(top, 0), zoom));
-}
 /// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
 function drawScreens() {
   if (!inside) { return; }
@@ -279,7 +268,7 @@ function drawScreens() {
   }
 }
 
-let last = performance.now() / 1000, sinceClouds = 1, sinceScreens = 1;
+let last = performance.now() / 1000, sinceScreens = 1;
 function frame(ms) {
   requestAnimationFrame(frame);
   const now = ms / 1000, real = clamp(now - last, 0, 0.25), dt = Math.min(real, 0.05);
@@ -290,14 +279,13 @@ function frame(ms) {
     if (!dirty) { return; }
     dirty = false;
     look = copy(LOOKS[level()]);
-    drawClouds(); drawScreens(); stepCharts(1, day().curve, true); drawOrb(0);
+    drawScreens(); stepCharts(1, day().curve, true); drawOrb(0);
     return;
   }
   glide(real);
   cloudTime += dt * look.speed;
-  sinceClouds += real; sinceScreens += real;
-  if (sinceClouds >= 1 / 31) { sinceClouds = 0; drawClouds(); }
-  if (sinceScreens >= 1 / 21) { sinceScreens = 0; drawScreens(); }
+  sinceScreens += real;
+  if (sinceScreens >= 1 / 31) { sinceScreens = 0; drawScreens(); }
   stepCharts(real, day().curve);
   drawOrb(landed ? dt : Math.min(real, 0.1));
 }
@@ -316,20 +304,27 @@ for (const v of views) {
   if (v.name === "bar") { v.button.addEventListener("click", () => scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" })); continue; }
   v.button.addEventListener("pointerdown", (e) => {
     if (!landed || v !== owner || still.matches) { return; }
-    v.button.setPointerCapture(e.pointerId);
-    body.held = { from: [e.clientX, e.clientY], pull: [0, 0], far: false };
+    e.preventDefault();
+    body.held = { id: e.pointerId, view: v, from: [e.clientX, e.clientY], pull: [0, 0], far: false };
     body.air = false;
     body.charge = 0;
   });
-  v.button.addEventListener("pointermove", (e) => {
-    if (!body.held) { return; }
-    body.held.pull = [e.clientX - body.held.from[0], e.clientY - body.held.from[1]];
-    if (Math.hypot(...body.held.pull) > 8) { body.held.far = true; }
-  });
-  v.button.addEventListener("pointerup", () => release(v));
-  v.button.addEventListener("pointercancel", () => { body.held = null; });   // the finger scrolls the page
+  v.button.addEventListener("dragstart", (e) => e.preventDefault());
+  v.button.addEventListener("contextmenu", (e) => { if (touch.matches) { e.preventDefault(); } });
   v.button.addEventListener("click", (e) => { if (e.detail === 0 && landed && !still.matches) { body.jump(v.el.clientWidth * 3.3, 0.4); mood = "joy"; moodUntil = now_ + 2.4; } });   // keyboard
 }
+// Everything that can end a pull is listened to on the whole window, so the orb can never stay in the hand.
+addEventListener("pointermove", (e) => {
+  const held = body.held;
+  if (!held || e.pointerId !== held.id) { return; }
+  if (e.pointerType === "mouse" && e.buttons === 0) { release(held.view); return; }
+  held.pull = [e.clientX - held.from[0], e.clientY - held.from[1]];
+  if (Math.hypot(...held.pull) > 8) { held.far = true; }
+}, { passive: true });
+addEventListener("pointerup", (e) => { if (body.held && e.pointerId === body.held.id) { release(body.held.view); } });
+for (const name of ["pointercancel", "blur"]) { addEventListener(name, () => { body.held = null; }); }
+document.addEventListener("visibilitychange", () => { body.held = null; });
+document.addEventListener("pointerleave", () => { if (body.held) { release(body.held.view); } });
 function release(v) {
   const held = body.held;
   if (!held) { return; }
@@ -354,23 +349,24 @@ for (const b of document.querySelectorAll(".store")) {
 
 // ---- Status: right now, then four example days; they change by themselves ----
 
-let stageDay = 0;                                 // 0 = right now, 1...4 = example days
+let stageDay = 0;                                 // the example day: quiet, active, storm, severe
 let inStage = false, handsUntil = 0;
 let liveDay = null;                               // filled by NOAA
-const day = () => inStage && stageDay ? DAYS[stageDay - 1] : liveDay ?? DAYS[0];
+const day = () => inStage ? DAYS[stageDay] : liveDay ?? DAYS[0];
 const buttons = [...document.querySelectorAll("#status .segments button")];
-const WHEN = ["Right now", "On a quiet day", "On an active day", "During a storm", "During a severe storm"];
+const WHEN = ["On a quiet day", "On an active day", "During a storm", "During a severe storm"];
 const MEANS = ["The Sun is calm. Nothing unusual is on its way.", "The Sun is restless. Near the poles the sky may light up tonight.",
                "Aurora may be seen farther from the poles than usual. GPS and radio may be less accurate.", "A rare, strong storm. Aurora may be seen far from the poles, and GPS and radio can fail for a while."];
 function showStage() {
-  const d = day();
-  stageLevel = inStage && stageDay ? d.level : null;
-  showScreens(d);
+  stageLevel = inStage ? stageDay : null;
+  showScreens(day());
   dirty = true;
+  const d = DAYS[stageDay];
+  stage.dataset.level = stageDay;
   put($("#when"), WHEN[stageDay]);
   put($("#kp"), d.kp);
   put($("#state"), d.state);
-  put($("#means"), MEANS[d.level]);
+  put($("#means"), MEANS[stageDay]);
   buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === stageDay));
   $("#status .thumb").style.transform = `translateX(${stageDay * 100}%)`;
 }
@@ -389,12 +385,26 @@ new IntersectionObserver((list) => {
 let autoAt = 0;
 setInterval(() => {
   if (!inStage || document.hidden || still.matches || now_ < handsUntil || now_ < autoAt) { return; }
-  stageDay = (stageDay + 1) % 5;
+  stageDay = (stageDay + 1) % 4;
   autoAt = now_ + 2.9;
   showStage();
 }, 200);
 // The person plays: the page waits a while before it goes on.
 buttons.forEach((b, i) => b.addEventListener("click", () => { stageDay = i; inStage = true; handsUntil = now_ + 15; showStage(); }));
+
+// ---- The wordmark in the bar: every letter is black or white, by what lies under it ----
+
+const letters = [...document.querySelectorAll("#bar .word > span")];
+let toneAt = 0;
+function tones() {
+  if (now_ < toneAt || !bar.classList.contains("shown")) { return; }
+  toneAt = now_ + 0.08;
+  for (const l of letters) {
+    const r = l.getBoundingClientRect(), under = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2).find((e) => !bar.contains(e));
+    const tone = under?.closest("[data-tone]")?.dataset.tone ?? (darkMode.matches ? "dark" : "light");
+    if (l.dataset.on !== tone) { l.dataset.on = tone; }
+  }
+}
 
 // ---- Loops and soft entrances ----
 
