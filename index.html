@@ -27,7 +27,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://heliotide.app/#site","name":"Heliotide","url":"https://heliotide.app/","inLanguage":"en"},{"@type":"MobileApplication","@id":"https://heliotide.app/#app","name":"Heliotide: Space Weather","url":"https://heliotide.app/","image":"https://heliotide.app/img/favicon-512.png","description":"Space weather in plain words: live K-index, solar flares, solar wind, aurora, alerts and earthquakes near you.","operatingSystem":"iOS 18 or later, iPadOS 18 or later","applicationCategory":"WeatherApplication","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
-  <link rel="stylesheet" href="site.css?v=7">
+  <link rel="stylesheet" href="site.css?v=8">
   <noscript><style>.soft, .family .m, [data-write], #hero .intro > *, #hero .show, #bar .word > span { opacity: 1 !important; filter: none !important; transform: none !important; } #status { display: none; }</style></noscript>
 </head>
 <body>
@@ -37,17 +37,16 @@
     <section class="part split" id="hero">
       <div class="intro">
         <div class="slot" data-orb="hero"></div>
-        <h1 data-write="char">Solar Activity App</h1>
+        <h1 data-write="char">Solar Weather in Your Pocket</h1>
         <p data-write="word" style="--s:.45s">Space weather in plain words: what the Sun and the Earth are doing right now. Flares, storms, aurora, earthquakes.</p>
-        <span class="store soon" role="img" aria-label="Soon on the App Store"><small>Soon on</small><b>App Store</b></span>
+        <span class="store soon" role="img" aria-label="Soon on the App Store"><svg class="apple" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span><small>Soon on the</small><b>App Store</b></span></span>
       </div>
       <div class="show holder" aria-hidden="true"><div class="dev phone" data-screen="phone"></div></div>
     </section>
 
     <section class="part" id="today">
-      <div class="lead"><h2 data-write="word">Your whole day with the Sun</h2><p data-write="word" style="--s:.25s">Every card says in plain words what is going on.</p></div>
-      <div class="bento" id="bento"></div>
-      <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="key" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.1 2.2 .5 0 -.04"/></filter></svg>
+      <div class="lead"><h2 data-write="word">What the Sun means where you are</h2><p data-write="word" style="--s:.25s">Every card says in plain words what is going on.</p></div>
+      <div id="bento" class="mosaic"></div>
     </section>
 
     <section class="part split" id="status" aria-label="Space weather now">
@@ -69,7 +68,17 @@
       </div>
     </section>
 
-    <section class="part split" id="widgets">
+    <section class="part split" id="chat">
+      <div class="lead"><h2 data-write="word">World Chat</h2><p data-write="word" style="--s:.15s">For people who care about the sky and the ground under their feet, and for those who feel every storm. Talk with the whole world, or only with people near you.</p><div class="soft" style="--d:.3s"><div class="segments" role="group" aria-label="Room"><div class="thumb"></div><button type="button">Near me</button><button type="button">World</button></div></div></div>
+      <div class="holder soft rise"><div class="dev phone" data-screen="chat" aria-hidden="true"></div><div class="pal a" aria-hidden="true"></div><div class="pal b" aria-hidden="true"></div><div class="pal c" aria-hidden="true"></div><div class="pal d" aria-hidden="true"></div></div>
+    </section>
+
+    <section class="part split more" id="alerts">
+      <div class="lead"><h2 data-write="word">Alerts</h2><p data-write="word" style="--s:.15s">Notifications about solar flares, magnetic storms and earthquakes near you. Only the ones you choose, even when the app is closed.</p></div>
+      <div class="low soft rise" aria-hidden="true"><div class="dev phone" data-screen="lock"></div></div>
+    </section>
+
+    <section class="part split more" id="widgets">
       <div class="lead"><h2 data-write="word">Widgets</h2><p data-write="word" style="--s:.15s">The state of space weather at a glance, on your Home Screen and Lock Screen.</p></div>
       <div class="rail" aria-hidden="true">
         <div class="w large soft rise" data-widget="large" data-shift="1"></div>
@@ -80,17 +89,7 @@
       </div>
     </section>
 
-    <section class="part split" id="alerts">
-      <div class="lead"><h2 data-write="word">Alerts</h2><p data-write="word" style="--s:.15s">Notifications about solar flares, magnetic storms and earthquakes near you. Only the ones you choose, even when the app is closed.</p></div>
-      <div class="low soft rise" aria-hidden="true"><div class="dev phone" data-screen="lock"></div></div>
-    </section>
-
-    <section class="part split" id="chat">
-      <div class="lead"><h2 data-write="word">World Chat</h2><p data-write="word" style="--s:.15s">For people who care about the sky and the ground under their feet, and for those who feel every storm. Talk with the whole world, or only with people near you.</p><div class="soft" style="--d:.3s"><div class="segments" role="group" aria-label="Room"><div class="thumb"></div><button type="button">Near me</button><button type="button">World</button></div></div></div>
-      <div class="holder soft rise"><div class="dev phone" data-screen="chat" aria-hidden="true"></div><div class="pal a" aria-hidden="true"></div><div class="pal b" aria-hidden="true"></div><div class="pal c" aria-hidden="true"></div><div class="pal d" aria-hidden="true"></div></div>
-    </section>
-
-    <section class="part" id="devices">
+    <section class="part more" id="devices">
       <div class="lead"><h2 data-write="word">On every mobile screen</h2><p data-write="word" style="--s:.15s">iPhone · iPhone Duo · iPad · iPad mini. In light and dark.</p></div>
       <div class="family soft-set">
         <div class="m m-ipad from-r"><picture><source type="image/avif" srcset="img/family-ipad-light.avif"><img src="img/family-ipad-light.png" alt="The map of Heliotide on an iPad" loading="lazy" draggable="false"></picture></div>
@@ -103,9 +102,9 @@
 
     <section class="part split" id="end">
       <div class="lead">
-        <h2 data-write="word">See what the Sun is doing</h2>
+        <h2 data-write="word">See what the Sun is up to</h2>
         <p class="deal" data-write="word" style="--s:.3s">No ads. No subscription. Completely free. Worldwide.</p>
-        <span class="store soon" role="img" aria-label="Soon on the App Store"><small>Soon on</small><b>App Store</b></span>
+        <span class="store soon" role="img" aria-label="Soon on the App Store"><svg class="apple" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span><small>Soon on the</small><b>App Store</b></span></span>
       </div>
       <div class="slot art" data-orb="end" data-look="#end .store"></div>
     </section>
@@ -114,10 +113,10 @@
     <nav aria-label="Pages"><a href="support/">Support</a><a href="privacy/">Privacy Policy</a><a href="sources/">Data Sources</a></nav>
     <p class="love">Made with love in Ukraine <span role="img" aria-label="flag of Ukraine">🇺🇦</span></p>
   </footer>
-  <script src="base.js?v=7"></script>
-  <script src="shaders.js?v=7"></script>
-  <script src="face.js?v=7"></script>
-  <script src="app.js?v=7"></script>
-  <script src="site.js?v=7"></script>
+  <script src="base.js?v=8"></script>
+  <script src="shaders.js?v=8"></script>
+  <script src="face.js?v=8"></script>
+  <script src="app.js?v=8"></script>
+  <script src="site.js?v=8"></script>
 </body>
 </html>
