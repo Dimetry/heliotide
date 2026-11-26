@@ -450,15 +450,15 @@ function drawScreens() {
     if (!onScreen.has(c)) { continue; }
     const kind = c.dataset.bg, stage_ = !!c.closest("#status"), moving = stage_ || !!c.closest("#hero");
     if (!moving) {
-      const key = kind + liveLevel + theme;
+      const key = kind + theme;
       if (c.dataset.key === key) { continue; }
       c.dataset.key = key;
     }
     inside.resize(c.width, c.height);
     if (kind === "chat") { inside.draw(cloudValues(LOOKS[0], 34, CHAT_LIFT)); }       // the chat: calm green, the clouds up at the bar (as in the app)
     // Calm clouds at every level: only the colours change, never the speed or the swirl (a phone stays cool, Dima 11-26).
-    else if (moving) { inside.draw({ ...cloudValues(stage_ ? stageLook : liveLook, stage_ ? stageTime : cloudTime, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM), energy: 0 }); }
-    else { inside.draw(cloudValues(LOOKS[liveLevel], 20, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
+    else if (moving) { inside.draw({ ...cloudValues(stage_ ? stageLook : LOOKS[0], stage_ ? stageTime : cloudTime, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM), energy: 0 }); }
+    else { inside.draw(cloudValues(LOOKS[0], 20, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
     c.getContext("2d").drawImage(inside.canvas, 0, 0);
   }
 }
@@ -574,7 +574,7 @@ setInterval(() => { if (endIn && touch.matches && !document.hidden) { nodFrom = 
 let stageDay = 0;                                 // the example day: quiet, active, storm, severe
 let inStage = false, handsUntil = 0;
 let liveDay = null;                               // filled by NOAA
-const day = () => inStage ? DAYS[stageDay] : liveDay ?? DAYS[0];
+const day = () => inStage ? DAYS[stageDay] : DAYS[0];   // outside the Kp part: our quiet green day (Dima, 11-26)
 const buttons = [...document.querySelectorAll("#status .segments button")];
 const MEANS = ["The Sun is calm. Nothing is on its way.", "Aurora is possible near the poles.", "GPS and radio may be less accurate.", "GPS and radio can fail for a while."];
 /// The soft light under the phone of the Kp part: three colours of each level (the app's cloud colours).
@@ -683,28 +683,12 @@ document.querySelectorAll(".soft-set").forEach((e) => appear.observe(e));
 
 // ---- The Sun, the solar wind and the aurora: live from NASA and NOAA, as in the app. They move only on screen ----
 
-const SDO = "https://sdo.gsfc.nasa.gov/assets/img/latest/";
-const sunStill = $("#sunstill"), sunFilm = $("#sunfilm");
-// The Sun of this hour; the baked picture stays if NASA does not answer.
-// The colour of the Sun follows the level, as in the app: Quiet 94 Å, Active 131 Å, Storm 193 Å, Severe 304 Å.
-const WAVE = ["0094", "0131", "0193", "0304"];
-let sunWave = "";
-function sunNow() {
-  const w = WAVE[liveLevel];
-  if (w === sunWave) { return; }
-  sunWave = w;
-  const im = new Image(); im.referrerPolicy = "no-referrer"; im.onload = () => { sunStill.src = im.src; }; im.src = SDO + `latest_512_${w}.jpg`;
-  if (sunFilm.getAttribute("src")) { sunFilm.src = SDO + `latest_512_${w}.mp4`; }
-}
-sunNow();
-// The film of the last two days (8.9 MB) only on a big screen; a phone keeps the still picture.
-const bigScreen = matchMedia("(hover: hover) and (min-width: 900px)").matches;
-sunFilm.addEventListener("error", () => { if (!sunFilm.src.endsWith("img/sun.mp4")) { sunFilm.src = "img/sun.mp4"; } });
-sunFilm.addEventListener("playing", () => sunFilm.classList.add("on"));
-new IntersectionObserver(([e]) => {
-  if (!bigScreen || still.matches) { return; }
-  if (e.isIntersecting) { if (!sunFilm.getAttribute("src")) { sunFilm.src = SDO + `latest_512_${sunWave}.mp4`; } sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
-}).observe(sunStill);
+// Always the same Sun everywhere: SDO's visible-light picture (the orange one, the second page of the app's gallery),
+// of this hour; the baked picture stays if NASA does not answer. One small picture, no film.
+const im_ = new Image(); im_.referrerPolicy = "no-referrer";
+im_.onload = () => document.querySelectorAll(".sunhmi").forEach((e) => { e.src = im_.src; });
+im_.src = "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIC.jpg";
+function sunNow() {}
 
 /// NOAA's picture series: the aurora of the last 24 hours, the solar wind model (WSA-Enlil, the disc seen from above,
 /// cut as in the app). A few pictures, one melting into the next.

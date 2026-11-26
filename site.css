@@ -788,3 +788,29 @@ main { overflow-x: clip; }
 .c-alerts .cb { justify-content: space-between; }
 #bento .axis b { margin-right: 0; }
 #bento .fchart { margin-right: 0; } #bento .fchart i { right: -5px; }
+.scr > .pcard { display: flex; flex-direction: column; gap: 11px; }
+.pcard .c-wind2 .pb { grid-template-columns: minmax(0, 1fr) calc((100% + 32px) / 3); }
+/* Badge: plain black (white in dark), no border; the words fill it. */
+.store.soon { box-shadow: none; padding: 0 14px 0 11px; gap: 6px; }
+/* Event cards: the map is cut on a straight diagonal; the pin stands in the middle of the map, the map centred on it. */
+.cmap { -webkit-mask: none; mask: none; clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%); width: 56%; aspect-ratio: auto; overflow: hidden; }
+.cmap img { inset: auto; width: 170%; height: auto; max-width: none; object-fit: fill; }
+.cmap.quake img { left: calc(62% - .418 * 170%); top: 50%; transform: translateY(-50.5%); }
+.cmap.fire img { left: calc(62% - .50 * 170%); top: 50%; transform: translateY(-55%); }
+.cmap .pinn, .c-map .cmap .pinn { left: 62%; top: 50%; margin: -18px 0 0 -18px; }
+/* Alerts: no shadow under this phone (it was cut on the right), and a green Lock Screen, in the colour of our devices. */
+#alerts .low .phone::before { display: none; }
+#alerts .lock .wall img { filter: hue-rotate(-105deg) saturate(.85); }
+.pcard .disc img { opacity: 1; }
+.cmap { clip-path: polygon(40% 0, 100% 0, 100% 100%, 12% 100%); }
+.cmap img { width: 135%; }
+.cmap.quake img { left: calc(64% - .418 * 135%); } .cmap.fire img { left: calc(64% - .50 * 135%); }
+.cmap .pinn, .c-map .cmap .pinn { left: 64%; }
+/* Devices stand on the table: no gap above the shadow. The watch in front may stand a little higher. */
+.family .m { bottom: calc((var(--y, 0) - 7) * 100cqw / var(--w)); }
+.family .m-watch { --y: 2; }
+.lh .two b { font-size: calc(var(--p) * 26); } .side .two b { font-size: calc(var(--p) * 21); } .small .two b { font-size: calc(var(--p) * 18); }
+/* Alerts phone in the middle again (its shadow is gone, no room needed on the right). */
+.low { padding-right: 0; width: 340px; } .low .phone { right: 20px; }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { .low { width: 400px; } }
+@media (max-width: 760px) { .low { width: 300px; } }
