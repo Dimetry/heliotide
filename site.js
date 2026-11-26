@@ -679,14 +679,24 @@ document.querySelectorAll(".soft-set").forEach((e) => appear.observe(e));
 const SDO = "https://sdo.gsfc.nasa.gov/assets/img/latest/";
 const sunStill = $("#sunstill"), sunFilm = $("#sunfilm");
 // The Sun of this hour; the baked picture stays if NASA does not answer.
-{ const im = new Image(); im.referrerPolicy = "no-referrer"; im.onload = () => { sunStill.src = im.src; }; im.src = SDO + "latest_512_0304.jpg"; }
+// The colour of the Sun follows the level, as in the app: Quiet 94 Å, Active 131 Å, Storm 193 Å, Severe 304 Å.
+const WAVE = ["0094", "0131", "0193", "0304"];
+let sunWave = "";
+function sunNow() {
+  const w = WAVE[liveLevel];
+  if (w === sunWave) { return; }
+  sunWave = w;
+  const im = new Image(); im.referrerPolicy = "no-referrer"; im.onload = () => { sunStill.src = im.src; }; im.src = SDO + `latest_512_${w}.jpg`;
+  if (sunFilm.getAttribute("src")) { sunFilm.src = SDO + `latest_512_${w}.mp4`; }
+}
+sunNow();
 // The film of the last two days (8.9 MB) only on a big screen; a phone keeps the still picture.
 const bigScreen = matchMedia("(hover: hover) and (min-width: 900px)").matches;
 sunFilm.addEventListener("error", () => { if (!sunFilm.src.endsWith("img/sun.mp4")) { sunFilm.src = "img/sun.mp4"; } });
 sunFilm.addEventListener("playing", () => sunFilm.classList.add("on"));
 new IntersectionObserver(([e]) => {
   if (!bigScreen || still.matches) { return; }
-  if (e.isIntersecting) { if (!sunFilm.getAttribute("src")) { sunFilm.src = SDO + "latest_512_0304.mp4"; } sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
+  if (e.isIntersecting) { if (!sunFilm.getAttribute("src")) { sunFilm.src = SDO + `latest_512_${sunWave}.mp4`; } sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
 }).observe(sunStill);
 
 /// NOAA's picture series: the aurora of the last 24 hours, the solar wind model (WSA-Enlil, the disc seen from above,
@@ -755,6 +765,7 @@ async function live() {
   const cls = flares?.[0]?.current_class ?? null, bz = Number(field_?.[0]?.bz_gsm ?? NaN), speed = Number(wind?.[0]?.proton_speed ?? NaN);
   const l = Math.max(kpLevel(kp), cls?.[0] === "X" ? 2 : cls?.[0] === "M" ? 1 : 0, scaleLevel(scale("R")), scaleLevel(scale("S")), scaleLevel(g), bz <= -20 ? 2 : bz <= -10 ? 1 : 0);
   liveLevel = l;
+  sunNow();
   liveDay = { level: l, kp: Math.round(kp), curve: [...past, ...next].map((p) => p.kp),
     state: ["Space weather is quiet now", "Space weather is active now", g > 0 ? "Magnetic storm now" : "Space weather storm now", g > 0 ? "Severe magnetic storm now" : "Severe space weather now"][l],
     condition: ["Quiet space weather", "Active space weather", g > 0 ? "Magnetic storm" : "Stormy space weather", g > 0 ? "Severe magnetic storm" : "Severe space weather"][l],
