@@ -126,7 +126,7 @@ void main() {
   p.y += 0.3 * (1.0 - smoothstep(-0.6, 0.4, b.z));
   float tw = energy * 0.8 * (1.0 - smoothstep(0.0, 1.0, r));
   p = vec2(cos(tw) * p.x - sin(tw) * p.y, sin(tw) * p.x + cos(tw) * p.y);
-  vec2 uv = p * 0.62 * mix(1.05, 0.95, energy) + 0.5;
+  vec2 uv = p * 0.52 * mix(1.05, 0.95, energy) + 0.5;
   float sky;
   vec3 col = cloudPaint(uv, sky);
 

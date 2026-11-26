@@ -6,6 +6,7 @@ const LIGHT = [["#F4FAE2", "#DFEED4", "#9DDD8B", "#CDE8B5"], ["#EEF7F2", "#93E3F
 const DARK = [["#0C150B", "#0C4E0F", "#71A54A"], ["#00323A", "#1C8687", "#4BC6FF"],
               ["#340C04", "#901414", "#B8420E"], ["#341C3C", "#AB296E", "#FF42A9"]];                           // deep, mid, glow
 const DARK_SKY = ["#295B29", "#366980", "#8E260D", "#5F0076"];
+const rgbOf = (v) => v.map((x) => Math.round(clamp(x, 0, 1) * 255)).join(" ");
 const SPEED = [0.49, 0.84, 1.64, 2.14], ENERGY = [0, 0.07, 0.36, 0.52];
 const BALL = [["#F4FAE2", "#B5E06A", "#D9E36A", "#8FCB52"], ["#EEF9FD", "#93E3FD", "#34D3EC", "#7CCBEA"],
               ["#FFF0CF", "#F7C43A", "#F08A24", "#F59A38"], ["#FDDFF3", "#F07AC8", "#C05CF0", "#F5607A"]];
@@ -36,14 +37,21 @@ let stageLevel = null;  // the level of the four-colours part, while it is on sc
 const level = () => stageLevel ?? liveLevel;
 
 const copy = (look) => Object.fromEntries(Object.entries(look).map(([k, v]) => [k, Array.isArray(v) ? v.slice() : v]));
-let look = copy(LOOKS[0]);
-function glide(dt) {
-  const to = LOOKS[level()], f = 1 - Math.exp(-dt * 3.2);
+// Two looks, so nothing outside the Kp part ever takes its example colours: the live one (today's level) and the
+// one of the Kp part. The orb and the phone of a part always read the same one, so their colours change together.
+let liveLook = copy(LOOKS[0]), stageLook = copy(LOOKS[0]);
+function glideTo(look, to, f) {
   for (const k in to) {
     if (Array.isArray(to[k])) { for (let i = 0; i < 3; i++) { look[k][i] += (to[k][i] - look[k][i]) * f; } }
     else { look[k] += (to[k] - look[k]) * f; }
   }
 }
+function glide(dt) {
+  const f = 1 - Math.exp(-dt * 3.2);
+  glideTo(liveLook, LOOKS[liveLevel], f);
+  glideTo(stageLook, LOOKS[inStage ? stageDay : liveLevel], f);
+}
+const orbStage = () => owner?.name === "status" && inStage;
 
 // ---- The orb's way in: it glides in calmly from below and turns to us ----
 
@@ -87,18 +95,25 @@ function measure() {
   W = w;
   const dpr = Math.min(2, devicePixelRatio || 1);
   big = Math.max(...views.map((v) => v.el.clientWidth)) / 2;
-  ball?.resize(big / 0.48 * dpr, big / 0.48 * dpr);
-  for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
+  for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(touch.matches ? 2 : 3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
   for (const c of screens) { const [cw, ch] = c.dataset.bg !== "wide" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
   dirty = true;
 }
 
-let cloudTime = 20, chatTime = 34, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
+let cloudTime = 20, stageTime = 20, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
 let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
 const touch = matchMedia("(hover: none)");
+// ?place: the orb stays where it is dropped, and a label says where, so Dima can show the right place in each part.
+const placing = new URLSearchParams(location.search).has("place"), placed = {};
+const placeLabel = placing ? Object.assign(document.body.appendChild(document.createElement("div")), { id: "place" }) : null;
+function showPlace(v) {
+  const r = v.el.getBoundingClientRect();
+  placeLabel.textContent = `${v.name}: ${Math.round(body.home[0])} px, ${Math.round(body.home[1])} px (${Math.round(body.home[0] / r.width * 100)} %, ${Math.round(body.home[1] / r.height * 100)} % of its size)`;
+}
 
 /// Who shows the orb: the big place in the middle of the screen, or the O of the bar.
 function findOwner() {
+  if (body.held) { return; }                       // in the hand it stays where it is
   let best = null, near = 1e9;
   for (const v of views) {
     if (v.name === "bar") { continue; }
@@ -108,7 +123,7 @@ function findOwner() {
     if (y > H * room && y < H * (1 - room) && x > 10 && x < W - 10) { const d = Math.abs(y - H * 0.45); if (d < near) { near = d; best = v; } }
   }
   const next = best ?? viewOf("bar");
-  if (next !== owner) { owner = next; body.held = null; body.air = false; for (const p of [body.x, body.y, body.squash, body.tilt]) { p.x = p.v = 0; } }
+  if (next !== owner) { owner = next; body.held = null; body.air = false; body.home = placed[owner.name] ?? [0, 0]; for (const p of [body.x, body.y, body.squash, body.tilt]) { p.x = p.v = 0; } }
   bar.classList.toggle("shown", owner.name !== "end");
   bar.classList.toggle("docked", owner.name === "bar");
 }
@@ -121,7 +136,7 @@ const body = {
   squash: new Spring(430, 13),                            // + flat, − long; the volume stays the same
   tilt: new Spring(160, 20),                                // along which direction
   spin: [new Spring(34, 7.6), new Spring(34, 7.6)], goal: [0, 0],   // turning; the goal is always a full turn
-  air: false, held: null, charge: 0, hits: [],
+  air: false, held: null, charge: 0, hits: [], home: [0, 0],
   /// A push at the point (px, py) of the ball (−1...1 from its middle, y down), as a finger in zero gravity does it.
   push(R, px, py, power) {
     const far = Math.hypot(px, py), ux = far > 0.12 ? px / far : 0, uy = far > 0.12 ? py / far : 1;   // in the middle: upwards
@@ -139,16 +154,17 @@ const body = {
   step(dt, R) {
     if (this.held) {
       // Pulled: the farther, the heavier (rubber band); it gets long in the direction of the pull.
-      const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy), k = far ? R * 1.3 * (1 - 1 / (far * 0.62 / (R * 1.3) + 1)) / far : 0;
+      // Held: it goes where the finger or the cursor goes, with a little soft lag.
+      const [dx, dy] = this.held.pull, far = Math.hypot(dx, dy);
       this.x.k = this.y.k = 420; this.x.d = this.y.d = 34;
-      this.x.step(dt, dx * k); this.y.step(dt, dy * k);
+      this.x.step(dt, dx + this.home[0]); this.y.step(dt, dy + this.home[1]);
       this.charge = Math.min(1, this.charge + dt * 2.2);
       if (far > 8) { this.tilt.step(dt, this.wrap(Math.atan2(dx, -dy))); this.squash.step(dt, -Math.min(0.085, Math.hypot(this.x.x, this.y.x) / R * 0.07)); }
       else { this.squash.step(dt, 0.025 + 0.035 * this.charge); }
       this.air = false;
     } else {
-      this.x.k = this.y.k = 46; this.x.d = this.y.d = 7;
-      this.x.step(dt, 0); this.y.step(dt, 0);
+      this.x.k = this.y.k = 46; this.x.d = this.y.d = 10;
+      this.x.step(dt, this.home[0]); this.y.step(dt, this.home[1]);
       const speed = Math.hypot(this.x.v, this.y.v) / R;
       this.squash.step(dt, -clamp(speed * 0.007, 0, 0.04));
       if (speed > 0.9) { this.tilt.step(dt, this.tilt.x + this.wrap(Math.atan2(this.x.v, -this.y.v) - this.tilt.x) * 0.4); }
@@ -172,10 +188,10 @@ function feeling() {
   if (body.held) { return body.held.far ? "wow" : "squeeze"; }
   if (body.air) { return "air"; }
   if (mood && now_ < moodUntil) { return mood; }
-  const l = level(), idle = now_ - awake;
+  const l = orbStage() ? stageDay : liveLevel, idle = now_ - awake;
   if (owner.feel) { return owner.feel[Math.floor(now_ / 3.2) % owner.feel.length]; }
   if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
-  if (!inStage && l === 0) {
+  if (!orbStage() && l === 0) {
     if (watching()) { return "smile"; }
     if (idle > 17) { return "sleepy"; }
     if (idle > 14.6) { return "yawn"; }
@@ -188,7 +204,11 @@ function feeling() {
 /// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
 function looking(x, y, dt) {
   scrollLook *= Math.exp(-dt * 3);
-  if (watching()) {
+  if (storeHover && owner.name === "end") {
+    const b = $("#end .store").getBoundingClientRect(), dx = b.left + b.width / 2 - x, dy = b.top + b.height / 2 - y, d = Math.hypot(dx, dy) || 1;
+    return [dx / d, dy / d];
+  }
+  if (watching() && !owner.el.hasAttribute("data-nofollow")) {
     const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 240);
     return [dx / d * k, dy / d * k];
   }
@@ -226,6 +246,22 @@ function acting(name, dt, R) {
   return name;
 }
 
+/// The glow around the orb (dark theme) takes the orb's own colours; written only when they change.
+let glowKey = "";
+function glowColours(l) {
+  const key = rgbOf(l.ballMain) + rgbOf(l.ballMid) + rgbOf(l.ballHigh);
+  if (key === glowKey) { return; }
+  glowKey = key;
+  const st = document.documentElement.style;
+  st.setProperty("--g1", rgbOf(l.ballMain)); st.setProperty("--g2", rgbOf(l.ballMid)); st.setProperty("--g3", rgbOf(l.ballLow));
+}
+/// "Yes, go on!": quick nods while the App Store button is under the cursor (on a phone: when the end comes in).
+let nod = 0, nodFrom = -9, storeHover = false;
+function nodding() {
+  if (storeHover && now_ - nodFrom > 2.4) { nodFrom = now_; }
+  const t = now_ - nodFrom;
+  nod = t < 1.3 ? 0.22 * Math.sin(2 * Math.PI * 3.2 * t) * Math.exp(-1.1 * t) : 0;
+}
 function drawOrb(dt) {
   findOwner();
   tones();
@@ -240,6 +276,7 @@ function drawOrb(dt) {
     x = f.x; y = f.y; size = f.scale; turn = f.turn; alpha = f.alpha;
     if (f.over || scrollY > H * 0.3) { arrived(); }
   } else if (!still.matches) {
+    nodding();
     name = acting(name, dt, R);
     if (!SHUT.has(name)) { aim = looking(rect.left + R, rect.top + R, dt); }
     if (!inBar) { body.step(dt, R); }
@@ -251,13 +288,20 @@ function drawOrb(dt) {
     y = body.y.x + Math.sin(now_ * 0.81 + 0.6) * drift + Math.sin(now_ * 1.9) * drift * 0.22;
     const up = face.head[1].x;
     if (owner.roam) { x += (Math.sin(now_ * 0.43) * 0.42 + Math.sin(now_ * 1.07 + 2) * 0.1) * R; y += (Math.sin(now_ * 0.61 + 1) * 0.36 + Math.sin(now_ * 0.97) * 0.08) * R; }
-    if (up < 0) { y += up * R * 0.07; }                        // it stretches its neck to look up
-    turn = [body.spin[0].x + face.head[0].x * 0.22 + act.shakeTurn, body.spin[1].x - up * (up < 0 ? 0.46 : 0.16) - act.lean.x];
+    if (up < 0) { y += up * R * 0.07; }
+    y -= Math.abs(nod) * R * 0.18;                        // it stretches its neck to look up
+    turn = [body.spin[0].x + face.head[0].x * 0.22 + act.shakeTurn + 0.25 * Math.sin(now_ * 0.21), body.spin[1].x - up * (up < 0 ? 0.46 : 0.16) - act.lean.x + 0.18 * Math.sin(now_ * 0.17) - nod];
     tilt = act.tilt.x;
     stretch = act.stretch.x;
   }
-  orbTime += dt * (name === "sleepy" ? 0.2 : 0.42);       // always the same calm flow: touching it does not stir the clouds
-  ball?.draw({ time: orbTime, energy: 0.06, roll: turn, cMain: look.ballMain, cLow: look.ballLow, cMid: look.ballMid, cHigh: look.ballHigh });
+  orbTime += dt * (name === "sleepy" ? 0.35 : 0.9);       // always the same calm flow: touching it does not stir the clouds
+  // The ball is drawn only as big as the place that shows it now (a small O in the bar costs almost nothing).
+  const need = Math.max(24, Math.round(owner.el.clientWidth / 0.96 * Math.min(touch.matches ? 1.5 : 2, devicePixelRatio || 1)));
+  if (ball && ball.canvas.width !== need) { ball.resize(need, need); }
+  const ol = orbStage() ? stageLook : liveLook;
+  const lv = orbStage() ? stageDay : liveLevel;
+  glowColours(ol);
+  ball?.draw({ time: orbTime, energy: [0.1, 0.16, 0.28, 0.38][lv], roll: turn, cMain: ol.ballMain, cLow: ol.ballLow, cMid: ol.ballMid, cHigh: ol.ballHigh });
   face.step(still.matches ? 1 : dt, name, aim);
   const d = face.path(turn), q = clamp(body.squash.x, -0.1, 0.1), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
   for (const v of views) {
@@ -277,6 +321,54 @@ function drawOrb(dt) {
     }
   }
 }
+// ---- Two friends in the chat, sky and orchid: they come out from behind the phone and seem to talk ----
+
+const palBall = ball ? shaderCanvas(document.createElement("canvas"), ORB) : null;
+palBall?.resize(112, 112);
+const pals = [...document.querySelectorAll(".pal")].map((el, i) => {
+  el.innerHTML = '<canvas width="112" height="112"></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg>';
+  const c = BALL[[1, 3][i]].map(rgb);
+  el.style.setProperty("--g", rgbOf(c[1]));
+  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(70, 11), t: 5 * i, talk: 0, at: 0.9 + i * 0.7 };
+});
+let palsOn = false, palDrawn = 0;
+if (pals.length) {
+  new IntersectionObserver(([e]) => { palsOn = e.isIntersecting; }, { threshold: 0.4 }).observe($("#chat"));
+  // When somebody else writes, one of the friends "says" it: a few quick happy faces and small hops.
+  new MutationObserver((list) => {
+    for (const m of list) { for (const n of m.addedNodes) { if (n.classList?.contains("bub") && !n.classList.contains("mine") && palsOn) { const p = pals[Math.floor(Math.random() * pals.length)]; p.talk = now_ + 1.5; } } }
+  }).observe($(".bubbles"), { childList: true });
+}
+function stepPals(dt) {
+  if (!pals.length || still.matches) { return; }
+  let any = false;
+  for (const p of pals) {
+    const late = palsOn ? now_ - p.at : 0;
+    p.out.step(dt, palsOn && late > 0 ? 1 : 0);
+    if (!palsOn && p.out.x < 0.02) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
+    any = true;
+    p.el.style.visibility = "visible";
+    p.t += dt;
+    const talking = now_ < p.talk, other = pals.find((q) => q !== p && now_ < q.talk);
+    const r = p.el.getBoundingClientRect();
+    let aim = [-0.7, 0.15];                                  // they read the chat
+    if (other) { const o = other.el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d]; }
+    else if (watching()) { const dx = pointer[0] - r.left - r.width / 2, dy = pointer[1] - r.top - r.height / 2, d = Math.hypot(dx, dy) || 1; aim = [dx / d * Math.min(1, d / 240), dy / d * Math.min(1, d / 240)]; }
+    p.face.step(dt, talking ? (Math.floor(now_ * 5) % 2 ? "joy" : "smile") : other ? "curious" : "smile", aim);
+    p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53)]));
+    const o = p.out.x, hop = talking ? -Math.abs(Math.sin(now_ * 11)) * 5 : 0;
+    p.el.style.transform = `translate(${((1 - o) * -90).toFixed(1)}%, ${(Math.sin(p.t * 1.1) * 4 + hop).toFixed(1)}px) scale(${(0.45 + 0.55 * o).toFixed(3)})`;
+  }
+  // Their clouds turn slowly: drawn ten times a second, small.
+  palDrawn += dt;
+  if (any && palBall && palDrawn > 0.1) {
+    palDrawn = 0;
+    for (const p of pals) {
+      palBall.draw({ time: orbTime * 0.8 + p.t * 0.1, energy: 0.14, roll: [0.3 * Math.sin(p.t * 0.31), 0.2 * Math.sin(p.t * 0.23)], cMain: p.c[1], cLow: p.c[3], cMid: p.c[2], cHigh: p.c[0] });
+      p.ctx.clearRect(0, 0, 112, 112); p.ctx.drawImage(palBall.canvas, 0, 0, 112, 112);
+    }
+  }
+}
 function arrived() {
   if (document.documentElement.classList.contains("landed")) { return; }
   landed = true;
@@ -285,26 +377,26 @@ function arrived() {
 }
 
 /// The clouds stand lower on the first screen and rise to the bar behind the rest, as in the app.
-const cloudValues = (lift, zoom = ZOOM) => ({ time: cloudTime, energy: look.energy, zoom, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
+const cloudValues = (look, time, lift, zoom = ZOOM) => ({ time, energy: look.energy, zoom, lift, dark: darkMode.matches ? 1 : 0, cMain: look.main, cLow: look.low, cMid: look.mid, cHigh: look.high,
                                 deep: look.deep, dmid: look.dmid, glow: look.glow, skyShift: look.skyShift });
-/// The same clouds on the devices that are on screen: drawn once per shape, copied to every device.
+/// The clouds on the screens of the devices. Only the first screen and the Kp part move; every other screen is one
+/// still frame, drawn again only when the level or the theme changes (cheap, and Safari keeps its frame rate).
 function drawScreens() {
   if (!inside) { return; }
+  const theme = darkMode.matches ? 1 : 0;
   for (const c of screens) {
-    if (c.dataset.bg !== "chat" || !onScreen.has(c)) { continue; }
-    const l = LOOKS[2];                                  // the chat: orange, the clouds up at the bar, always calm (as in the app)
+    if (!onScreen.has(c)) { continue; }
+    const kind = c.dataset.bg, stage_ = !!c.closest("#status"), moving = stage_ || !!c.closest("#hero");
+    if (!moving) {
+      const key = kind + liveLevel + theme;
+      if (c.dataset.key === key) { continue; }
+      c.dataset.key = key;
+    }
     inside.resize(c.width, c.height);
-    inside.draw({ time: chatTime, energy: 0, zoom: ZOOM, lift: CHAT_LIFT, dark: darkMode.matches ? 1 : 0, cMain: l.main, cLow: l.low, cMid: l.mid, cHigh: l.high, deep: l.deep, dmid: l.dmid, glow: l.glow, skyShift: l.skyShift });
+    if (kind === "chat") { inside.draw(cloudValues(LOOKS[0], 34, CHAT_LIFT)); }       // the chat: calm green, the clouds up at the bar (as in the app)
+    else if (moving) { inside.draw(cloudValues(stage_ ? stageLook : liveLook, stage_ ? stageTime : cloudTime, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
+    else { inside.draw(cloudValues(LOOKS[liveLevel], 20, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
     c.getContext("2d").drawImage(inside.canvas, 0, 0);
-  }
-  for (const kind of ["tall", "wide"]) {
-    // In the strip of devices the picture stands still: drawn once per level and theme.
-    const key = level() + "" + darkMode.matches;
-    const list = screens.filter((c) => c.dataset.bg === kind && onScreen.has(c) && (!c.closest("[data-still]") || c.dataset.key !== key));
-    if (!list.length) { continue; }
-    inside.resize(list[0].width, list[0].height);
-    inside.draw(kind === "wide" ? cloudValues(0.34, 2.6) : cloudValues(LIFT));
-    for (const c of list) { c.dataset.key = key; c.getContext("2d").drawImage(inside.canvas, 0, 0); }
   }
 }
 
@@ -312,7 +404,8 @@ let last = performance.now() / 1000, sinceScreens = 1;
 function frame(ms) {
   requestAnimationFrame(frame);
   // Another window is in front: draw less, the computer needs its power elsewhere.
-  if (ms / 1000 - last < (document.hasFocus() || touch.matches ? 0.012 : 0.06)) { return; }
+  // A phone draws at most 30 frames a second (it stays cool); another window in front: draw less still.
+  if (ms / 1000 - last < (touch.matches ? 0.03 : document.hasFocus() ? 0.012 : 0.06)) { return; }
   const now = ms / 1000, real = clamp(now - last, 0, 0.25), dt = Math.min(real, 0.05);
   last = now;
   now_ += real;
@@ -320,24 +413,25 @@ function frame(ms) {
     // Nothing moves by itself: draw only when something has changed.
     if (!dirty) { return; }
     dirty = false;
-    look = copy(LOOKS[level()]);
+    liveLook = copy(LOOKS[liveLevel]); stageLook = copy(LOOKS[inStage ? stageDay : liveLevel]);
     drawScreens(); stepCharts(1, day().curve, true); drawOrb(0);
     return;
   }
   glide(real);
-  cloudTime += dt * look.speed;
-  chatTime += dt * SPEED[0];
+  cloudTime += dt * liveLook.speed;
+  stageTime += dt * stageLook.speed;
   sinceScreens += real;
   if (sinceScreens >= 1 / 31) { sinceScreens = 0; drawScreens(); }
   stepCharts(real, day().curve);
   drawOrb(landed ? dt : Math.min(real, 0.1));
+  stepPals(dt);
 }
 
 function aimAt(e) { pointer = [e.clientX, e.clientY]; awake = now_; }
 addEventListener("resize", measure);
 addEventListener("load", measure);
 addEventListener("scroll", () => { dirty = true; if (now_ - awake > 3) { awake = now_ - 3; } }, { passive: true });
-darkMode.addEventListener("change", () => { dirty = true; showWidgets(DAYS[widgetDay]); });
+darkMode.addEventListener("change", () => { dirty = true; paintAuras(); units.forEach((u) => showWidgets(DAYS[u.day % 4], u.el)); });
 addEventListener("pointermove", aimAt, { passive: true });
 addEventListener("pointerdown", aimAt, { passive: true });
 document.addEventListener("pointerleave", () => { pointer = null; });
@@ -348,7 +442,9 @@ for (const v of views) {
   v.button.addEventListener("pointerdown", (e) => {
     if (!landed || v !== owner || still.matches) { return; }
     e.preventDefault();
-    body.held = { id: e.pointerId, view: v, from: [e.clientX, e.clientY], pull: [0, 0], far: false };
+    body.held = { id: e.pointerId, view: v, from: [e.clientX - body.x.x + body.home[0], e.clientY - body.y.x + body.home[1]], pull: [body.x.x - body.home[0], body.y.x - body.home[1]], far: false };
+    try { v.button.setPointerCapture(e.pointerId); } catch {}
+    v.el.style.zIndex = 9;
     body.air = false;
     body.charge = 0;
   });
@@ -373,10 +469,10 @@ function release(v) {
   if (!held) { return; }
   body.held = null;
   const r = v.button.getBoundingClientRect(), R = v.el.clientWidth / 2;
+  v.el.style.zIndex = "";
   if (held.far) {
-    // Let go: it flies back over its place, rings out and rolls with the speed.
-    body.x.v -= body.x.x * 4;
-    body.y.v -= body.y.x * 4;
+    // Let go: it floats home softly and rolls once. With ?place it stays where it was put, for choosing places.
+    if (placing) { body.home = [body.x.x, body.y.x]; placed[v.name] = body.home; showPlace(v); }
     body.squash.v += 0.7;
     body.goal[0] += Math.abs(body.x.x) > R * 0.6 ? -Math.sign(body.x.x) * 2 * Math.PI : 0;
     body.goal[1] += Math.abs(body.y.x) > R * 0.6 ? Math.sign(body.y.x) * 2 * Math.PI : 0;
@@ -389,9 +485,13 @@ function release(v) {
   moodUntil = now_ + 2;
 }
 for (const b of document.querySelectorAll(".store")) {
-  b.addEventListener("pointerenter", () => { mood = "joy"; moodUntil = now_ + 60; });
-  b.addEventListener("pointerleave", () => { moodUntil = now_ + 0.4; });
+  b.addEventListener("pointerenter", (e) => { if (e.pointerType === "touch") { return; } storeHover = true; nodFrom = now_ - 9; mood = "joy"; moodUntil = now_ + 60; });
+  b.addEventListener("pointerleave", () => { storeHover = false; mood = "curious"; moodUntil = now_ + 1.2; });
 }
+// On a phone there is no hover: it nods when the end comes in, and again now and then.
+let endIn = false;
+new IntersectionObserver(([e]) => { endIn = e.isIntersecting; if (endIn && touch.matches) { nodFrom = now_ + 0.6; mood = "joy"; moodUntil = now_ + 1.8; } }, { threshold: 0.6 }).observe($("#end"));
+setInterval(() => { if (endIn && touch.matches && !document.hidden) { nodFrom = now_; mood = "joy"; moodUntil = now_ + 1.8; } }, 6000);
 
 // ---- Status: right now, then four example days; they change by themselves ----
 
@@ -401,6 +501,16 @@ let liveDay = null;                               // filled by NOAA
 const day = () => inStage ? DAYS[stageDay] : liveDay ?? DAYS[0];
 const buttons = [...document.querySelectorAll("#status .segments button")];
 const MEANS = ["The Sun is calm. Nothing is on its way.", "Aurora is possible near the poles.", "GPS and radio may be less accurate.", "GPS and radio can fail for a while."];
+/// The soft light under the phone of the Kp part: three colours of each level (the app's cloud colours).
+const auras = [...document.querySelectorAll(".aura i")];
+function paintAuras() {
+  const dark = darkMode.matches;
+  auras.forEach((a, i) => {
+    const L = LOOKS[i], set = dark ? [L.dmid, L.glow, rgb(DARK_SKY[i])] : [L.main, L.mid, L.low];
+    set.forEach((c, k) => a.style.setProperty("--c" + (k + 1), rgbOf(c)));
+  });
+}
+paintAuras();
 function showStage() {
   stageLevel = inStage ? stageDay : null;
   showScreens(day());
@@ -410,6 +520,7 @@ function showStage() {
   put($("#state"), d.state);
   put($("#means"), MEANS[stageDay]);
   buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === stageDay));
+  auras.forEach((a, i) => a.classList.toggle("on", i === (inStage ? stageDay : liveLevel)));
   $("#status .thumb").style.transform = `translateX(${stageDay * 100}%)`;
 }
 new IntersectionObserver((list) => {
@@ -421,7 +532,7 @@ new IntersectionObserver((list) => {
 new IntersectionObserver((list) => {
   if (list[list.length - 1].isIntersecting || !inStage) { return; }
   inStage = false; stageDay = 0; handsUntil = 0;
-  look = copy(LOOKS[liveLevel]);
+  stageLook = copy(LOOKS[liveLevel]);
   showStage();
 }, { rootMargin: "16%" }).observe(stage);
 let autoAt = 0;
@@ -451,21 +562,32 @@ function tones() {
 
 // ---- Loops and soft entrances ----
 
-let widgetDay = 0, noted = 2;
-showWidgets(DAYS[0]);
+let noted = 2;
+// Every widget and the watch keep their own day and change on their own clock, never two at once.
+const units = [...document.querySelectorAll("#widgets [data-widget], #widgets .wt")].map((el, i) => ({ el, day: i, every: [6.7, 5.3, 4.1, 4.7][i] ?? 5, next: 1.5 + i * 1.3 }));
+units.forEach((u) => showWidgets(DAYS[u.day % 4], u.el));
+let lastWidget = 0;
 note(0); note(1);
-const loops = new Map([["#widgets", false], ["#chat", false], ["#today", false]]);
+const loops = new Map([["#widgets", false], ["#alerts", false], ["#chat", false], ["#today", false]]);
 const loopWatch = new IntersectionObserver((list) => { for (const e of list) { loops.set("#" + e.target.id, e.isIntersecting); } });
 for (const id of loops.keys()) { loopWatch.observe($(id)); }
 const every = (ms, id, run) => setInterval(() => { if (!document.hidden && !still.matches && id.some((i) => loops.get(i))) { run(); } }, ms);
-every(3600, ["#widgets"], () => { widgetDay = (widgetDay + 1) % 4; showWidgets(DAYS[widgetDay]); });
-every(3300, ["#widgets"], () => note(noted++));
+every(200, ["#widgets"], () => {
+  const u = units.filter((u) => now_ >= u.next).sort((a, b) => a.next - b.next)[0];
+  if (!u || now_ - lastWidget < 0.9) { return; }
+  u.day++; u.next = now_ + u.every; lastWidget = now_;
+  showWidgets(DAYS[u.day % 4], u.el);
+});
+every(3300, ["#alerts"], () => note(noted++));
 every(2600, ["#today"], () => stepToday());
 talkLoop(() => loops.get("#chat") && !document.hidden);
 const rooms = [...document.querySelectorAll("#chat .segments button")];
 rooms.forEach((b, i) => b.addEventListener("click", () => openRoom(i)));
 openRoom(1);
 
+// Parts off screen stop their small CSS loops (pins, rain, rings, the caret).
+const asleep = new IntersectionObserver((list) => { for (const e of list) { e.target.classList.toggle("off", !e.isIntersecting); } });
+document.querySelectorAll(".part").forEach((p) => asleep.observe(p));
 function show(el) { el.classList.add("seen"); if (el.dataset.write) { setTimeout(() => el.classList.add("done"), 2600); } }
 const appear = new IntersectionObserver((list) => {
   for (const e of list) { if (e.isIntersecting) { show(e.target); appear.unobserve(e.target); } }
@@ -481,39 +603,63 @@ for (const el of document.querySelectorAll("[data-write]")) {
 }
 document.querySelectorAll(".soft").forEach((e) => appear.observe(e));
 
-// ---- The Sun and the aurora: they move only while they are on screen ----
+// ---- The Sun, the solar wind and the aurora: live from NASA and NOAA, as in the app. They move only on screen ----
 
-const sunFilm = $("#sunfilm"), auroraCanvas = $("#aurorafilm");
-let auroraOn = false, auroraFrames = null, auroraAsked = false;
+const SDO = "https://sdo.gsfc.nasa.gov/assets/img/latest/";
+const sunStill = $("#sunstill"), sunFilm = $("#sunfilm");
+// The Sun of this hour; the baked picture stays if NASA does not answer.
+{ const im = new Image(); im.referrerPolicy = "no-referrer"; im.onload = () => { sunStill.src = im.src; }; im.src = SDO + "latest_512_0304.jpg"; }
+// The film of the last two days (8.9 MB) only on a big screen; a phone keeps the still picture.
+const bigScreen = matchMedia("(hover: hover) and (min-width: 900px)").matches;
+sunFilm.addEventListener("error", () => { if (!sunFilm.src.endsWith("img/sun.mp4")) { sunFilm.src = "img/sun.mp4"; } });
+sunFilm.addEventListener("playing", () => sunFilm.classList.add("on"));
 new IntersectionObserver(([e]) => {
-  if (e.isIntersecting && !still.matches) { sunFilm.preload = "auto"; sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
-}).observe(sunFilm);
-new IntersectionObserver(([e]) => { auroraOn = e.isIntersecting; if (auroraOn) { askAurora(); } }, { rootMargin: "200px" }).observe(auroraCanvas);
-/// The last 24 hours of NOAA's aurora model, 20 of its pictures, one melting into the next.
-async function askAurora() {
-  if (auroraAsked || navigator.connection?.saveData) { return; }
-  auroraAsked = true;
-  const list = await load("products/animations/ovation_north_24h.json");
-  if (!Array.isArray(list) || list.length < 20) { return; }
-  const step = (list.length - 1) / 19, shots = await Promise.all(Array.from({ length: 20 }, (_, i) => new Promise((done) => {
+  if (!bigScreen || still.matches) { return; }
+  if (e.isIntersecting) { if (!sunFilm.getAttribute("src")) { sunFilm.src = SDO + "latest_512_0304.mp4"; } sunFilm.play().catch(() => {}); } else { sunFilm.pause(); }
+}).observe(sunStill);
+
+/// NOAA's picture series: the aurora of the last 24 hours, the solar wind model (WSA-Enlil, the disc seen from above,
+/// cut as in the app). A few pictures, one melting into the next.
+const FILMS = [
+  { canvas: $("#aurorafilm"), list: "products/animations/ovation_north_24h.json", count: touch.matches ? 8 : 20 },
+  { canvas: $("#windfilm"), list: "products/animations/enlil.json", count: touch.matches ? 6 : 20, crop: [70, 52, 264, 264], circle: 0.468 }
+].map((f) => ({ ...f, on: false, asked: false, shots: null, drawn: -1 }));
+async function askFilm(f) {
+  if (f.asked || navigator.connection?.saveData) { return; }
+  f.asked = true;
+  const list = await load(f.list);
+  if (!Array.isArray(list) || list.length < f.count) { return; }
+  const step = (list.length - 1) / (f.count - 1);
+  const shots = await Promise.all(Array.from({ length: f.count }, (_, i) => new Promise((done) => {
     const im = new Image();
     im.referrerPolicy = "no-referrer";
     im.onload = () => done(im);
     im.onerror = () => done(null);
     im.src = SWPC.slice(0, -1) + list[Math.round(i * step)].url;
   })));
-  auroraFrames = shots.filter(Boolean);
+  f.shots = shots.filter(Boolean);
 }
-let auroraDrawn = 0;
+for (const f of FILMS) { new IntersectionObserver(([e]) => { f.on = e.isIntersecting; if (f.on) { askFilm(f); } }, { rootMargin: "200px" }).observe(f.canvas); }
+function paintShot(f, im, alpha) {
+  const c = f.canvas.getContext("2d"), side = f.canvas.width;
+  c.save();
+  c.globalAlpha = alpha;
+  if (f.circle) { c.beginPath(); c.arc(side / 2, side / 2, side * f.circle, 0, Math.PI * 2); c.clip(); }
+  if (f.crop) { c.drawImage(im, ...f.crop, 0, 0, side, side); } else { c.drawImage(im, 0, 0, side, side); }
+  c.restore();
+}
 setInterval(() => {
-  if (!auroraOn || !auroraFrames || auroraFrames.length < 8 || document.hidden || still.matches) { return; }
-  const n = auroraFrames.length, hold = 5, t = (now_ * 3.2) % (n + hold), i = Math.min(n - 1, Math.floor(t)), k = i < n - 1 ? t - i : 0;
-  if (t === auroraDrawn) { return; }
-  auroraDrawn = t;
-  const c = auroraCanvas.getContext("2d"), side = auroraCanvas.width;
-  c.globalAlpha = 1; c.drawImage(auroraFrames[i], 0, 0, side, side);
-  if (k) { c.globalAlpha = k; c.drawImage(auroraFrames[i + 1], 0, 0, side, side); }
-  auroraCanvas.style.opacity = 1;
+  if (document.hidden || still.matches) { return; }
+  for (const f of FILMS) {
+    if (!f.on || !f.shots || f.shots.length < Math.min(6, f.count)) { continue; }
+    const n = f.shots.length, hold = 5, t = (now_ * 3.2) % (n + hold), i = Math.min(n - 1, Math.floor(t)), k = i < n - 1 ? t - i : 0;
+    if (t === f.drawn) { continue; }
+    f.drawn = t;
+    if (f.circle) { f.canvas.getContext("2d").clearRect(0, 0, f.canvas.width, f.canvas.width); }
+    paintShot(f, f.shots[i], 1);
+    if (k) { paintShot(f, f.shots[i + 1], k); }
+    f.canvas.style.opacity = 1;
+  }
 }, 66);
 
 // ---- Live numbers from NOAA, the same rule as in the app: the highest measured signal wins ----
