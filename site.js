@@ -203,7 +203,7 @@ function feeling() {
   if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
   // A phone has no cursor: the first orb plays a calm little show by itself (Fable, 11-26), and starts again.
   if (touch.matches && owner.name === "hero") {
-    heroTint = idle > 8 && idle < 15.2 ? (liveLevel + 1 + heroRound % 3) % 4 : liveLevel;
+    heroTint = idle > 8 && idle < 15.2 ? (1 + heroRound % 3) % 4 : 0;
     if (idle < 8) { return "smile"; }
     if (idle < 15.2) { return "curious"; }
     if (idle > 16 && idle < 19) { return "content"; }
@@ -324,8 +324,9 @@ function drawOrb(dt) {
   const need = Math.max(24, Math.round(owner.el.clientWidth / 0.96 * Math.min(touch.matches ? 1.5 : 2, devicePixelRatio || 1)));
   if (ball && ball.canvas.width !== need) { ball.resize(need, need); }
   const heroShow = touch.matches && owner.name === "hero";
-  const ol = orbStage() ? stageLook : heroShow ? heroLook : liveLook;
-  const lv = orbStage() ? stageDay : liveLevel;
+  // Outside the Kp part the orb is always our green one, whatever the Sun does now (Dima, 11-26).
+  const ol = orbStage() ? stageLook : heroShow ? heroLook : LOOKS[0];
+  const lv = orbStage() ? stageDay : 0;
   // A strong drag of the page: a short "wow".
   if (touch.matches && Math.abs(scrollLook) > 0.8 && !(mood && now_ < moodUntil)) { mood = "wow"; moodUntil = now_ + 0.6; }
   glowColours(ol);
@@ -359,11 +360,11 @@ const pals = [...document.querySelectorAll(".pal")].map((el, i) => {
   el.innerHTML = '<canvas width="112" height="112"></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg>';
   const c = BALL[[0, 1, 3, 2][i] ?? 0].map(rgb);
   el.style.setProperty("--g", rgbOf(c[1]));
-  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(70, 11), t: 5 * i, talk: 0, at: [0.4, 1.1, 0.75, 1.45][i] ?? 1, side: i < 2 ? 1 : -1 };
+  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(9, 5.6), t: 5 * i, talk: 0, at: [0.3, 1.5, 2.7, 3.9][i] ?? 1, side: i < 2 ? 1 : -1 };
 });
-let palsOn = false, palDrawn = 0;
+let palsOn = false, palDrawn = 0, palsSince = 0;
 if (pals.length) {
-  new IntersectionObserver(([e]) => { palsOn = e.isIntersecting; }, { threshold: 0.4 }).observe($("#chat"));
+  new IntersectionObserver(([e]) => { if (e.isIntersecting && !palsOn) { palsSince = now_; } palsOn = e.isIntersecting; }, { threshold: 0.4 }).observe($("#chat"));
   // When somebody else writes, one of the friends "says" it: a few quick happy faces and small hops.
   new MutationObserver((list) => {
     for (const m of list) { for (const n of m.addedNodes) { if (n.classList?.contains("bub") && !n.classList.contains("mine") && palsOn) { const p = pals[Math.floor(Math.random() * pals.length)]; p.talk = now_ + 1.5; } } }
@@ -388,7 +389,8 @@ function stepPals(dt) {
   let any = false;
   for (const [i, p] of pals.entries()) {
     const c = PALS[i] ?? PALS[0];
-    const late = palsOn ? now_ - p.at : 0;
+    // One by one, slowly: the next one starts when the one before has almost arrived.
+    const late = palsOn ? now_ - palsSince - p.at : 0;
     p.out.step(dt, palsOn && late > 0 ? 1 : 0);
     if (!palsOn && p.out.x < 0.02) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
     any = true;
@@ -450,7 +452,8 @@ function drawScreens() {
     }
     inside.resize(c.width, c.height);
     if (kind === "chat") { inside.draw(cloudValues(LOOKS[0], 34, CHAT_LIFT)); }       // the chat: calm green, the clouds up at the bar (as in the app)
-    else if (moving) { inside.draw(cloudValues(stage_ ? stageLook : liveLook, stage_ ? stageTime : cloudTime, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
+    // Calm clouds at every level: only the colours change, never the speed or the swirl (a phone stays cool, Dima 11-26).
+    else if (moving) { inside.draw({ ...cloudValues(stage_ ? stageLook : liveLook, stage_ ? stageTime : cloudTime, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM), energy: 0 }); }
     else { inside.draw(cloudValues(LOOKS[liveLevel], 20, kind === "wide" ? 0.34 : LIFT, kind === "wide" ? 2.6 : ZOOM)); }
     c.getContext("2d").drawImage(inside.canvas, 0, 0);
   }
@@ -474,8 +477,8 @@ function frame(ms) {
     return;
   }
   glide(real);
-  cloudTime += dt * liveLook.speed;
-  stageTime += dt * stageLook.speed;
+  cloudTime += dt * SPEED[0];
+  stageTime += dt * SPEED[0];
   sinceScreens += real;
   if (sinceScreens >= 1 / 31) { sinceScreens = 0; drawScreens(); }
   stepCharts(real, day().curve);
@@ -703,7 +706,7 @@ new IntersectionObserver(([e]) => {
 /// cut as in the app). A few pictures, one melting into the next.
 const FILMS = [
   { canvas: $("#aurorafilm"), list: "products/animations/ovation_north_24h.json", count: touch.matches ? 8 : 20 },
-  { canvas: $("#windfilm"), list: "products/animations/enlil.json", count: touch.matches ? 6 : 20, crop: [70, 52, 264, 264], circle: 0.468 }
+  { canvas: $("#windfilm"), list: "products/animations/enlil.json", count: touch.matches ? 6 : 20, crop: [70, 52, 264, 264], circle: 0.468, key: true }
 ].map((f) => ({ ...f, on: false, asked: false, shots: null, drawn: -1 }));
 async function askFilm(f) {
   if (f.asked || navigator.connection?.saveData) { return; }
@@ -714,19 +717,39 @@ async function askFilm(f) {
   const shots = await Promise.all(Array.from({ length: f.count }, (_, i) => new Promise((done) => {
     const im = new Image();
     im.referrerPolicy = "no-referrer";
-    im.onload = () => done(im);
+    if (f.key) { im.crossOrigin = "anonymous"; }
+    im.onload = () => done(f.key ? keyed(f, im) : im);
     im.onerror = () => done(null);
     im.src = SWPC.slice(0, -1) + list[Math.round(i * step)].url;
   })));
   f.shots = shots.filter(Boolean);
 }
 for (const f of FILMS) { new IntersectionObserver(([e]) => { f.on = e.isIntersecting; if (f.on) { askFilm(f); } }, { rootMargin: "200px" }).observe(f.canvas); }
+/// The app's black key (idea 148): alpha = the brightest of R, G, B; black lets the card through, colours stay.
+function keyed(f, im) {
+  try {
+    const side = f.canvas.width, k = document.createElement("canvas");
+    k.width = k.height = side;
+    const c = k.getContext("2d", { willReadFrequently: true });
+    paintShot({ ...f, canvas: k }, im, 1);
+    const d = c.getImageData(0, 0, side, side), px = d.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const m = Math.max(px[i], px[i + 1], px[i + 2]);
+      if (m === 0) { px[i + 3] = 0; continue; }
+      const a = m / 255 * px[i + 3] / 255;
+      px[i] = px[i] / (m / 255); px[i + 1] = px[i + 1] / (m / 255); px[i + 2] = px[i + 2] / (m / 255); px[i + 3] = a * 255;
+    }
+    c.putImageData(d, 0, 0);
+    k.keyed = true;
+    return k;
+  } catch { return im; }
+}
 function paintShot(f, im, alpha) {
   const c = f.canvas.getContext("2d"), side = f.canvas.width;
   c.save();
   c.globalAlpha = alpha;
   if (f.circle) { c.beginPath(); c.arc(side / 2, side / 2, side * f.circle, 0, Math.PI * 2); c.clip(); }
-  if (f.crop) { c.drawImage(im, ...f.crop, 0, 0, side, side); } else { c.drawImage(im, 0, 0, side, side); }
+  if (im.keyed) { c.drawImage(im, 0, 0); } else if (f.crop) { c.drawImage(im, ...f.crop, 0, 0, side, side); } else { c.drawImage(im, 0, 0, side, side); }
   c.restore();
 }
 setInterval(() => {

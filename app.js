@@ -100,8 +100,8 @@ const wind_ = () => `<div class="card_"><div class="head">${icon("wind")}SOLAR W
 const status_ = '<div class="status"><b>9:41</b><span><svg viewBox="0 0 66 14" aria-hidden="true"><rect x="0" y="8" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="7" rx="1"/><rect x="10" y="3.500" width="3" height="9.500" rx="1"/><rect x="15" y="1" width="3" height="12" rx="1"/><path d="M32 12.600 29.600 10a3.400 3.400 0 0 1 4.800 0ZM27.600 8a6.200 6.200 0 0 1 8.800 0l1.500-1.600a8.400 8.400 0 0 0-11.800 0ZM24.900 5.200a10 10 0 0 1 14.200 0l1.500-1.600a12.200 12.200 0 0 0-17.200 0Z"/><rect x="45" y="1.500" width="19" height="11" rx="3.200"/></svg></span></div>';
 
 const SCREENS = {
-  phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}${hero_()}${flares_()}${tabs_(0)}</div>`,
-  wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
+  phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}${hero_()}<div class="pcard"></div></div>`,
+  wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div></div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">${icon("arrow")}REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
   face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
   lock: () => `<div class="scr lock" data-tone="dark"><div class="wall"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/wall-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/wall-dark.jpg"><source type="image/avif" srcset="img/wall-light.avif"><img src="img/wall-light.jpg" alt="" loading="lazy"></picture></div><div class="date">Wednesday, 25 November</div><div class="clock">9:41</div><div class="notes"></div><span class="torch l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.500h8a.8.8 0 0 1 .8.8v1.200H7.200V3.300a.8.8 0 0 1 .8-.8ZM7.200 6h9.600v.6c0 1.700-.7 2.600-1.400 3.500-.4.5-.6 1-.6 1.700v8.500a1.700 1.700 0 0 1-1.700 1.700h-2.200a1.700 1.700 0 0 1-1.700-1.700v-8.500c0-.7-.2-1.200-.6-1.700C7.900 9.200 7.200 8.300 7.200 6.600Zm4.800 6.600a1 1 0 0 0-1 1v1.600a1 1 0 0 0 2 0v-1.600a1 1 0 0 0-1-1Z" fill-rule="evenodd"/></svg></span><span class="torch r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.300 4h5.400c.5 0 .9.200 1.200.6l1 1.500h2.500A2.600 2.600 0 0 1 22 8.700v8.700a2.600 2.600 0 0 1-2.600 2.600H4.600A2.600 2.600 0 0 1 2 17.400V8.700a2.600 2.600 0 0 1 2.600-2.600h2.500l1-1.500c.3-.4.7-.6 1.200-.6ZM12 8.200a4.600 4.600 0 1 0 0 9.200 4.600 4.600 0 0 0 0-9.200Zm0 1.800a2.800 2.800 0 1 1 0 5.600 2.800 2.800 0 0 1 0-5.600Z" fill-rule="evenodd"/></svg></span><i class="homebar"></i></div>`,
@@ -217,7 +217,9 @@ function openRoom(i) {
 function fieldText(t) {
   const f = document.querySelector("#chat .field");
   f.classList.toggle("typing", t !== "");
-  f.firstElementChild.textContent = t || "Message";
+  const line = f.firstElementChild;
+  line.textContent = t || "Message";
+  line.scrollLeft = line.scrollWidth;   // one line; a long text shows its end, as a real field does
 }
 /// The conversation runs by itself, calmly and unevenly, as people write. Others' messages just come in;
 /// ours is typed letter by letter, then sent.
@@ -229,7 +231,8 @@ async function talkLoop(active) {
     if (next[0]) {
       // Mostly a pause to read, sometimes a quick answer, sometimes a long silence.
       const luck = Math.random();
-      await wait(luck < 0.25 ? some(1100, 1700) : luck < 0.8 ? some(2300, 3700) : some(4200, 5600));
+      // Sometimes two or three come one right after another, sometimes nobody writes for a while.
+      await wait(luck < 0.3 ? some(350, 900) : luck < 0.5 ? some(1200, 1900) : luck < 0.85 ? some(2400, 3800) : some(4500, 6500));
       if (mine === turnNo && active()) { say(); }
     } else {
       await wait(some(1500, 2400));
@@ -272,6 +275,7 @@ function addBubble(el, quiet) {
   box.append(el);
   while (box.children.length > 10) { box.firstElementChild.remove(); }
   if (quiet || still.matches) { return; }
+  for (const a of box.getAnimations()) { a.finish(); }   // two quick messages never overlap
   const h = el.offsetHeight + 10, mine = el.classList.contains("mine"), soft = "cubic-bezier(.22, 1, .36, 1)";
   box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 720, easing: soft });
   el.style.transformOrigin = mine ? "100% 100%" : "0 100%";
@@ -307,11 +311,10 @@ function stepCharts(dt, to, force) {
 // radius 22; title 13 semibold capitals; big value 34 + word 20 medium; notes 15; rows 15 with a dotted term;
 // small labels 12. A picture takes a third of the card (PictureBeside); the black of the pictures is see-through. ----
 
-const chev = (open) => `<i class="chev">${icon(open ? "up" : "down")}</i>`;
-const cardHead = (i, t, peek) => `<div class="ch">${icon(i)}<span class="ct">${t}</span>${peek ? `<span class="pk">· ${peek}</span>` : `<span class="ci">${icon("info")}</span>`}${chev(!peek)}</div>`;
-const tileHead = (i, t) => `<div class="ch">${icon(i)}<span class="ct">${t}</span><span class="ci end">${icon("info")}</span></div>`;
+// On the site the cards are calm: no collapse chevron, no (i), no page dots (Dima, 11-26).
+const cardHead = (i, t) => `<div class="ch">${icon(i)}<span class="ct">${t}</span></div>`;
+const tileHead = cardHead;
 const term = (t, before, value, word, first) => `<div class="tr${first ? " first" : ""}"><u>${t}</u><span>${before ? `<small>${before}</small> ` : ""}${value ? `<small>${value}</small>${word ? " · " : ""}` : ""}${word ? `<b>${word}</b>` : ""}</span></div>`;
-const dots = (n) => `<div class="pdots">${Array.from({ length: n }, (_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>`;
 // The X-ray of the last 12 hours: quiet with a few short flares, ending in the "Now" dot.
 const XRAY = (() => {
   const spikes = { 13: 26, 37: 18, 41: 9, 46: 12, 52: 14, 64: 30, 78: 6 };
@@ -322,38 +325,53 @@ const XRAY = (() => {
 const gaugeTicks = Array.from({ length: 41 }, (_, i) => { const a = (135 + 270 * i / 40) * Math.PI / 180; return `<line x1="${(52 * Math.cos(a)).toFixed(1)}" y1="${(52 * Math.sin(a)).toFixed(1)}" x2="${(60 * Math.cos(a)).toFixed(1)}" y2="${(60 * Math.sin(a)).toFixed(1)}"/>`; }).join("");
 const HOURS = [["Now", 8, 90, 1], ["14", 8, 84, 1], ["15", 9, 80, 1], ["16", 9, 62, 1], ["17", 8, 40, 0], ["18", 8, 20, 0], ["19", 7, 10, 0], ["20", 7, 5, 0]];
 const wx = (rain) => `<svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${rain ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg>`;
+// The map of the app's event cards (Apple Maps, coloured, with relief), cut from the app without the "you are here" dot.
+const cmap = (n, x, y, pin) => `<div class="cmap" aria-hidden="true"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/map-${n}-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/map-${n}-dark.jpg"><source type="image/avif" srcset="img/map-${n}-light.avif"><img src="img/map-${n}-light.jpg" alt="" loading="lazy" draggable="false"></picture><div class="pinn ${n}" style="left:${x}%;top:${y}%">${pin}</div></div>`;
 
 const CARDS = {
-  flares: `<article class="card c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
-    <p class="vl"><span>B1.4</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
+  flares: `<article class="card s4 c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
+    <p class="vl"><span>B1.5</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
     <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
     <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
-    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div>${dots(3)}</div>
-      <div class="col bottom"><p class="lab">Flare chance, next 24 h:</p>${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
+    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div></div>
+      <div class="col bottom">${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
   </div></article>`,
-  wind: `<article class="card c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
-    <div class="col"><u class="lab0">Speed</u><p class="vl"><span>468</span><small>km/s</small> <b>Raised</b></p>${term("Density", "", "0.9 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.4 nT", "Calm")}</div>
-    <div class="pic3"><div class="disc circ"><img class="key" src="img/wind.jpg" alt="The solar wind model of NOAA, seen from above" draggable="false"><canvas id="windfilm" class="key" width="400" height="400" style="opacity:0"></canvas></div><p class="legend"><i class="sun_d"></i>Sun <i class="earth_d"></i>Earth</p>${dots(5)}</div>
-  </div></div></article>`,
-  alerts: `<article class="card c-alerts shut">${cardHead("alert", "Alerts", "All normal")}</article>`,
-  aurora: `<article class="card c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
+  wind: `<article class="card s4 c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
+    <div class="col"><u class="lab0">Speed</u><p class="vl"><span>325</span><small>km/s</small> <b>Calm</b></p>${term("Density", "", "0.8 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.3 nT", "Calm")}</div>
+    <div class="pic3"><div class="disc circ"><picture><source type="image/avif" srcset="img/wind-key.avif"><img src="img/wind-key.png" alt="The solar wind model of NOAA, seen from above" draggable="false"></picture><canvas id="windfilm" width="400" height="400" style="opacity:0"></canvas></div><p class="legend"><i class="sun_d"></i>Sun <i class="earth_d"></i>Earth</p></div>
+  </div><p class="cn wline">The wind from the Sun is calm. Nothing is on its way to the Earth.</p></div></article>`,
+  alerts: `<article class="card s4 c-alerts">${cardHead("alert", "Alerts")}<div class="cb">
+    <p class="w20">All normal</p><p class="cn">No storms, no blackouts, no radiation now.</p>
+    <div class="arows">${term("Magnetic storm", "", "", "None", 1)}${term("Radio blackout", "", "", "None")}${term("Radiation storm", "", "", "None")}${term("Solar wind", "", "325 km/s", "Calm")}${term("Aurora here", "", "6% now", "Unlikely")}</div>
+    <div class="notif">${icon("bell")}<span>Notifications</span><em>Off ${icon("down")}</em></div>
+  </div></article>`,
+  aurora: `<article class="card s4 c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
     <div class="col bottom"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div>
-    <div class="pic3"><div class="disc sq"><img class="key" src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" class="key" width="560" height="560" style="opacity:0"></canvas></div></div>
+    <div class="pic3 top"><div class="disc sq"><img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" width="560" height="560" style="opacity:0"></canvas></div></div>
   </div><div class="outlook"><p>Storm expected tomorrow (Kp 5): a better chance to see aurora.</p></div></div></article>`,
-  quakes: `<article class="card c-map">${cardHead("quake", "Earthquakes")}<div class="land quake"></div><div class="pinn quake" aria-hidden="true"><i></i><i></i><i></i><b>4.3</b></div><i class="me" style="--x:66%;--y:46%"></i><div class="cb"><div class="words"><p class="v34">2</p><p class="w20">M4+ near you</p><p class="cn">Closest: M4.3, 160 km away. Last 24 h.</p></div></div></article>`,
-  fires: `<article class="card c-map">${cardHead("fire", "Wildfires")}<div class="land fire"></div><div class="pinn fire" aria-hidden="true"><i></i><i></i><b>${icon("fire")}</b></div><i class="me" style="--x:62%;--y:64%"></i><div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away.</p></div></div></article>`,
-  weather: `<article class="card c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
-    <div class="wnow"><p class="v34">8°</p><p class="w20">Rain</p><p class="cn">Raining now</p></div>
+  quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>4.3</b>")}<div class="cb"><div class="words"><p class="v34">2</p><p class="w20">M4+ near you</p><p class="cn">Closest: M4.3, 160 km away.</p></div></div></article>`,
+  fires: `<article class="card s2 c-map">${cardHead("fire", "Wildfires")}${cmap("fire", 64, 30, `<i></i><i></i><b>${icon("fire")}</b>`)}<div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away. 212 tracked worldwide.</p></div></div></article>`,
+  weather: `<article class="card s2 c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
+    <div class="wnow"><p class="v34">8°</p><p class="w20">Rain</p></div>
     <div class="hrs">${HOURS.map(([t, c, r, rain]) => `<div><b>${t}</b>${wx(rain)}<span>${r >= 20 ? r + "%" : "&nbsp;"}</span><em>${c}°</em></div>`).join("")}</div></div></div></article>`,
-  uv: `<article class="card tile2 c-uv">${tileHead("sun", "UV index")}<div class="cb"><p class="vl"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="cn end">Clear sky: up to 4 at 13:00.</p></div></article>`,
-  press: `<article class="card tile2 c-press">${tileHead("gauge", "Pressure")}<div class="cb"><div class="gauge"><svg viewBox="-62 -62 124 124" aria-hidden="true">${gaugeTicks}<line id="needle" class="needle" x1="46" y1="0" x2="61" y2="0"/></svg><p><span id="hpa">1015</span><small id="ptrend">↓ Falling</small></p><em>hPa</em></div></div></article>`
+  uv: `<article class="card s1 tile2 c-uv">${tileHead("sun", "UV index")}<div class="cb"><p class="vl"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="cn end">Clear sky: up to 4 at 13:00.</p></div></article>`,
+  press: `<article class="card s1 tile2 c-press">${tileHead("gauge", "Pressure")}<div class="cb"><div class="gauge"><svg viewBox="-62 -62 124 124" aria-hidden="true">${gaugeTicks}<line id="needle" class="needle" x1="46" y1="0" x2="61" y2="0"/></svg><p><span id="hpa">1015</span><small id="ptrend">↓ Falling</small></p><em>hPa</em></div></div></article>`
 };
-// Three columns on a computer (as the iPad mosaic); on a phone the groups run sideways, one card wide.
-document.querySelector("#bento").innerHTML = [
-  [["flares"], ["quakes"]],
-  [["wind", "alerts"], ["aurora"]],
-  [["weather", "pair"], ["fires"]]
-].map((col) => `<div class="bcol">${col.map((g) => `<div class="bgrp">${g.map((k) => k === "pair" ? `<div class="pair2">${CARDS.uv}${CARDS.press}</div>` : CARDS[k]).join("")}</div>`).join("")}</div>`).join("");
+// The phones show the same Solar flares card as the page (no tab bar: less noise), at the app's size, scaled to the screen.
+const phoneFlares = `<article class="card c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
+    <p class="vl"><span data-d="flare"></span> <b data-d="flareWord"></b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
+    <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
+    <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
+    <div class="pb lead"><div class="pic3"><div class="disc">${[0, 1, 2, 3].map((i) => `<img src="img/sun${i}.jpg" alt="" data-sun="${i}" loading="lazy" draggable="false">`).join("")}</div></div>
+      <div class="col bottom">${term("X Strong", "Chance", "", '<span data-d="x"></span>', 1)}${term("M Medium", "Chance", "", '<span data-d="m"></span>')}${term("C Small", "Chance", "", "15%")}</div></div>
+  </div></article>`;
+for (const el of document.querySelectorAll(".pcard")) { el.innerHTML = phoneFlares; }
+function fitCards() { for (const el of document.querySelectorAll(".pcard")) { el.style.transform = `scale(${(el.closest(".dev").clientWidth / 450).toFixed(4)})`; } }
+fitCards();
+addEventListener("resize", fitCards);
+// One mosaic of equal squares: a card takes 4, 2 or 1 of them. The squares keep their size; only the order of the
+// places changes with the width (phone: two columns, downwards; computer: six columns, sideways).
+document.querySelector("#bento").innerHTML = ["flares", "alerts", "aurora", "wind", "quakes", "weather", "fires", "uv", "press"].map((k) => CARDS[k]).join("");
 // The cards rise one after another.
 document.querySelectorAll("#bento .card").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
 let todayStep = 0, lastHpa = 1015;
