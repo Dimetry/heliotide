@@ -373,7 +373,7 @@ fitCards();
 addEventListener("resize", fitCards);
 // One mosaic of equal squares: a card takes 4, 2 or 1 of them. The squares keep their size; only the order of the
 // places changes with the width (phone: two columns, downwards; computer: six columns, sideways).
-document.querySelector("#bento").innerHTML = ["flares", "alerts", "aurora", "wind", "quakes", "fires", "uv", "press", "weather"].map((k) => CARDS[k]).join("");
+document.querySelector("#bento").innerHTML = ["flares", "wind", "aurora", "quakes", "fires", "uv", "press", "weather"].map((k) => CARDS[k]).join("");
 // The cards rise one after another.
 document.querySelectorAll("#bento .card").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
 let todayStep = 0, lastHpa = 1015;

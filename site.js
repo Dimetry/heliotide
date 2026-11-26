@@ -362,7 +362,7 @@ const pals = [...document.querySelectorAll(".pal")].map((el, i) => {
   el.style.setProperty("--g", rgbOf(c[1]));
   return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(9, 5.6), t: 5 * i, talk: 0, at: [0.3, 1.35, 2.4, 3.45][i] ?? 1, k: 0, side: i < 2 ? 1 : -1 };
 });
-let palsOn = false, palDrawn = 0, palsSince = 0;
+let palsOn = false, palDrawn = 0, palsSince = 0, palPhone = null;
 if (pals.length) {
   new IntersectionObserver(([e]) => { if (e.isIntersecting && !palsOn) { palsSince = now_; } palsOn = e.isIntersecting; }, { threshold: 0.4 }).observe($("#chat"));
   // When somebody else writes, one of the friends "says" it: a few quick happy faces and small hops.
@@ -398,17 +398,12 @@ function stepPals(dt) {
     p.el.style.visibility = "visible";
     p.t += dt;
     const talking = now_ < p.talk, other = pals.find((q) => q !== p && now_ < q.talk);
-    const r = p.el.getBoundingClientRect();
-    let aim = [0.8 * p.side, 0.25];                          // into the chat
-    if (i === 1) {                                           // the curious one reads the newest message, and looks at you now and then
-      const last = document.querySelector("#chat .bubbles > .bub:last-child");
-      if (p.t % 6 < 1) { aim = [0, 0.1]; }
-      else if (last) { const o = last.getBoundingClientRect(), dx = o.left + o.width / 2 - r.left - r.width / 2, dy = o.top + o.height / 2 - r.top - r.height / 2, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d]; }
-    }
-    if (i === 2 && p.t % 10 < 4) { aim = [-0.6 * p.side, -0.6]; }       // the dramatic one looks up and away
-    if (i === 3 && p.t % 9 < 3) { aim = [-0.7 * p.side, 0.6]; }         // the grump looks down and away
-    if (other) { const o = other.el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d * 0.5 + 0.4]; }
-    const face_ = talking ? (Math.floor(now_ * c.talk[2]) % 2 ? c.talk[0] : c.talk[1]) : other ? c.other : palFace(c, p.t);
+    // All of them look at the chat: one focal point, the middle of the phone's screen (who is low looks up, who is
+    // high looks down). Their places are measured twice a second, not every frame (cheap).
+    if (!p.r || now_ - (p.rAt ?? -9) > 0.5) { p.r = p.el.getBoundingClientRect(); p.rAt = now_; palPhone = $("#chat .phone").getBoundingClientRect(); }
+    const fx = palPhone.left + palPhone.width / 2 - p.r.left - p.r.width / 2, fy = palPhone.top + palPhone.height * 0.55 - p.r.top - p.r.height / 2, fd = Math.hypot(fx, fy) || 1;
+    const aim = [fx / fd, fy / fd];
+    const face_ = talking ? (Math.floor(now_ * c.talk[2]) % 2 ? c.talk[0] : c.talk[1]) : palFace(c, p.t);
     p.face.step(dt, face_, aim);
     const nod = talking && c.nod ? Math.sin(Math.min(1, (p.talk - now_) / 1.5) * Math.PI) * 0.25 : 0;
     p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53) - nod]));
@@ -416,7 +411,7 @@ function stepPals(dt) {
     const e1 = eo(Math.min(1, k / 0.45)), e2 = k < 0.45 ? 0 : eio((k - 0.45) / 0.55);
     const x = p.side * (95 - 175 * e1 + 80 * e2), lift = -Math.sin(Math.PI * Math.min(1, k * 1.1)) * 26;
     const hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
-    const tilt = c.tilt * (i === 1 ? Math.sign(aim[0]) || 1 : 1);
+    const tilt = c.tilt;
     p.el.style.transform = `translate(calc(${x.toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16 + lift).toFixed(1)}px) rotate(${tilt}deg) scale(${(0.75 + 0.25 * e1).toFixed(3)})`;
     const front = k > 0.45 ? "2" : "0";                       // behind the phone until it is out past the edge
     if (p.el.style.zIndex !== front) { p.el.style.zIndex = front; }

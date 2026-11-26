@@ -814,3 +814,20 @@ main { overflow-x: clip; }
 .low { padding-right: 0; width: 340px; } .low .phone { right: 20px; }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { .low { width: 400px; } }
 @media (max-width: 760px) { .low { width: 300px; } }
+/* Computer (Dima, 11-26, late): Solar wind and Aurora next to Solar flares, Alerts hidden for now, UV over Pressure on
+   the right; seven columns, two rows, fourteen squares, no holes. Weather only on a phone and a tablet. */
+@media (min-width: 1100px) {
+  #bento { --n: 7; --W: min(100vw - 2 * var(--edge), 1160px);
+    grid-template-areas: "f f w w a a u" "f f q q r r p"; grid-auto-rows: var(--u); }
+  #bento .c-flares { grid-area: f; } #bento .c-wind { grid-area: w; } #bento .c-aurora { grid-area: a; }
+  #bento .c-map:nth-of-type(4) { grid-area: q; } #bento .c-map:nth-of-type(5) { grid-area: r; }
+  #bento .c-uv { grid-area: u; } #bento .c-press { grid-area: p; }
+  /* Two-square cards are lower here: one line less. */
+  #bento .c-wind .tr:not(.first) { display: none; }
+  #bento .c-aurora .cn { display: none; }
+}
+/* Maps: the diagonal leans the other way, steeper, and melts softly into the card. */
+.cmap { clip-path: none; width: 64%; -webkit-mask: linear-gradient(64deg, transparent 22%, rgba(0, 0, 0, .55) 42%, #000 62%); mask: linear-gradient(64deg, transparent 22%, rgba(0, 0, 0, .55) 42%, #000 62%); }
+.cmap .pinn, .c-map .cmap .pinn { left: 66%; }
+.cmap.quake img { left: calc(66% - .418 * 135%); } .cmap.fire img { left: calc(66% - .50 * 135%); }
+.cmap { -webkit-mask: linear-gradient(42deg, transparent 30%, rgba(0, 0, 0, .55) 46%, #000 64%); mask: linear-gradient(42deg, transparent 30%, rgba(0, 0, 0, .55) 46%, #000 64%); }
