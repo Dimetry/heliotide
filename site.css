@@ -759,7 +759,7 @@ main { overflow-x: clip; }
 .field { padding-right: calc(var(--p) * 46); }
 .field > span { display: block; white-space: nowrap; overflow: hidden; }
 /* The page's Solar flares card on the phone screens: the app's width, scaled; frosted as the app's cards. */
-.scr > .pcard { left: calc(var(--p) * 20); top: calc(var(--p) * 450); width: 410px; transform-origin: 0 0; }
+.scr > .pcard { left: calc(var(--p) * 20); top: calc(var(--p) * 450); width: 362px; transform-origin: 0 0; }
 .pcard .card { background: rgba(255, 255, 255, .3); box-shadow: inset 0 0 0 .8px rgba(255, 255, 255, .5); }
 @media (prefers-color-scheme: dark) { .pcard .card { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 .8px rgba(255, 255, 255, .12); } }
 .pcard .card .cb { padding-bottom: 16px; }
@@ -774,3 +774,17 @@ main { overflow-x: clip; }
   #status h2, #means { white-space: nowrap; }
   #means { max-width: none; text-wrap: nowrap; }
 }
+/* 6e fix: Aurora and Solar wind are two squares; their picture fills the height on the right. Weather is left out on
+   a computer, where six columns take exactly 18 squares (three rows, no holes). */
+.c-wind .pb, .c-aurora .pb { height: 100%; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; }
+.c-wind .pic3, .c-aurora .pic3 { height: 100%; justify-content: flex-start; }
+.c-wind .disc, .c-aurora .disc { height: 100%; width: auto; aspect-ratio: 1; }
+.c-wind .col, .c-aurora .col { justify-content: flex-end; }
+@media (min-width: 1100px) { #bento .c-wx { display: none; } }
+.c-map .cb { align-items: flex-start; }
+.c-map .words .cn { max-width: 100%; }
+/* Nothing may ever run over a card's title: what does not fit is cut at the top of the content. */
+#bento .card .cb { overflow: hidden; }
+.c-alerts .cb { justify-content: space-between; }
+#bento .axis b { margin-right: 0; }
+#bento .fchart { margin-right: 0; } #bento .fchart i { right: -5px; }

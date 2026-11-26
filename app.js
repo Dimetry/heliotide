@@ -336,21 +336,20 @@ const CARDS = {
     <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div></div>
       <div class="col bottom">${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
   </div></article>`,
-  wind: `<article class="card s4 c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
-    <div class="col"><u class="lab0">Speed</u><p class="vl"><span>325</span><small>km/s</small> <b>Calm</b></p>${term("Density", "", "0.8 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.3 nT", "Calm")}</div>
-    <div class="pic3"><div class="disc circ"><picture><source type="image/avif" srcset="img/wind-key.avif"><img src="img/wind-key.png" alt="The solar wind model of NOAA, seen from above" draggable="false"></picture><canvas id="windfilm" width="400" height="400" style="opacity:0"></canvas></div><p class="legend"><i class="sun_d"></i>Sun <i class="earth_d"></i>Earth</p></div>
-  </div><p class="cn wline">The wind from the Sun is calm. Nothing is on its way to the Earth.</p></div></article>`,
+  wind: `<article class="card s2 c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
+    <div class="col"><p class="vl"><span>325</span><small>km/s</small> <b>Calm</b></p>${term("Density", "", "0.8 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.3 nT", "Calm")}</div>
+    <div class="pic3"><div class="disc circ"><picture><source type="image/avif" srcset="img/wind-key.avif"><img src="img/wind-key.png" alt="The solar wind model of NOAA, seen from above" draggable="false"></picture><canvas id="windfilm" width="400" height="400" style="opacity:0"></canvas></div></div>
+  </div></div></article>`,
   alerts: `<article class="card s4 c-alerts">${cardHead("alert", "Alerts")}<div class="cb">
-    <p class="w20">All normal</p><p class="cn">No storms, no blackouts, no radiation now.</p>
+    <p class="w20">All normal</p>
     <div class="arows">${term("Magnetic storm", "", "", "None", 1)}${term("Radio blackout", "", "", "None")}${term("Radiation storm", "", "", "None")}${term("Solar wind", "", "325 km/s", "Calm")}${term("Aurora here", "", "6% now", "Unlikely")}</div>
-    <div class="notif">${icon("bell")}<span>Notifications</span><em>Off ${icon("down")}</em></div>
   </div></article>`,
-  aurora: `<article class="card s4 c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
+  aurora: `<article class="card s2 c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
     <div class="col bottom"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div>
     <div class="pic3 top"><div class="disc sq"><img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" width="560" height="560" style="opacity:0"></canvas></div></div>
-  </div><div class="outlook"><p>Storm expected tomorrow (Kp 5): a better chance to see aurora.</p></div></div></article>`,
-  quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>4.3</b>")}<div class="cb"><div class="words"><p class="v34">2</p><p class="w20">M4+ near you</p><p class="cn">Closest: M4.3, 160 km away.</p></div></div></article>`,
-  fires: `<article class="card s2 c-map">${cardHead("fire", "Wildfires")}${cmap("fire", 64, 30, `<i></i><i></i><b>${icon("fire")}</b>`)}<div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away. 212 tracked worldwide.</p></div></div></article>`,
+  </div></div></article>`,
+  quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>4.3</b>")}<div class="cb"><div class="words"><p class="w20">2 near you, M4+</p><p class="cn">Closest: M4.3, 160 km away.</p></div></div></article>`,
+  fires: `<article class="card s2 c-map">${cardHead("fire", "Wildfires")}${cmap("fire", 64, 30, `<i></i><i></i><b>${icon("fire")}</b>`)}<div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away.</p></div></div></article>`,
   weather: `<article class="card s2 c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
     <div class="wnow"><p class="v34">8°</p><p class="w20">Rain</p></div>
     <div class="hrs">${HOURS.map(([t, c, r, rain]) => `<div><b>${t}</b>${wx(rain)}<span>${r >= 20 ? r + "%" : "&nbsp;"}</span><em>${c}°</em></div>`).join("")}</div></div></div></article>`,
@@ -371,7 +370,7 @@ fitCards();
 addEventListener("resize", fitCards);
 // One mosaic of equal squares: a card takes 4, 2 or 1 of them. The squares keep their size; only the order of the
 // places changes with the width (phone: two columns, downwards; computer: six columns, sideways).
-document.querySelector("#bento").innerHTML = ["flares", "alerts", "aurora", "wind", "quakes", "weather", "fires", "uv", "press"].map((k) => CARDS[k]).join("");
+document.querySelector("#bento").innerHTML = ["flares", "alerts", "aurora", "wind", "quakes", "fires", "uv", "press", "weather"].map((k) => CARDS[k]).join("");
 // The cards rise one after another.
 document.querySelectorAll("#bento .card").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
 let todayStep = 0, lastHpa = 1015;
