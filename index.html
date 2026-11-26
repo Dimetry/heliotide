@@ -27,8 +27,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://heliotide.app/#site","name":"Heliotide","url":"https://heliotide.app/","inLanguage":"en"},{"@type":"MobileApplication","@id":"https://heliotide.app/#app","name":"Heliotide: Space Weather","url":"https://heliotide.app/","image":"https://heliotide.app/img/favicon-512.png","description":"Space weather in plain words: live K-index, solar flares, solar wind, aurora, alerts and earthquakes near you.","operatingSystem":"iOS 18 or later, iPadOS 18 or later","applicationCategory":"WeatherApplication","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}]}</script>
-  <link rel="stylesheet" href="site.css">
-  <noscript><style>.soft, [data-write], #hero .intro > *, #hero .show, #bar .word > span { opacity: 1 !important; filter: none !important; transform: none !important; } #status { display: none; }</style></noscript>
+  <link rel="stylesheet" href="site.css?v=6d">
+  <noscript><style>.soft, .family .m, [data-write], #hero .intro > *, #hero .show, #bar .word > span { opacity: 1 !important; filter: none !important; transform: none !important; } #status { display: none; }</style></noscript>
 </head>
 <body>
   <div id="bar"><i class="haze a"></i><i class="haze b"></i><div class="word" role="img" aria-label="Heliotide"><span style="--i:0">H</span><span style="--i:1">E</span><span style="--i:2">L</span><span style="--i:3">I</span><span class="sun_" style="--i:4"><svg viewBox="-100 -100 200 200" aria-hidden="true"><line style="--i:0" x1="0.0" y1="-62.0" x2="0.0" y2="-74.0"/><line style="--i:1" x1="43.8" y1="-43.8" x2="52.3" y2="-52.3"/><line style="--i:2" x1="62.0" y1="0.0" x2="74.0" y2="0.0"/><line style="--i:3" x1="43.8" y1="43.8" x2="52.3" y2="52.3"/><line style="--i:4" x1="0.0" y1="62.0" x2="0.0" y2="74.0"/><line style="--i:5" x1="-43.8" y1="43.8" x2="-52.3" y2="52.3"/><line style="--i:6" x1="-62.0" y1="0.0" x2="-74.0" y2="0.0"/><line style="--i:7" x1="-43.8" y1="-43.8" x2="-52.3" y2="-52.3"/></svg><div class="o" data-orb="bar"></div><b>O</b></span><span style="--i:5">T</span><span style="--i:6">I</span><span style="--i:7">D</span><span style="--i:8">E</span></div></div>
@@ -39,7 +39,7 @@
         <div class="slot" data-orb="hero"></div>
         <h1 data-write="char">Solar Activity App</h1>
         <p data-write="word" style="--s:.45s">Space weather in plain words: what the Sun and the Earth are doing right now. Flares, storms, aurora, earthquakes.</p>
-        <a class="store" href="https://apps.apple.com/app/id6836600764"><picture><source media="(prefers-color-scheme: dark)" srcset="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/en-us"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us" width="150" height="50" alt="Download on the App Store" referrerpolicy="no-referrer"></picture></a>
+        <span class="store soon" role="img" aria-label="Soon on the App Store"><small>Soon on</small><b>App Store</b></span>
       </div>
       <div class="show holder" aria-hidden="true"><div class="dev phone" data-screen="phone"></div></div>
     </section>
@@ -90,13 +90,13 @@
     </section>
 
     <section class="part" id="devices">
-      <div class="lead"><h2 data-write="word">On every mobile screen</h2><p data-write="word" style="--s:.15s">iPhone, iPhone Duo, iPad and iPad mini. In light and dark.</p></div>
-      <div class="family">
-        <div class="m m-ipad soft from-r"><img src="img/family-ipad-light.png" alt="The map of Heliotide on an iPad" loading="lazy" draggable="false"></div>
-        <div class="m m-mini soft from-l" style="--d:.12s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-mini-dark.png"><img src="img/family-mini-light.png" alt="Today on an iPad mini during a magnetic storm" loading="lazy" draggable="false"></picture></div>
-        <div class="m m-duo soft from-l" style="--d:.24s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-duoc-dark.png"><img src="img/family-duoc-light.png" alt="World Chat on a closed iPhone Duo" loading="lazy" draggable="false"></picture></div>
-        <div class="m m-phone soft from-r" style="--d:.36s"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-phone-dark.png"><img src="img/family-phone-light.png" alt="Today on an iPhone, quiet space weather" loading="lazy" draggable="false"></picture></div>
-        <div class="m m-watch soft from-r" style="--d:.48s"><img src="img/family-watch-light.png" alt="Heliotide on an Apple Watch, severe storm" loading="lazy" draggable="false"></div>
+      <div class="lead"><h2 data-write="word">On every mobile screen</h2><p data-write="word" style="--s:.15s">iPhone · iPhone Duo · iPad · iPad mini. In light and dark.</p></div>
+      <div class="family soft-set">
+        <div class="m m-ipad from-r"><img src="img/family-ipad-light.png" alt="The map of Heliotide on an iPad" loading="lazy" draggable="false"></div>
+        <div class="m m-mini from-l"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-mini-dark.png"><img src="img/family-mini-light.png" alt="Today on an iPad mini during a magnetic storm" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-duo from-l"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-duoc-dark.png"><img src="img/family-duoc-light.png" alt="World Chat on a closed iPhone Duo" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-phone from-r"><picture><source media="(prefers-color-scheme: dark)" srcset="img/family-phone-dark.png"><img src="img/family-phone-light.png" alt="Today on an iPhone, quiet space weather" loading="lazy" draggable="false"></picture></div>
+        <div class="m m-watch from-r"><img src="img/family-watch-light.png" alt="Heliotide on an Apple Watch, severe storm" loading="lazy" draggable="false"></div>
       </div>
     </section>
 
@@ -104,18 +104,19 @@
       <div class="lead">
         <h2 data-write="word">See what the Sun is doing</h2>
         <p class="deal" data-write="word" style="--s:.3s">No ads. No subscription. Completely free. Worldwide.</p>
-        <a class="store" href="https://apps.apple.com/app/id6836600764"><picture><source media="(prefers-color-scheme: dark)" srcset="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/white/en-us"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us" width="150" height="50" alt="Download on the App Store" referrerpolicy="no-referrer"></picture></a>
+        <span class="store soon" role="img" aria-label="Soon on the App Store"><small>Soon on</small><b>App Store</b></span>
       </div>
       <div class="slot art" data-orb="end" data-look="#end .store"></div>
     </section>
   </main>
   <footer>
     <nav aria-label="Pages"><a href="support/">Support</a><a href="privacy/">Privacy Policy</a><a href="sources/">Data Sources</a></nav>
+    <p class="love">Made with love in Ukraine <span role="img" aria-label="flag of Ukraine">🇺🇦</span></p>
   </footer>
-  <script src="base.js"></script>
-  <script src="shaders.js"></script>
-  <script src="face.js"></script>
-  <script src="app.js"></script>
-  <script src="site.js"></script>
+  <script src="base.js?v=6d"></script>
+  <script src="shaders.js?v=6d"></script>
+  <script src="face.js?v=6d"></script>
+  <script src="app.js?v=6d"></script>
+  <script src="site.js?v=6d"></script>
 </body>
 </html>

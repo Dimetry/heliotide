@@ -39,7 +39,7 @@ const level = () => stageLevel ?? liveLevel;
 const copy = (look) => Object.fromEntries(Object.entries(look).map(([k, v]) => [k, Array.isArray(v) ? v.slice() : v]));
 // Two looks, so nothing outside the Kp part ever takes its example colours: the live one (today's level) and the
 // one of the Kp part. The orb and the phone of a part always read the same one, so their colours change together.
-let liveLook = copy(LOOKS[0]), stageLook = copy(LOOKS[0]);
+let liveLook = copy(LOOKS[0]), stageLook = copy(LOOKS[0]), heroLook = copy(LOOKS[0]);
 function glideTo(look, to, f) {
   for (const k in to) {
     if (Array.isArray(to[k])) { for (let i = 0; i < 3; i++) { look[k][i] += (to[k][i] - look[k][i]) * f; } }
@@ -50,6 +50,7 @@ function glide(dt) {
   const f = 1 - Math.exp(-dt * 3.2);
   glideTo(liveLook, LOOKS[liveLevel], f);
   glideTo(stageLook, LOOKS[inStage ? stageDay : liveLevel], f);
+  glideTo(heroLook, LOOKS[typeof heroTint === "number" ? heroTint : liveLevel], 1 - Math.exp(-dt * 2.4));
 }
 const orbStage = () => owner?.name === "status" && inStage;
 
@@ -72,7 +73,7 @@ const face = new LivingFace();
 /// The orb lives in several places of the page. Each place scrolls with the page by itself (nothing follows the scroll
 /// with a delay); the orb is shown in one place at a time and grows out of it softly.
 const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
-  el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>`;
+  el.innerHTML = `<button class="orb" type="button" aria-label="${el.dataset.orb === "bar" ? "Back to the top" : "Heliotide"}"><canvas></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg></button>${el.dataset.orb === "bar" ? "" : '<i class="zz" aria-hidden="true"><b>Z</b><b>z</b><b>z</b></i>'}`;
   const button = el.querySelector("button"), canvas = el.querySelector("canvas");
   return { el, look: el.dataset.look ? document.querySelector(el.dataset.look) : null, feel: el.dataset.feel?.split(" "), roam: "roam" in el.dataset, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
 });
@@ -94,7 +95,7 @@ function measure() {
   W = w;
   const dpr = Math.min(2, devicePixelRatio || 1);
   big = Math.max(...views.map((v) => v.el.clientWidth)) / 2;
-  for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(touch.matches ? 2 : 3, devicePixelRatio || 1)); if (v.canvas.width !== side) { v.canvas.width = v.canvas.height = side; } }
+  for (const v of views) { const side = Math.round(v.el.clientWidth / 0.96 * Math.min(touch.matches ? 2 : 3, devicePixelRatio || 1)); if (v.canvas.width !== side || v.canvas.height !== side) { v.canvas.width = v.canvas.height = side; } }
   for (const c of screens) { const [cw, ch] = c.dataset.bg !== "wide" ? [132, 286] : [240, 168]; if (c.width !== cw) { c.width = cw; c.height = ch; } }
   dirty = true;
 }
@@ -145,9 +146,14 @@ const body = {
     this.tilt.v = 0;
     this.squash.v += 1.1 + power * 0.16;
     // Off the middle it turns, the more the farther out; a quick series of taps adds up.
-    const turns = far > 0.12 ? 1 : 0;
-    if (turns && Math.abs(ux) >= Math.abs(uy)) { this.goal[0] -= Math.sign(ux) * 2 * Math.PI; this.spin[0].v -= ux * 6; }
-    else { this.goal[1] += (turns ? Math.sign(uy) : 1) * 2 * Math.PI; this.spin[1].v += (turns ? uy : 1) * 6; }
+    if (far > 0.12) { this.roll(-ux, uy, 6); } else { this.roll(0, 1, 6); }
+  },
+  /// One full turn along one line: (rx, ry) is the way the face moves (x right, y up). The goal is always a whole
+  /// number of turns along that line, so the ball ends exactly as it began and never tumbles across.
+  roll(rx, ry, speed) {
+    const l = Math.hypot(rx, ry) || 1, u = [rx / l, ry / l], now = this.spin[0].x * u[0] + this.spin[1].x * u[1];
+    const n = Math.round(now / (2 * Math.PI)) + 1;
+    for (let i = 0; i < 2; i++) { this.goal[i] = u[i] * n * 2 * Math.PI; this.spin[i].v += u[i] * speed; }
   },
   wrap(a) { return a > Math.PI / 2 ? a - Math.PI : a < -Math.PI / 2 ? a + Math.PI : a; },   // a squash has no front and back
   step(dt, R) {
@@ -169,9 +175,10 @@ const body = {
       if (speed > 0.9) { this.tilt.step(dt, this.tilt.x + this.wrap(Math.atan2(this.x.v, -this.y.v) - this.tilt.x) * 0.4); }
       this.air = speed > 1.4;
     }
-    for (let i = 0; i < 2; i++) {
-      this.spin[i].step(dt, this.goal[i]);
-      if (Math.abs(this.goal[i]) > 40 && Math.abs(this.spin[i].x - this.goal[i]) < 0.01) { this.spin[i].x -= this.goal[i]; this.goal[i] = 0; }
+    for (let i = 0; i < 2; i++) { this.spin[i].step(dt, this.goal[i]); }
+    // Home again after a turn: count from nought again (the goal is whole turns along one line, so nothing jumps).
+    if (Math.hypot(...this.goal) > 0 && Math.hypot(this.spin[0].x - this.goal[0], this.spin[1].x - this.goal[1]) < 0.01 && Math.hypot(this.spin[0].v, this.spin[1].v) < 0.05) {
+      for (let i = 0; i < 2; i++) { this.spin[i].x -= this.goal[i]; this.goal[i] = 0; }
     }
   }
 };
@@ -180,20 +187,39 @@ const body = {
 /// open eyes look, and every feeling has its own small movement.
 const SHUT = new Set(["sleepy", "yawn", "content", "bliss", "squeeze"]);
 const OF_LEVEL = [["smile", "content"], ["curious", "smile", "curious", "smirk"], ["worry", "worry", "grumpy"], ["wow", "scared"]];
+const follow = new Spring(60, 15);
+let sleeping = false, heroTint = 0, heroRound = 0;
 const act = { name: "smile", since: 0, tilt: new Spring(140, 16), lean: new Spring(150, 17), stretch: new Spring(240, 18), shakeX: 0, shakeTurn: 0, wokeAt: -9 };
-const watching = () => pointer && now_ - awake < (touch.matches ? 2.2 : 4);
+const watching = () => pointer && now_ - awake < (touch.matches ? 2.4 : 14);
 
 function feeling() {
   if (body.held) { return body.held.far ? "wow" : "squeeze"; }
   if (body.air) { return "air"; }
+  // Asleep it stays asleep: only a cursor move or a scroll wakes it (not a nod, a new level or anything else).
+  if (sleeping && !touch.matches) { return "sleepy"; }
   if (mood && now_ < moodUntil) { return mood; }
   const l = orbStage() ? stageDay : liveLevel, idle = now_ - awake;
   if (owner.feel) { return owner.feel[Math.floor(now_ / 3.2) % owner.feel.length]; }
   if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
+  // A phone has no cursor: the first orb plays a calm little show by itself (Fable, 11-26), and starts again.
+  if (touch.matches && owner.name === "hero") {
+    heroTint = idle > 8 && idle < 15.2 ? (liveLevel + 1 + heroRound % 3) % 4 : liveLevel;
+    if (idle < 8) { return "smile"; }
+    if (idle < 15.2) { return "curious"; }
+    if (idle > 16 && idle < 19) { return "content"; }
+    if (idle > 21 && idle < 21.8) { return "wink"; }
+    if (idle > 25 && idle < 27.4) { return "yawn"; }
+    if (idle >= 27.4 && idle < 37.4) { return "sleepy"; }
+    if (idle >= 37.4) { awake = now_; heroRound++; act.wokeAt = now_; return "curious"; }
+    return "smile";
+  }
+  // Nobody moves for a long while: it yawns and falls asleep, on any day. Only a cursor move or a scroll wakes it.
+  if (!orbStage() && !watching()) {
+    if (idle > 17) { sleeping = true; return "sleepy"; }
+    if (idle > 14.6) { return "yawn"; }
+  }
   if (!orbStage() && l === 0) {
     if (watching()) { return "smile"; }
-    if (idle > 17) { return "sleepy"; }
-    if (idle > 14.6) { return "yawn"; }
     if (idle > 9.5 && idle < 12) { return "content"; }
     return "smile";
   }
@@ -203,12 +229,9 @@ function feeling() {
 /// Where it looks: at the pointer; without one (a phone) it looks around by itself, where the page goes, and at taps.
 function looking(x, y, dt) {
   scrollLook *= Math.exp(-dt * 3);
-  if (storeHover && owner.name === "end") {
-    const b = $("#end .store").getBoundingClientRect(), dx = b.left + b.width / 2 - x, dy = b.top + b.height / 2 - y, d = Math.hypot(dx, dy) || 1;
-    return [dx / d, dy / d];
-  }
   if (watching() && !owner.el.hasAttribute("data-nofollow")) {
-    const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 240);
+    // Close by it still looks clearly that way (the hero orb has little room on its left).
+    const dx = pointer[0] - x, dy = pointer[1] - y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, 0.35 + d / 160);
     return [dx / d * k, dy / d * k];
   }
   // Next to a screen it watches the screen, with a short look at us from time to time.
@@ -289,7 +312,10 @@ function drawOrb(dt) {
     if (owner.roam) { x += (Math.sin(now_ * 0.43) * 0.42 + Math.sin(now_ * 1.07 + 2) * 0.1) * R; y += (Math.sin(now_ * 0.61 + 1) * 0.36 + Math.sin(now_ * 0.97) * 0.08) * R; }
     if (up < 0) { y += up * R * 0.07; }
     y -= Math.abs(nod) * R * 0.18;                        // it stretches its neck to look up
-    turn = [body.spin[0].x + face.head[0].x * 0.22 + act.shakeTurn + 0.25 * Math.sin(now_ * 0.21), body.spin[1].x - up * (up < 0 ? 0.46 : 0.16) - act.lean.x + 0.18 * Math.sin(now_ * 0.17) - nod];
+    // The slow idle sway is as big as a look, so it fades out while the orb follows the cursor.
+    follow.step(dt, watching() && !owner.el.hasAttribute("data-nofollow") ? 1 : 0);
+    const sway = 1 - 0.85 * clamp(follow.x, 0, 1), headK = 0.22 + 0.12 * clamp(follow.x, 0, 1);
+    turn = [body.spin[0].x + face.head[0].x * headK + act.shakeTurn + 0.25 * Math.sin(now_ * 0.21) * sway, body.spin[1].x - up * (up < 0 ? 0.46 : 0.16) - act.lean.x + 0.18 * Math.sin(now_ * 0.17) * sway - nod];
     tilt = act.tilt.x;
     stretch = act.stretch.x;
   }
@@ -297,14 +323,19 @@ function drawOrb(dt) {
   // The ball is drawn only as big as the place that shows it now (a small O in the bar costs almost nothing).
   const need = Math.max(24, Math.round(owner.el.clientWidth / 0.96 * Math.min(touch.matches ? 1.5 : 2, devicePixelRatio || 1)));
   if (ball && ball.canvas.width !== need) { ball.resize(need, need); }
-  const ol = orbStage() ? stageLook : liveLook;
+  const heroShow = touch.matches && owner.name === "hero";
+  const ol = orbStage() ? stageLook : heroShow ? heroLook : liveLook;
   const lv = orbStage() ? stageDay : liveLevel;
+  // A strong drag of the page: a short "wow".
+  if (touch.matches && Math.abs(scrollLook) > 0.8 && !(mood && now_ < moodUntil)) { mood = "wow"; moodUntil = now_ + 0.6; }
   glowColours(ol);
   ball?.draw({ time: orbTime, energy: [0.1, 0.16, 0.28, 0.38][lv], roll: turn, cMain: ol.ballMain, cLow: ol.ballLow, cMid: ol.ballMid, cHigh: ol.ballHigh });
   face.step(still.matches ? 1 : dt, name, aim);
   const d = face.path(turn), q = clamp(body.squash.x, -0.1, 0.1), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
+  const asleep = landed && !inBar && name === "sleepy" && !still.matches;
   for (const v of views) {
     const mine = v === owner;
+    if (v.el.classList.contains("asleep") !== (mine && asleep)) { v.el.classList.toggle("asleep", mine && asleep); }
     if (still.matches) { v.grow.x = mine ? 1 : 0; } else { v.grow.step(dt, mine ? 1 : 0); }
     const g = Math.max(0, v.grow.x);
     if (g < 0.01) { if (v.on !== false) { v.on = false; v.el.style.visibility = "hidden"; } continue; }
@@ -338,10 +369,25 @@ if (pals.length) {
     for (const m of list) { for (const n of m.addedNodes) { if (n.classList?.contains("bub") && !n.classList.contains("mine") && palsOn) { const p = pals[Math.floor(Math.random() * pals.length)]; p.talk = now_ + 1.5; } } }
   }).observe($(".bubbles"), { childList: true });
 }
+/// Four characters, by colour (Fable, 11-26): green the calm sleepy host, sky the curious one, pink the dramatic one,
+/// orange the little grump. Each has its own cycle of faces (name, seconds), bob, tilt, way of talking and of looking.
+const PALS = [
+  { cycle: [["smile", 9], ["content", 5], ["smile", 4], ["yawn", 2.4], ["sleepy", 2.6]], bob: [0.8, 3], tilt: 4, talk: ["bliss", "smile", 3], hop: 0, nod: 4, other: "smile" },
+  { cycle: [["curious", 5], ["smile", 5], ["wink", 1], ["curious", 3], ["smirk", 3]], bob: [1.3, 3], tilt: 6, talk: ["joy", "smile", 5], hop: 5, other: "curious" },
+  { cycle: [["smile", 6], ["wow", 3], ["smile", 5], ["worry", 3.5], ["scared", 1.5]], bob: [1.0, 4], tilt: 0, talk: ["wow", "joy", 4], hop: 7, other: "wow" },
+  { cycle: [["grumpy", 8], ["smirk", 4], ["grumpy", 6], ["worry", 3], ["smirk", 3], ["smile", 5]], bob: [0.6, 2], tilt: -5, talk: ["smirk", "smile", 3], hop: 0, shake: 2, other: "smirk" }
+];
+function palFace(c, t) {
+  const all = c.cycle.reduce((n, [, s]) => n + s, 0);
+  let k = t % all;
+  for (const [name, s] of c.cycle) { if (k < s) { return name; } k -= s; }
+  return c.cycle[0][0];
+}
 function stepPals(dt) {
   if (!pals.length || still.matches) { return; }
   let any = false;
-  for (const p of pals) {
+  for (const [i, p] of pals.entries()) {
+    const c = PALS[i] ?? PALS[0];
     const late = palsOn ? now_ - p.at : 0;
     p.out.step(dt, palsOn && late > 0 ? 1 : 0);
     if (!palsOn && p.out.x < 0.02) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
@@ -350,12 +396,22 @@ function stepPals(dt) {
     p.t += dt;
     const talking = now_ < p.talk, other = pals.find((q) => q !== p && now_ < q.talk);
     const r = p.el.getBoundingClientRect();
-    let aim = [0.8 * p.side, 0.25];                          // they look into the chat
+    let aim = [0.8 * p.side, 0.25];                          // into the chat
+    if (i === 1) {                                           // the curious one reads the newest message, and looks at you now and then
+      const last = document.querySelector("#chat .bubbles > .bub:last-child");
+      if (p.t % 6 < 1) { aim = [0, 0.1]; }
+      else if (last) { const o = last.getBoundingClientRect(), dx = o.left + o.width / 2 - r.left - r.width / 2, dy = o.top + o.height / 2 - r.top - r.height / 2, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d]; }
+    }
+    if (i === 2 && p.t % 10 < 4) { aim = [-0.6 * p.side, -0.6]; }       // the dramatic one looks up and away
+    if (i === 3 && p.t % 9 < 3) { aim = [-0.7 * p.side, 0.6]; }         // the grump looks down and away
     if (other) { const o = other.el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d * 0.5 + 0.4]; }
-    p.face.step(dt, talking ? (Math.floor(now_ * 5) % 2 ? "joy" : "smile") : other ? "curious" : "smile", aim);
-    p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53)]));
-    const o = p.out.x, hop = talking ? -Math.abs(Math.sin(now_ * 11)) * 5 : 0;
-    p.el.style.transform = `translate(${((1 - o) * 95 * p.side).toFixed(1)}%, ${(Math.sin(p.t * 1.1) * 3 + hop).toFixed(1)}px) scale(${(0.6 + 0.4 * o).toFixed(3)})`;
+    const face_ = talking ? (Math.floor(now_ * c.talk[2]) % 2 ? c.talk[0] : c.talk[1]) : other ? c.other : palFace(c, p.t);
+    p.face.step(dt, face_, aim);
+    const nod = talking && c.nod ? Math.sin(Math.min(1, (p.talk - now_) / 1.5) * Math.PI) * 0.25 : 0;
+    p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53) - nod]));
+    const o = p.out.x, hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
+    const tilt = c.tilt * (i === 1 ? Math.sign(aim[0]) || 1 : 1);
+    p.el.style.transform = `translate(calc(${((1 - o) * 95 * p.side).toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16).toFixed(1)}px) rotate(${tilt}deg) scale(${(0.6 + 0.4 * o).toFixed(3)})`;
     const front = o > 0.85 ? "2" : "0";                       // behind the phone while rising, in front once up
     if (p.el.style.zIndex !== front) { p.el.style.zIndex = front; }
   }
@@ -427,10 +483,22 @@ function frame(ms) {
   stepPals(dt);
 }
 
-function aimAt(e) { pointer = [e.clientX, e.clientY]; awake = now_; }
+function aimAt(e) { pointer = [e.clientX, e.clientY]; awake = now_; sleeping = false; }
 addEventListener("resize", measure);
 addEventListener("load", measure);
-addEventListener("scroll", () => { dirty = true; if (now_ - awake > 3) { awake = now_ - 3; } }, { passive: true });
+// A scroll wakes it, and it keeps looking at the cursor (the cursor stays where it was on the window).
+addEventListener("scroll", () => { dirty = true; sleeping = false; awake = touch.matches ? Math.max(awake, now_ - 1.6) : now_; }, { passive: true });
+// A finger: it looks where the finger touches and follows it while the page is dragged (touchmove goes on while
+// the page scrolls; pointer events stop there).
+addEventListener("touchstart", (e) => {
+  const t = e.touches[0];
+  if (!t) { return; }
+  pointer = [t.clientX, t.clientY]; awake = now_;
+  // A tap close to it: a happy face; elsewhere it only looks there, curious.
+  const r = owner.el.getBoundingClientRect(), R = r.width / 2, d = Math.hypot(t.clientX - r.left - R, t.clientY - r.top - R);
+  if (owner.name !== "bar") { mood = d < R * 1.5 ? "joy" : "curious"; moodUntil = now_ + (d < R * 1.5 ? 0.8 : 0.5); }
+}, { passive: true });
+addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) { pointer = [t.clientX, t.clientY]; awake = now_; } }, { passive: true });
 darkMode.addEventListener("change", () => { dirty = true; paintAuras(); units.forEach((u) => showWidgets(DAYS[u.day % 4], u.el)); });
 addEventListener("pointermove", aimAt, { passive: true });
 addEventListener("pointerdown", aimAt, { passive: true });
@@ -441,6 +509,7 @@ for (const v of views) {
   if (v.name === "bar") { v.button.addEventListener("click", () => scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" })); continue; }
   v.button.addEventListener("pointerdown", (e) => {
     if (!landed || v !== owner || still.matches) { return; }
+    if (e.pointerType === "touch" && v.name === "widgets") { return; }      // in the sideways row a finger moves the row, not the orb
     e.preventDefault();
     body.held = { id: e.pointerId, view: v, from: [e.clientX - body.x.x + body.home[0], e.clientY - body.y.x + body.home[1]], pull: [body.x.x - body.home[0], body.y.x - body.home[1]], far: false };
     try { v.button.setPointerCapture(e.pointerId); } catch {}
@@ -474,8 +543,8 @@ function release(v) {
     // Let go: it floats home softly and rolls once. With ?place it stays where it was put, for choosing places.
     if (placing) { body.home = [body.x.x, body.y.x]; placed[v.name] = body.home; showPlace(v); }
     body.squash.v += 0.7;
-    body.goal[0] += Math.abs(body.x.x) > R * 0.6 ? -Math.sign(body.x.x) * 2 * Math.PI : 0;
-    body.goal[1] += Math.abs(body.y.x) > R * 0.6 ? Math.sign(body.y.x) * 2 * Math.PI : 0;
+    // It rolls only along the line it flies home on (from where it was let go back to its place).
+    if (Math.hypot(body.x.x, body.y.x) > R * 0.6) { body.roll(-body.x.x, body.y.x, 4); }
     mood = "bliss"; moodUntil = now_ + 1.6;
     return;
   }
@@ -602,6 +671,8 @@ for (const el of document.querySelectorAll("[data-write]")) {
   if (!el.closest("#hero")) { appear.observe(el); }
 }
 document.querySelectorAll(".soft").forEach((e) => appear.observe(e));
+// The devices: the whole group is watched (each one starts off screen at the side), then they come in one by one.
+document.querySelectorAll(".soft-set").forEach((e) => appear.observe(e));
 
 // ---- The Sun, the solar wind and the aurora: live from NASA and NOAA, as in the app. They move only on screen ----
 
