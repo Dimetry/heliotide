@@ -360,7 +360,7 @@ const pals = [...document.querySelectorAll(".pal")].map((el, i) => {
   el.innerHTML = '<canvas width="112" height="112"></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg>';
   const c = BALL[[0, 1, 3, 2][i] ?? 0].map(rgb);
   el.style.setProperty("--g", rgbOf(c[1]));
-  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(9, 5.6), t: 5 * i, talk: 0, at: [0.3, 1.5, 2.7, 3.9][i] ?? 1, side: i < 2 ? 1 : -1 };
+  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(9, 5.6), t: 5 * i, talk: 0, at: [0.3, 1.35, 2.4, 3.45][i] ?? 1, k: 0, side: i < 2 ? 1 : -1 };
 });
 let palsOn = false, palDrawn = 0, palsSince = 0;
 if (pals.length) {
@@ -389,10 +389,11 @@ function stepPals(dt) {
   let any = false;
   for (const [i, p] of pals.entries()) {
     const c = PALS[i] ?? PALS[0];
-    // One by one, slowly: the next one starts when the one before has almost arrived.
-    const late = palsOn ? now_ - palsSince - p.at : 0;
-    p.out.step(dt, palsOn && late > 0 ? 1 : 0);
-    if (!palsOn && p.out.x < 0.02) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
+    // One by one: each first slides out from behind the phone and past its edge (behind it), then, once clear of
+    // the phone, comes to the front and swings back to its place on a curve. The next starts as this one lands.
+    const late = palsOn ? now_ - palsSince - p.at : -1;
+    if (late < 0) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } p.k = 0; continue; }
+    p.k = clamp(late / 1.3, 0, 1);
     any = true;
     p.el.style.visibility = "visible";
     p.t += dt;
@@ -411,10 +412,13 @@ function stepPals(dt) {
     p.face.step(dt, face_, aim);
     const nod = talking && c.nod ? Math.sin(Math.min(1, (p.talk - now_) / 1.5) * Math.PI) * 0.25 : 0;
     p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53) - nod]));
-    const o = p.out.x, hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
+    const k = p.k, eo = (v) => 1 - (1 - v) ** 3, eio = (v) => v < 0.5 ? 4 * v * v * v : 1 - (-2 * v + 2) ** 3 / 2;
+    const e1 = eo(Math.min(1, k / 0.45)), e2 = k < 0.45 ? 0 : eio((k - 0.45) / 0.55);
+    const x = p.side * (95 - 175 * e1 + 80 * e2), lift = -Math.sin(Math.PI * Math.min(1, k * 1.1)) * 26;
+    const hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
     const tilt = c.tilt * (i === 1 ? Math.sign(aim[0]) || 1 : 1);
-    p.el.style.transform = `translate(calc(${((1 - o) * 95 * p.side).toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16).toFixed(1)}px) rotate(${tilt}deg) scale(${(0.6 + 0.4 * o).toFixed(3)})`;
-    const front = o > 0.85 ? "2" : "0";                       // behind the phone while rising, in front once up
+    p.el.style.transform = `translate(calc(${x.toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16 + lift).toFixed(1)}px) rotate(${tilt}deg) scale(${(0.75 + 0.25 * e1).toFixed(3)})`;
+    const front = k > 0.45 ? "2" : "0";                       // behind the phone until it is out past the edge
     if (p.el.style.zIndex !== front) { p.el.style.zIndex = front; }
   }
   // Their clouds turn slowly: drawn ten times a second, small.
