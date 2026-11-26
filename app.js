@@ -328,7 +328,7 @@ const CARDS = {
     <p class="vl"><span>B1.4</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
     <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
     <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
-    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" class="key" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" class="key" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div>${dots(3)}</div>
+    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div>${dots(3)}</div>
       <div class="col bottom"><p class="lab">Flare chance, next 24 h:</p>${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
   </div></article>`,
   wind: `<article class="card c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">

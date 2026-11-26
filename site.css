@@ -681,3 +681,5 @@ main { overflow-x: clip; }
   #hero .show .phone, #status .phone, #chat .phone { width: calc((100vh - 74px) * .489); min-width: 0; }
   .family { width: min(100%, calc((100vh - 150px) * 1.9)); }
 }
+/* The Sun disc stays solid (idea 148): its black corners are hidden by a circle instead of the key. */
+.c-flares .disc img, .c-flares .disc video { clip-path: circle(47%); }
