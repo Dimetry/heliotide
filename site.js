@@ -77,9 +77,8 @@ const views = [...document.querySelectorAll("[data-orb]")].map((el) => {
   return { el, look: el.dataset.look ? document.querySelector(el.dataset.look) : null, feel: el.dataset.feel?.split(" "), roam: "roam" in el.dataset, name: el.dataset.orb, button, canvas, ctx: canvas.getContext("2d"), path: el.querySelector("path"), grow: new Spring(el.dataset.orb === "bar" ? 620 : 430, el.dataset.orb === "bar" ? 40 : 34, 0) };
 });
 const viewOf = (name) => views.find((v) => v.name === name);
-let owner = viewOf(matchMedia("(min-width: 900px), (orientation: landscape) and (min-width: 700px)").matches ? "side" : "hero");
+let owner = viewOf("hero");
 owner.grow.x = 1;
-$(".p-lead").classList.add("at" + Math.floor(Math.random() * 3));     // every visit in another corner next to the words
 
 const screens = [...document.querySelectorAll("canvas[data-bg]")];
 const onScreen = new Set();
@@ -321,15 +320,15 @@ function drawOrb(dt) {
     }
   }
 }
-// ---- Two friends in the chat, sky and orchid: they come out from behind the phone and seem to talk ----
+// ---- Four friends in the chat, the four icon colours: one by one they come out from behind the phone, two on each side, and talk ----
 
 const palBall = ball ? shaderCanvas(document.createElement("canvas"), ORB) : null;
 palBall?.resize(112, 112);
 const pals = [...document.querySelectorAll(".pal")].map((el, i) => {
   el.innerHTML = '<canvas width="112" height="112"></canvas><svg viewBox="-100 -100 200 200" aria-hidden="true"><path d=""/></svg>';
-  const c = BALL[[1, 3][i]].map(rgb);
+  const c = BALL[[0, 1, 3, 2][i] ?? 0].map(rgb);
   el.style.setProperty("--g", rgbOf(c[1]));
-  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(70, 11), t: 5 * i, talk: 0, at: 0.9 + i * 0.7 };
+  return { el, ctx: el.querySelector("canvas").getContext("2d"), path: el.querySelector("path"), face: new LivingFace(), c, out: new Spring(70, 11), t: 5 * i, talk: 0, at: [0.4, 1.1, 0.75, 1.45][i] ?? 1, side: i < 2 ? 1 : -1 };
 });
 let palsOn = false, palDrawn = 0;
 if (pals.length) {
@@ -351,13 +350,14 @@ function stepPals(dt) {
     p.t += dt;
     const talking = now_ < p.talk, other = pals.find((q) => q !== p && now_ < q.talk);
     const r = p.el.getBoundingClientRect();
-    let aim = [-0.7, 0.15];                                  // they read the chat
-    if (other) { const o = other.el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d]; }
-    else if (watching()) { const dx = pointer[0] - r.left - r.width / 2, dy = pointer[1] - r.top - r.height / 2, d = Math.hypot(dx, dy) || 1; aim = [dx / d * Math.min(1, d / 240), dy / d * Math.min(1, d / 240)]; }
+    let aim = [0.8 * p.side, 0.25];                          // they look into the chat
+    if (other) { const o = other.el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top, d = Math.hypot(dx, dy) || 1; aim = [dx / d, dy / d * 0.5 + 0.4]; }
     p.face.step(dt, talking ? (Math.floor(now_ * 5) % 2 ? "joy" : "smile") : other ? "curious" : "smile", aim);
     p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53)]));
     const o = p.out.x, hop = talking ? -Math.abs(Math.sin(now_ * 11)) * 5 : 0;
-    p.el.style.transform = `translate(${((1 - o) * -90).toFixed(1)}%, ${(Math.sin(p.t * 1.1) * 4 + hop).toFixed(1)}px) scale(${(0.45 + 0.55 * o).toFixed(3)})`;
+    p.el.style.transform = `translate(${((1 - o) * 95 * p.side).toFixed(1)}%, ${(Math.sin(p.t * 1.1) * 3 + hop).toFixed(1)}px) scale(${(0.6 + 0.4 * o).toFixed(3)})`;
+    const front = o > 0.85 ? "2" : "0";                       // behind the phone while rising, in front once up
+    if (p.el.style.zIndex !== front) { p.el.style.zIndex = front; }
   }
   // Their clouds turn slowly: drawn ten times a second, small.
   palDrawn += dt;
@@ -517,7 +517,7 @@ function showStage() {
   dirty = true;
   const d = DAYS[stageDay];
   put($("#kp"), d.kp);
-  put($("#state"), d.state);
+  put($("#state"), d.state.replace(/ now$/, ""));
   put($("#means"), MEANS[stageDay]);
   buttons.forEach((b, i) => b.setAttribute("aria-pressed", i === stageDay));
   auras.forEach((a, i) => a.classList.toggle("on", i === (inStage ? stageDay : liveLevel)));

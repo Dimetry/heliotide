@@ -17,7 +17,7 @@ const minus = (v) => v < 0 ? "−" + -v : "" + v;
 // ---- Text that changes softly ----
 
 /// The old word blurs away upwards while the new one comes out of the blur from below, both at once.
-function put(el, text) {
+function put(el, text, k = 1, delay = 0) {
   text = String(text);
   if (el.dataset.text === text) { return; }
   const before = el.dataset.text;
@@ -31,8 +31,8 @@ function put(el, text) {
   el.classList.add("swap");
   el.replaceChildren(fresh, ghost);
   const big = text.length <= 3, blur = big ? 10 : 5, way = big ? ".22em" : ".35em";
-  ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 220, easing: "cubic-bezier(.4, 0, 1, 1)", fill: "forwards" }).onfinish = () => ghost.remove();
-  fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 420, delay: 50, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
+  ghost.animate([{ opacity: 1, filter: "blur(0)", transform: "none" }, { opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(-${way}) scale(${big ? 0.82 : 0.98})` }], { duration: 220 * k, delay, easing: "cubic-bezier(.4, 0, 1, 1)", fill: "forwards" }).onfinish = () => ghost.remove();
+  fresh.animate([{ opacity: 0, filter: `blur(${blur}px)`, transform: `translateY(${way}) scale(${big ? 1.12 : 1})` }, { opacity: 1, filter: "blur(0)", transform: "none" }], { duration: 420 * k, delay: delay + 50 * k, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" });
 }
 
 // ---- Charts ----
@@ -99,8 +99,8 @@ const wind_ = () => `<div class="card_"><div class="head">${icon("wind")}SOLAR W
 const status_ = '<div class="status"><b>9:41</b><span><svg viewBox="0 0 66 14" aria-hidden="true"><rect x="0" y="8" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="7" rx="1"/><rect x="10" y="3.500" width="3" height="9.500" rx="1"/><rect x="15" y="1" width="3" height="12" rx="1"/><path d="M32 12.600 29.600 10a3.400 3.400 0 0 1 4.800 0ZM27.600 8a6.200 6.200 0 0 1 8.800 0l1.500-1.600a8.400 8.400 0 0 0-11.800 0ZM24.900 5.200a10 10 0 0 1 14.200 0l1.500-1.600a12.200 12.200 0 0 0-17.200 0Z"/><rect x="45" y="1.500" width="19" height="11" rx="3.200"/></svg></span></div>';
 
 const SCREENS = {
-  phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}<span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span>${hero_()}${flares_()}${tabs_(0)}</div>`,
-  wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><span class="round l">${icon("heart")}</span><span class="round r">${icon("gear")}</span><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
+  phone: () => `<div class="scr phoneapp"><canvas data-bg="tall"></canvas>${status_}${hero_()}${flares_()}${tabs_(0)}</div>`,
+  wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">${icon("arrow")}REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
   face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
   lock: () => `<div class="scr lock" data-tone="dark"><div class="wall"><picture><source media="(prefers-color-scheme: dark)" srcset="img/wall-dark.jpg"><img src="img/wall-light.jpg" alt="" loading="lazy"></picture></div><div class="date">Wednesday, 25 November</div><div class="clock">9:41</div><div class="notes"></div><span class="torch l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.500h8a.8.8 0 0 1 .8.8v1.200H7.200V3.300a.8.8 0 0 1 .8-.8ZM7.200 6h9.600v.6c0 1.700-.7 2.600-1.400 3.500-.4.5-.6 1-.6 1.700v8.500a1.700 1.700 0 0 1-1.700 1.700h-2.200a1.700 1.700 0 0 1-1.700-1.700v-8.500c0-.7-.2-1.200-.6-1.700C7.900 9.200 7.200 8.300 7.200 6.600Zm4.800 6.600a1 1 0 0 0-1 1v1.600a1 1 0 0 0 2 0v-1.600a1 1 0 0 0-1-1Z" fill-rule="evenodd"/></svg></span><span class="torch r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.300 4h5.400c.5 0 .9.200 1.200.6l1 1.500h2.500A2.600 2.600 0 0 1 22 8.700v8.700a2.600 2.600 0 0 1-2.600 2.600H4.600A2.600 2.600 0 0 1 2 17.400V8.700a2.600 2.600 0 0 1 2.600-2.600h2.500l1-1.500c.3-.4.7-.6 1.200-.6ZM12 8.200a4.600 4.600 0 1 0 0 9.200 4.600 4.600 0 0 0 0-9.200Zm0 1.800a2.800 2.800 0 1 1 0 5.600 2.800 2.800 0 0 1 0-5.600Z" fill-rule="evenodd"/></svg></span><i class="homebar"></i></div>`,
@@ -177,15 +177,23 @@ function paintFlow(el, level) {
 function showWidgets(day, root = document) {
   day = { ...day, peakText: "Kp " + day.peak, windText: day.wind + " km/s", bzText: minus(day.bz) + " nT" };
   const all = (q) => [...(root.matches?.(q) ? [root] : []), ...root.querySelectorAll(q)];
-  for (const el of all("[data-w]")) { put(el, day[el.dataset.w]); }
+  all("[data-w]").forEach((el, i) => put(el, day[el.dataset.w], 2.4, i * 70));   // slow and one after another: calm, never a jump
   for (const el of all("[data-flow]")) { paintFlow(el, day.level); }
   for (const el of all("[data-ring2]")) { el.style.setProperty("--k", day.kp / 9); el.style.color = ["#8fd457", "#4bc6ff", "#ff9d2e", "#ff5fc0"][day.level]; }
   for (const el of all("[data-wchart]")) {
     const lo = Math.min(...day.curve) - 0.3, hi = Math.max(...day.curve) + 0.3;
     const P = day.curve.map((v, i) => [-10 + i / 23 * 384, 23 + (1 - (v - lo) / (hi - lo)) * 25]), path = (a, b) => "M" + P.slice(a, b + 1).map((p) => p.map((n) => n.toFixed(1)).join(" ")).join("L");
-    const [next, past] = el.querySelectorAll("path");
-    next.setAttribute("d", path(11, 23)); past.setAttribute("d", path(0, 11));
-    el.style.setProperty("--x", P[11][0] / 364 * 100 + "%"); el.style.setProperty("--y", P[11][1] / 52 * 100 + "%");
+    // The curve moves softly from the old day to the new one (never jumps).
+    const [next, past] = el.querySelectorAll("path"), from = el._P ?? P, t0 = performance.now(), D = still.matches || !el._P ? 0 : 1100;
+    el._P = P; cancelAnimationFrame(el._raf);
+    const step = (ms) => {
+      const k = D ? Math.min(1, (ms - t0) / D) : 1, e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2;
+      const Q = P.map((p, i) => [p[0], from[i][1] + (p[1] - from[i][1]) * e]), path = (a, b) => "M" + Q.slice(a, b + 1).map((p) => p.map((n) => n.toFixed(1)).join(" ")).join("L");
+      next.setAttribute("d", path(11, 23)); past.setAttribute("d", path(0, 11));
+      el.style.setProperty("--x", Q[11][0] / 364 * 100 + "%"); el.style.setProperty("--y", Q[11][1] / 52 * 100 + "%");
+      if (k < 1) { el._raf = requestAnimationFrame(step); }
+    };
+    step(t0);
   }
 }
 
