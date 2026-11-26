@@ -117,9 +117,10 @@ void main() {
   // The clouds lie on the ball and really turn with it, all the way round: the point under this pixel, turned back.
   float front = sqrt(1.0 - r * r);
   vec3 b = vec3(disc.x, -disc.y, front);
-  float cp = cos(roll.y), sp = sin(roll.y), cw = cos(roll.x), sw = sin(roll.x);
-  b = vec3(b.x, b.y * cp - b.z * sp, b.y * sp + b.z * cp);
-  b = vec3(b.x * cw - b.z * sw, b.y, b.x * sw + b.z * cw);
+  // One turn about one axis (in the plane of the screen, across the way it rolls): a throw rolls along its line only.
+  vec3 w = vec3(roll.y, -roll.x, 0.0);
+  float ta = length(w);
+  if (ta > 0.0001) { vec3 k = w / ta; b = b * cos(ta) + cross(k, b) * sin(ta) + k * dot(k, b) * (1.0 - cos(ta)); }
   float rr_ = clamp(length(b.xy), 0.0001, 0.9999);
   vec2 p = b.xy * mix(1.0, asin(rr_) / (rr_ * 1.5707963), 0.45);
   p.x += 1.25 * (1.0 - smoothstep(-0.5, 0.5, b.z));     // the back has other clouds

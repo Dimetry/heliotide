@@ -522,3 +522,29 @@ footer:hover, footer:focus-within { opacity: .85; }
 
 #today .lead p { margin-top: 4px; }
 #end .lead .store { margin: 0 auto; }
+
+/* Round 6c/6d (11-26) */
+/* Until the release: a plain badge with Dima's words, nothing opens. */
+.store.soon { display: inline-flex; flex-direction: column; justify-content: center; height: 46px; padding: 0 18px; border-radius: 10px; background: #000; color: #fff; line-height: 1; text-align: left; cursor: default; box-shadow: inset 0 0 0 1px #a6a6a6; -webkit-user-select: none; user-select: none; }
+.store.soon small { font-size: 11px; font-weight: 500; letter-spacing: .01em; }
+.store.soon b { font-size: 21px; font-weight: 600; letter-spacing: -.02em; margin-top: 2px; }
+@media (prefers-color-scheme: dark) { .store.soon { background: #fff; color: #000; box-shadow: none; } }
+footer .love { margin: 2px 0 0; }
+/* The end title: lines closer together. */
+#end h2 { line-height: .9; }
+/* Events: the map covers only the round edge of the list's screen, so the list reads. */
+.pair > :last-child { margin-left: -18%; }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) {
+  .pair > :last-child { margin-left: -9%; }
+  #events { grid-template-columns: minmax(280px, 320px) auto; gap: 48px; }
+}
+/* Asleep: "Z z z" float up from the top right of its head, as in cartoons. CSS only; they stop with the part off screen. */
+.slot { container-type: inline-size; }
+.zz { position: absolute; z-index: 3; left: 74%; top: 2%; width: 0; height: 0; pointer-events: none; font-style: normal; }
+.zz b { position: absolute; left: 0; bottom: 0; font: 700 max(10px, 16cqw)/1 ui-rounded, -apple-system, sans-serif; color: rgb(16 18 15 / .55); opacity: 0; }
+@media (prefers-color-scheme: dark) { .zz b { color: rgb(255 255 255 / .72); } }
+.zz b:nth-child(2) { font-size: max(9px, 13cqw); } .zz b:nth-child(3) { font-size: max(8px, 10cqw); }
+.asleep .zz b { animation: zfloat 3.6s linear infinite; }
+.asleep .zz b:nth-child(2) { animation-delay: 1.2s; } .asleep .zz b:nth-child(3) { animation-delay: 2.4s; }
+@keyframes zfloat { 0% { opacity: 0; transform: translate(0, 0) rotate(-8deg) scale(.6); } 20% { opacity: .85; } 50% { transform: translate(18cqw, -30cqw) rotate(2deg) scale(.9); } 100% { opacity: 0; transform: translate(26cqw, -62cqw) rotate(10deg) scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .zz { display: none; } }

@@ -120,8 +120,9 @@ class LivingFace {
   }
   /// SVG path in a 200 × 200 box around the centre. `turn`: how far the ball is turned (radians, y up).
   path(turn) {
-    const t = turn.map((v) => Math.atan2(Math.sin(v), Math.cos(v)));
-    if (Math.abs(t[0]) > 2.3 || Math.abs(t[1]) > 2.3) { return ""; }
+    // The turn is one angle along one line (as in the shader): wrap the angle, keep the line.
+    const m = Math.hypot(turn[0], turn[1]), mw = Math.atan2(Math.sin(m), Math.cos(m)), t = m > 1e-6 ? turn.map((v) => v * mw / m) : [0, 0];
+    if (Math.abs(mw) > 2.3) { return ""; }
     const shut = this.shut, gx = this.eye[0].x, gy = this.eye[1].x;
     return this.parts.map((part, i) => {
       // Looking up, like in a cartoon: the head turns up and the eyes run up with it and grow taller.
