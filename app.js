@@ -84,6 +84,7 @@ const ICON = {
   aurora: '<path d="M12 4.500l1.500 3.800 3.800 1.500-3.800 1.500L12 15l-1.500-3.700-3.800-1.500 3.800-1.500ZM18.500 14.500l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8ZM5.500 15.500l.6 1.500 1.500.6-1.500.6-.6 1.500-.6-1.500-1.500-.6 1.500-.6Z"/>',
   quake: '<path d="M2.500 12h4l2-6 3.500 13 3-10 1.500 3h5"/>', fire: '<path d="M12 3c.5 3.500 5.500 5.500 5.500 10.500A5.500 5.500 0 0 1 12 20a5.500 5.500 0 0 1-5.500-6C6.500 11 8.500 9.500 9 7.500c1.500.8 2 2 2 3C12.500 9 12.500 6 12 3Z"/>',
   gauge: '<circle cx="12" cy="12" r="9"/><path d="M12 12l3.500-4.500"/><circle cx="12" cy="12" r="1.200"/>', cloud: '<path d="M7 18a4 4 0 0 1-.3-8A5.500 5.500 0 0 1 17 9.500 4 4 0 0 1 17.500 18Z"/>', bell: '<path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 1.500h-15ZM10 20a2 2 0 0 0 4 0"/>',
+  alert: '<path d="M12 4.2 2.8 19.5h18.4Z"/><path d="M12 10v4.4M12 16.9v.2"/>',
   heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.4 4.2 4.2 0 0 1 19.5 10c0 5.400-7.500 10-7.500 10Z"/>',
   gear: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2.600v2.400M12 19v2.400M2.600 12H5M19 12h2.400M5.400 5.400 7 7M17 17l1.600 1.600M5.400 18.600 7 17M17 7l1.600-1.600"/>'
 };
@@ -103,7 +104,7 @@ const SCREENS = {
   wide: () => `<div class="scr wide"><canvas data-bg="wide"></canvas><div class="left">${hero_()}</div><div class="cols">${flares_()}${wind_()}</div>${tabs_(0)}</div>`,
   watch: () => `<div class="scr watchapp"><div class="wbg" data-flow="small" data-dark="1"></div><time>9:41</time><div class="place">${icon("arrow")}REYKJAVÍK</div><div class="kp"><small>Kp</small><span data-w="kp"></span></div><div class="state" data-w="condition"></div><div class="feel" data-w="watch"></div><i class="dots"></i></div>`,
   face: () => `<div class="scr watchface" data-tone="dark"><div class="wf-top"><div class="ring" data-ring2><span data-w="kp"></span><small>Kp</small></div><div class="wf-time"><span>TUE 24</span>9:41</div></div><div class="wf-rect"><b data-w="condition"></b><span data-w="watch"></span><div class="chart" data-wchart><svg viewBox="0 0 364 52" preserveAspectRatio="none"><path class="ahead"/><path/></svg><i></i></div></div></div>`,
-  lock: () => `<div class="scr lock" data-tone="dark"><div class="wall"><picture><source media="(prefers-color-scheme: dark)" srcset="img/wall-dark.jpg"><img src="img/wall-light.jpg" alt="" loading="lazy"></picture></div><div class="date">Wednesday, 25 November</div><div class="clock">9:41</div><div class="notes"></div><span class="torch l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.500h8a.8.8 0 0 1 .8.8v1.200H7.200V3.300a.8.8 0 0 1 .8-.8ZM7.200 6h9.600v.6c0 1.700-.7 2.600-1.400 3.500-.4.5-.6 1-.6 1.700v8.500a1.700 1.700 0 0 1-1.700 1.700h-2.200a1.700 1.700 0 0 1-1.700-1.700v-8.500c0-.7-.2-1.200-.6-1.700C7.900 9.200 7.200 8.300 7.200 6.600Zm4.800 6.600a1 1 0 0 0-1 1v1.600a1 1 0 0 0 2 0v-1.600a1 1 0 0 0-1-1Z" fill-rule="evenodd"/></svg></span><span class="torch r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.300 4h5.400c.5 0 .9.200 1.200.6l1 1.500h2.500A2.600 2.600 0 0 1 22 8.700v8.700a2.600 2.600 0 0 1-2.600 2.600H4.600A2.600 2.600 0 0 1 2 17.400V8.700a2.600 2.600 0 0 1 2.600-2.600h2.500l1-1.500c.3-.4.7-.6 1.200-.6ZM12 8.200a4.600 4.600 0 1 0 0 9.200 4.600 4.600 0 0 0 0-9.200Zm0 1.800a2.800 2.800 0 1 1 0 5.600 2.800 2.800 0 0 1 0-5.600Z" fill-rule="evenodd"/></svg></span><i class="homebar"></i></div>`,
+  lock: () => `<div class="scr lock" data-tone="dark"><div class="wall"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/wall-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/wall-dark.jpg"><source type="image/avif" srcset="img/wall-light.avif"><img src="img/wall-light.jpg" alt="" loading="lazy"></picture></div><div class="date">Wednesday, 25 November</div><div class="clock">9:41</div><div class="notes"></div><span class="torch l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.500h8a.8.8 0 0 1 .8.8v1.200H7.200V3.300a.8.8 0 0 1 .8-.8ZM7.200 6h9.600v.6c0 1.700-.7 2.600-1.400 3.500-.4.5-.6 1-.6 1.700v8.500a1.700 1.700 0 0 1-1.700 1.700h-2.200a1.700 1.700 0 0 1-1.700-1.700v-8.500c0-.7-.2-1.200-.6-1.700C7.900 9.200 7.200 8.300 7.200 6.600Zm4.800 6.600a1 1 0 0 0-1 1v1.600a1 1 0 0 0 2 0v-1.600a1 1 0 0 0-1-1Z" fill-rule="evenodd"/></svg></span><span class="torch r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.300 4h5.400c.5 0 .9.200 1.200.6l1 1.500h2.500A2.600 2.600 0 0 1 22 8.700v8.700a2.600 2.600 0 0 1-2.600 2.600H4.600A2.600 2.600 0 0 1 2 17.400V8.700a2.600 2.600 0 0 1 2.600-2.600h2.500l1-1.500c.3-.4.7-.6 1.200-.6ZM12 8.200a4.600 4.600 0 1 0 0 9.200 4.600 4.600 0 0 0 0-9.200Zm0 1.800a2.800 2.800 0 1 1 0 5.600 2.800 2.800 0 0 1 0-5.600Z" fill-rule="evenodd"/></svg></span><i class="homebar"></i></div>`,
   chat: () => `<div class="scr chatapp"><canvas data-bg="chat"></canvas>${status_}<span class="round l">${icon("left")}</span><div class="ctitle"><b>Chat</b><span id="room"></span></div><span class="round r">${icon("globe")}</span><div class="bubbles"></div><div class="field"><span>Message</span><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5.500M6 11.500l6-6 6 6"/></svg></em></div></div>`
 };
 for (const el of document.querySelectorAll("[data-screen]")) { el.innerHTML = SCREENS[el.dataset.screen](); }
@@ -302,31 +303,68 @@ function stepCharts(dt, to, force) {
   for (const c of charts) { drawChart(c, view.curve); }
 }
 
-// ---- The cards of Today ----
+// ---- The cards of Today: copied from the app (build 1.0 (11), November 2026). SpaceCard: header 44, padding 16,
+// radius 22; title 13 semibold capitals; big value 34 + word 20 medium; notes 15; rows 15 with a dotted term;
+// small labels 12. A picture takes a third of the card (PictureBeside); the black of the pictures is see-through. ----
 
-const tick = Array.from({ length: 60 }, (_, i) => { const t = (i * 6 - 90) * Math.PI / 180; return i > 27 && i < 33 ? "" : `<line x1="${(50 * Math.cos(t)).toFixed(1)}" y1="${(50 * Math.sin(t)).toFixed(1)}" x2="${(44 * Math.cos(t)).toFixed(1)}" y2="${(44 * Math.sin(t)).toFixed(1)}"/>`; }).join("");
-const head = (i, t) => `<div class="head">${icon(i)}${t}</div>`;
-// The cards as in the app (Today, November 2026): wide low cards, a square live picture on the right; the two event
-// cards with a quiet map of the coast under the words. Words and numbers are an example day.
-const pic = (inner, name, disc) => `<div class="sq"><div class="pic${disc ? " disc" : ""}" data-tone="dark">${inner}</div><small>${name}</small></div>`;
-document.querySelector("#bento").innerHTML = `
-  <article class="tile t-pic">${head("flare", "SOLAR FLARES")}<div class="split_"><div><p class="big">B1.4 <b>Low</b></p><p class="small_">Strongest in 24 h: B6.4</p><div class="rows_ c3">${[["Small · C", "15%"], ["Medium · M", "1%"], ["Strong · X", "1%"]].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join("")}</div></div>${pic('<img id="sunstill" src="img/sun3.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video>', "304 Å · Flares and filaments")}</div></article>
-  <article class="tile t-pic">${head("wind", "SOLAR WIND")}<div class="split_"><div><p class="lab">Speed</p><p class="big">468 <b>km/s Raised</b></p><div class="rows_ c3"><div><span>Density</span><b>0.9 p/cm³</b></div><div><span>Field direction · Bz</span><b>−1.4 nT</b></div></div></div>${pic('<img src="img/wind.jpg" alt="The solar wind model of NOAA" draggable="false"><canvas id="windfilm" width="400" height="400" style="opacity:0"></canvas>', "Solar wind density · From above", true)}</div></article>
-  <article class="tile t-pic">${head("aurora", "AURORA")}<div class="split_"><div><p class="big">34 <b>%</b></p><p class="mid0">Chance tonight</p><p class="small_">Look north after dark, away from city lights.</p></div>${pic('<img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" width="560" height="560" style="opacity:0"></canvas>', "Last 24 hours")}</div></article>
-  <article class="tile t-map"><div class="land quake"></div>${head("quake", "EARTHQUAKES")}<div class="pinn quake" aria-hidden="true"><i></i><i></i><i></i><b>4.3</b></div><i class="me" style="--x:69%;--y:40%"></i><div class="words"><p class="huge">2</p><p class="mid">M4+ near you</p><p class="small_">Closest: M4.3, 160 km away. Last 24 h.</p></div></article>
-  <article class="tile t-map"><div class="land fire"></div>${head("fire", "WILDFIRES")}<div class="pinn fire" aria-hidden="true"><i></i><i></i><b>${icon("fire")}</b></div><i class="me" style="--x:64%;--y:62%"></i><div class="words"><p class="mid">2 nearby</p><p class="small_">Closest: 84 km away.</p></div></article>
-  <article class="tile t-uv">${head("sun", "UV INDEX")}<p class="big"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="small_" style="margin-top:auto">Clear sky: up to 4 at 13:00.</p></article>
-  <article class="tile t-press">${head("gauge", "PRESSURE")}<div class="dial"><svg viewBox="-56 -56 112 112" aria-hidden="true">${tick}<line id="needle" class="needle" x1="0" y1="-52" x2="0" y2="-40"/></svg><p><span id="hpa">1015</span><small>hPa</small></p></div></article>
-  <article class="tile t-wx">${head("cloud", "WEATHER")}<p class="big">8° <b>Rain</b></p><div class="hours">${["Now", "14", "15", "16", "17", "18", "19", "20"].map((t, i) => `<div><b>${t}</b><svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${i < 5 ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg><span>${[90, 84, 80, 62, 40, 20, 10, 5][i]}%</span><b>${[8, 8, 9, 9, 8, 8, 7, 7][i]}°</b></div>`).join("")}</div></article>
-  <article class="tile t-al">${head("bell", "ALERTS")}<p class="mid0">All calm</p><div class="rows_">${[["Magnetic storm", "", "Calm"], ["Radio", "", "Calm"], ["Radiation", "", "Calm"], ["Solar wind", "353 km/s", "Calm"]].map(([l, n, w]) => `<div><span>${l}</span><small${l === "Solar wind" ? ' id="tw"' : ""}>${n}</small><b>${w}</b></div>`).join("")}</div></article>`;
+const chev = (open) => `<i class="chev">${icon(open ? "up" : "down")}</i>`;
+const cardHead = (i, t, peek) => `<div class="ch">${icon(i)}<span class="ct">${t}</span>${peek ? `<span class="pk">· ${peek}</span>` : `<span class="ci">${icon("info")}</span>`}${chev(!peek)}</div>`;
+const tileHead = (i, t) => `<div class="ch">${icon(i)}<span class="ct">${t}</span><span class="ci end">${icon("info")}</span></div>`;
+const term = (t, before, value, word, first) => `<div class="tr${first ? " first" : ""}"><u>${t}</u><span>${before ? `<small>${before}</small> ` : ""}${value ? `<small>${value}</small>${word ? " · " : ""}` : ""}${word ? `<b>${word}</b>` : ""}</span></div>`;
+const dots = (n) => `<div class="pdots">${Array.from({ length: n }, (_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>`;
+// The X-ray of the last 12 hours: quiet with a few short flares, ending in the "Now" dot.
+const XRAY = (() => {
+  const spikes = { 13: 26, 37: 18, 41: 9, 46: 12, 52: 14, 64: 30, 78: 6 };
+  let y = 44, d = "M0 44";
+  for (let i = 1; i <= 84; i++) { y = 44 + Math.sin(i * 1.7) * 1.3 + Math.sin(i * 0.31) * 1.6; if (spikes[i]) { d += ` L${(i * 4 - 2).toFixed(0)} ${y.toFixed(1)} L${i * 4} ${(44 - spikes[i]).toFixed(1)} L${i * 4 + 2} ${y.toFixed(1)}`; } else { d += ` L${i * 4} ${y.toFixed(1)}`; } }
+  return d;
+})();
+const gaugeTicks = Array.from({ length: 41 }, (_, i) => { const a = (135 + 270 * i / 40) * Math.PI / 180; return `<line x1="${(52 * Math.cos(a)).toFixed(1)}" y1="${(52 * Math.sin(a)).toFixed(1)}" x2="${(60 * Math.cos(a)).toFixed(1)}" y2="${(60 * Math.sin(a)).toFixed(1)}"/>`; }).join("");
+const HOURS = [["Now", 8, 90, 1], ["14", 8, 84, 1], ["15", 9, 80, 1], ["16", 9, 62, 1], ["17", 8, 40, 0], ["18", 8, 20, 0], ["19", 7, 10, 0], ["20", 7, 5, 0]];
+const wx = (rain) => `<svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${rain ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg>`;
+
+const CARDS = {
+  flares: `<article class="card c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
+    <p class="vl"><span>B1.4</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
+    <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
+    <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
+    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" class="key" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" class="key" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div>${dots(3)}</div>
+      <div class="col bottom"><p class="lab">Flare chance, next 24 h:</p>${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
+  </div></article>`,
+  wind: `<article class="card c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
+    <div class="col"><u class="lab0">Speed</u><p class="vl"><span>468</span><small>km/s</small> <b>Raised</b></p>${term("Density", "", "0.9 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.4 nT", "Calm")}</div>
+    <div class="pic3"><div class="disc circ"><img class="key" src="img/wind.jpg" alt="The solar wind model of NOAA, seen from above" draggable="false"><canvas id="windfilm" class="key" width="400" height="400" style="opacity:0"></canvas></div><p class="legend"><i class="sun_d"></i>Sun <i class="earth_d"></i>Earth</p>${dots(5)}</div>
+  </div></div></article>`,
+  alerts: `<article class="card c-alerts shut">${cardHead("alert", "Alerts", "All normal")}</article>`,
+  aurora: `<article class="card c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
+    <div class="col bottom"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div>
+    <div class="pic3"><div class="disc sq"><img class="key" src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" class="key" width="560" height="560" style="opacity:0"></canvas></div></div>
+  </div><div class="outlook"><p>Storm expected tomorrow (Kp 5): a better chance to see aurora.</p></div></div></article>`,
+  quakes: `<article class="card c-map">${cardHead("quake", "Earthquakes")}<div class="land quake"></div><div class="pinn quake" aria-hidden="true"><i></i><i></i><i></i><b>4.3</b></div><i class="me" style="--x:66%;--y:46%"></i><div class="cb"><div class="words"><p class="v34">2</p><p class="w20">M4+ near you</p><p class="cn">Closest: M4.3, 160 km away. Last 24 h.</p></div></div></article>`,
+  fires: `<article class="card c-map">${cardHead("fire", "Wildfires")}<div class="land fire"></div><div class="pinn fire" aria-hidden="true"><i></i><i></i><b>${icon("fire")}</b></div><i class="me" style="--x:62%;--y:64%"></i><div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away.</p></div></div></article>`,
+  weather: `<article class="card c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
+    <div class="wnow"><p class="v34">8°</p><p class="w20">Rain</p><p class="cn">Raining now</p></div>
+    <div class="hrs">${HOURS.map(([t, c, r, rain]) => `<div><b>${t}</b>${wx(rain)}<span>${r >= 20 ? r + "%" : "&nbsp;"}</span><em>${c}°</em></div>`).join("")}</div></div></div></article>`,
+  uv: `<article class="card tile2 c-uv">${tileHead("sun", "UV index")}<div class="cb"><p class="vl"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="cn end">Clear sky: up to 4 at 13:00.</p></div></article>`,
+  press: `<article class="card tile2 c-press">${tileHead("gauge", "Pressure")}<div class="cb"><div class="gauge"><svg viewBox="-62 -62 124 124" aria-hidden="true">${gaugeTicks}<line id="needle" class="needle" x1="46" y1="0" x2="61" y2="0"/></svg><p><span id="hpa">1015</span><small id="ptrend">↓ Falling</small></p><em>hPa</em></div></div></article>`
+};
+// Three columns on a computer (as the iPad mosaic); on a phone the groups run sideways, one card wide.
+document.querySelector("#bento").innerHTML = [
+  [["flares"], ["quakes"]],
+  [["wind", "alerts"], ["aurora"]],
+  [["weather", "pair"], ["fires"]]
+].map((col) => `<div class="bcol">${col.map((g) => `<div class="bgrp">${g.map((k) => k === "pair" ? `<div class="pair2">${CARDS.uv}${CARDS.press}</div>` : CARDS[k]).join("")}</div>`).join("")}</div>`).join("");
 // The cards rise one after another.
-document.querySelectorAll("#bento .tile").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
-let todayStep = 0;
+document.querySelectorAll("#bento .card").forEach((e, i) => { e.classList.add("soft"); e.style.setProperty("--d", (i % 4) * 0.07 + "s"); });
+let todayStep = 0, lastHpa = 1015;
 /// One small change at a time, slowly.
 function stepToday() {
   todayStep++;
   const p = [1015, 1004, 988, 996, 1021, 1034, 1027, 1009][todayStep % 8];
   put(document.querySelector("#hpa"), p);
-  document.querySelector("#needle").style.transform = `rotate(${(p - 1013) * 4.6}deg)`;
-  if (todayStep % 2) { const u = [3, 5, 8, 4, 2][(todayStep >> 1) % 5]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : u < 6 ? "Moderate" : "Very high"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
+  put(document.querySelector("#ptrend"), p < lastHpa ? "↓ Falling" : "↑ Rising");
+  lastHpa = p;
+  document.querySelector("#needle").style.transform = `rotate(${135 + 270 * (Math.min(1060, Math.max(960, p)) - 960) / 100}deg)`;
+  if (todayStep % 2) { const u = [3, 5, 8, 4, 2][(todayStep >> 1) % 5]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : u < 6 ? "Moderate" : u < 8 ? "High" : "Very high"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
 }
+document.querySelector("#needle").style.transform = `rotate(${135 + 270 * 55 / 100}deg)`;
