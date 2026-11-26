@@ -509,6 +509,7 @@ for (const v of views) {
   if (v.name === "bar") { v.button.addEventListener("click", () => scrollTo({ top: 0, behavior: still.matches ? "auto" : "smooth" })); continue; }
   v.button.addEventListener("pointerdown", (e) => {
     if (!landed || v !== owner || still.matches) { return; }
+    if (e.pointerType === "touch" && v.name === "widgets") { return; }      // in the sideways row a finger moves the row, not the orb
     e.preventDefault();
     body.held = { id: e.pointerId, view: v, from: [e.clientX - body.x.x + body.home[0], e.clientY - body.y.x + body.home[1]], pull: [body.x.x - body.home[0], body.y.x - body.home[1]], far: false };
     try { v.button.setPointerCapture(e.pointerId); } catch {}
@@ -670,6 +671,8 @@ for (const el of document.querySelectorAll("[data-write]")) {
   if (!el.closest("#hero")) { appear.observe(el); }
 }
 document.querySelectorAll(".soft").forEach((e) => appear.observe(e));
+// The devices: the whole group is watched (each one starts off screen at the side), then they come in one by one.
+document.querySelectorAll(".soft-set").forEach((e) => appear.observe(e));
 
 // ---- The Sun, the solar wind and the aurora: live from NASA and NOAA, as in the app. They move only on screen ----
 
