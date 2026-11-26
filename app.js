@@ -326,14 +326,14 @@ const gaugeTicks = Array.from({ length: 41 }, (_, i) => { const a = (135 + 270 *
 const HOURS = [["Now", 8, 90, 1], ["14", 8, 84, 1], ["15", 9, 80, 1], ["16", 9, 62, 1], ["17", 8, 40, 0], ["18", 8, 20, 0], ["19", 7, 10, 0], ["20", 7, 5, 0]];
 const wx = (rain) => `<svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${rain ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg>`;
 // The map of the app's event cards (Apple Maps, coloured, with relief), cut from the app without the "you are here" dot.
-const cmap = (n, x, y, pin) => `<div class="cmap" aria-hidden="true"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/map-${n}-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/map-${n}-dark.jpg"><source type="image/avif" srcset="img/map-${n}-light.avif"><img src="img/map-${n}-light.jpg" alt="" loading="lazy" draggable="false"></picture><div class="pinn ${n}" style="left:${x}%;top:${y}%">${pin}</div></div>`;
+const cmap = (n, x, y, pin) => `<div class="cmap ${n}" aria-hidden="true"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/map-${n}-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/map-${n}-dark.jpg"><source type="image/avif" srcset="img/map-${n}-light.avif"><img src="img/map-${n}-light.jpg" alt="" loading="lazy" draggable="false"></picture><div class="pinn ${n}">${pin}</div></div>`;
 
 const CARDS = {
   flares: `<article class="card s4 c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
     <p class="vl"><span>B1.5</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
     <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
     <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
-    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img id="sunstill" src="img/sun0.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"><video id="sunfilm" muted loop playsinline preload="none" aria-label="The Sun turning, seen by NASA SDO"></video></div></div>
+    <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img class="sunhmi" src="img/sun-hmi.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"></div></div>
       <div class="col bottom">${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
   </div></article>`,
   wind: `<article class="card s2 c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
@@ -361,10 +361,13 @@ const phoneFlares = `<article class="card c-flares">${cardHead("flare", "Solar f
     <p class="vl"><span data-d="flare"></span> <b data-d="flareWord"></b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
     <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
     <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
-    <div class="pb lead"><div class="pic3"><div class="disc">${[0, 1, 2, 3].map((i) => `<img src="img/sun${i}.jpg" alt="" data-sun="${i}" loading="lazy" draggable="false">`).join("")}</div></div>
+    <div class="pb lead"><div class="pic3"><div class="disc"><img class="sunhmi" src="img/sun-hmi.jpg" alt="" loading="lazy" draggable="false"></div></div>
       <div class="col bottom">${term("X Strong", "Chance", "", '<span data-d="x"></span>', 1)}${term("M Medium", "Chance", "", '<span data-d="m"></span>')}${term("C Small", "Chance", "", "15%")}</div></div>
   </div></article>`;
-for (const el of document.querySelectorAll(".pcard")) { el.innerHTML = phoneFlares; }
+const phoneWind = `<article class="card c-wind2">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
+    <div class="col"><u class="lab0">Speed</u><p class="vl"><span data-d="wind"></span><small>km/s</small> <b data-d="windWord"></b></p></div>
+    <div class="pic3"><div class="disc circ"><img src="img/wind-key.png" alt="" loading="lazy" draggable="false"></div></div></div></div></article>`;
+for (const el of document.querySelectorAll(".pcard")) { el.innerHTML = phoneFlares + phoneWind; }
 function fitCards() { for (const el of document.querySelectorAll(".pcard")) { el.style.transform = `scale(${(el.closest(".dev").clientWidth / 450).toFixed(4)})`; } }
 fitCards();
 addEventListener("resize", fitCards);
