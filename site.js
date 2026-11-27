@@ -100,6 +100,8 @@ function measure() {
   dirty = true;
 }
 
+const ORB_PACE = SPEED.map((v) => Math.sqrt(v / SPEED[0]));   // 1, 1.31, 1.83, 2.09
+let orbSpeed = 0.9;
 let cloudTime = 20, stageTime = 20, orbTime = 20, filmTime = 0, dirty = true, landed = still.matches;
 let pointer = null, awake = 0, now_ = 0, mood = null, moodUntil = 0, glance = [0, 0], glanceAt = 0, scrollLook = 0, lastScroll = scrollY;
 const touch = matchMedia("(hover: none)");
@@ -319,7 +321,10 @@ function drawOrb(dt) {
     tilt = act.tilt.x;
     stretch = act.stretch.x;
   }
-  orbTime += dt * (name === "sleepy" ? 0.35 : 0.9);       // always the same calm flow: touching it does not stir the clouds
+  // The clouds inside turn faster at a higher level (as the app's background: quiet slowest, severe fastest), and the
+  // speed glides on a switch; the swirl itself never changes (no distortion, Dima 11-26).
+  orbSpeed += ((name === "sleepy" ? 0.35 : 0.9) * ORB_PACE[orbStage() ? stageDay : 0] - orbSpeed) * Math.min(1, dt * 2.5);
+  orbTime += dt * orbSpeed;
   // The ball is drawn only as big as the place that shows it now (a small O in the bar costs almost nothing).
   const need = Math.max(24, Math.round(owner.el.clientWidth / 0.96 * Math.min(touch.matches ? 1.5 : 2, devicePixelRatio || 1)));
   if (ball && (ball.canvas.width !== need || ball.canvas.height !== need)) { ball.resize(need, need); }
@@ -330,7 +335,7 @@ function drawOrb(dt) {
   // A strong drag of the page: a short "wow".
   if (touch.matches && Math.abs(scrollLook) > 0.8 && !(mood && now_ < moodUntil)) { mood = "wow"; moodUntil = now_ + 0.6; }
   glowColours(ol);
-  ball?.draw({ time: orbTime, energy: [0.1, 0.16, 0.28, 0.38][lv], roll: turn, cMain: ol.ballMain, cLow: ol.ballLow, cMid: ol.ballMid, cHigh: ol.ballHigh });
+  ball?.draw({ time: orbTime, energy: 0.1, roll: turn, cMain: ol.ballMain, cLow: ol.ballLow, cMid: ol.ballMid, cHigh: ol.ballHigh });
   face.step(still.matches ? 1 : dt, name, aim);
   const d = face.path(turn), q = clamp(body.squash.x, -0.1, 0.1), sy = (1 - q) * (1 - stretch), sx = 1 / Math.sqrt(sy), a = body.tilt.x;
   const asleep = landed && !inBar && name === "sleepy" && !still.matches;
@@ -396,7 +401,7 @@ function stepPals(dt) {
     p.k = clamp(late / 1.3, 0, 1);
     any = true;
     p.el.style.visibility = "visible";
-    p.t += dt;
+    p.t += dt; p.ct = (p.ct ?? 20 + i * 7) + dt * 0.72 * ORB_PACE[[0, 1, 3, 2][i] ?? 0];
     const talking = now_ < p.talk, other = pals.find((q) => q !== p && now_ < q.talk);
     // All of them look at the chat: one focal point, the middle of the phone's screen (who is low looks up, who is
     // high looks down). Their places are measured twice a second, not every frame (cheap).
@@ -421,7 +426,7 @@ function stepPals(dt) {
   if (any && palBall && palDrawn > 0.1) {
     palDrawn = 0;
     for (const p of pals) {
-      palBall.draw({ time: orbTime * 0.8 + p.t * 0.1, energy: 0.14, roll: [0.3 * Math.sin(p.t * 0.31), 0.2 * Math.sin(p.t * 0.23)], cMain: p.c[1], cLow: p.c[3], cMid: p.c[2], cHigh: p.c[0] });
+      palBall.draw({ time: p.ct, energy: 0.1, roll: [0.3 * Math.sin(p.t * 0.31), 0.2 * Math.sin(p.t * 0.23)], cMain: p.c[1], cLow: p.c[3], cMid: p.c[2], cHigh: p.c[0] });
       p.ctx.clearRect(0, 0, 112, 112); p.ctx.drawImage(palBall.canvas, 0, 0, 112, 112);
     }
   }
@@ -477,7 +482,7 @@ function frame(ms) {
   }
   glide(real);
   cloudTime += dt * SPEED[0];
-  stageTime += dt * SPEED[0];
+  stageTime += dt * stageLook.speed;
   sinceScreens += real;
   if (sinceScreens >= 1 / 31) { sinceScreens = 0; drawScreens(); }
   stepCharts(real, day().curve);
