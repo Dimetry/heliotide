@@ -326,7 +326,7 @@ const gaugeTicks = Array.from({ length: 41 }, (_, i) => { const a = (135 + 270 *
 const HOURS = [["Now", 8, 90, 1], ["14", 8, 84, 1], ["15", 9, 80, 1], ["16", 9, 62, 1], ["17", 8, 40, 0], ["18", 8, 20, 0], ["19", 7, 10, 0], ["20", 7, 5, 0]];
 const wx = (rain) => `<svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${rain ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg>`;
 // The map of the app's event cards (Apple Maps, coloured, with relief), cut from the app without the "you are here" dot.
-const cmap = (n, x, y, pin) => `<div class="cmap ${n}" aria-hidden="true"><picture><source media="(prefers-color-scheme: dark)" type="image/avif" srcset="img/map-${n}-dark.avif"><source media="(prefers-color-scheme: dark)" srcset="img/map-${n}-dark.jpg"><source type="image/avif" srcset="img/map-${n}-light.avif"><img src="img/map-${n}-light.jpg" alt="" loading="lazy" draggable="false"></picture><div class="pinn ${n}">${pin}</div></div>`;
+const cmap = (n, x, y, pin) => `<div class="cmap ${n}" aria-hidden="true"><picture><source type="image/avif" srcset="img/sat-${n}.avif"><img src="img/sat-${n}.jpg" alt="" loading="lazy" draggable="false"></picture><div class="pinn ${n}">${pin}</div></div>`;
 
 const CARDS = {
   flares: `<article class="card s4 c-flares">${cardHead("flare", "Solar flares")}<div class="cb">

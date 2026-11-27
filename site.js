@@ -198,7 +198,7 @@ function feeling() {
   // Asleep it stays asleep: only a cursor move or a scroll wakes it (not a nod, a new level or anything else).
   if (sleeping && !touch.matches) { return "sleepy"; }
   if (mood && now_ < moodUntil) { return mood; }
-  const l = orbStage() ? stageDay : liveLevel, idle = now_ - awake;
+  const l = orbStage() ? stageDay : 0, idle = now_ - awake;   // outside the Kp part: always our happy green day
   if (owner.feel) { return owner.feel[Math.floor(now_ / 3.2) % owner.feel.length]; }
   if (now_ - act.wokeAt < 1.1) { return "curious"; }                 // just woken: "oh, somebody is here"
   // A phone has no cursor: the first orb plays a calm little show by itself (Fable, 11-26), and starts again.
@@ -322,7 +322,7 @@ function drawOrb(dt) {
   orbTime += dt * (name === "sleepy" ? 0.35 : 0.9);       // always the same calm flow: touching it does not stir the clouds
   // The ball is drawn only as big as the place that shows it now (a small O in the bar costs almost nothing).
   const need = Math.max(24, Math.round(owner.el.clientWidth / 0.96 * Math.min(touch.matches ? 1.5 : 2, devicePixelRatio || 1)));
-  if (ball && ball.canvas.width !== need) { ball.resize(need, need); }
+  if (ball && (ball.canvas.width !== need || ball.canvas.height !== need)) { ball.resize(need, need); }
   const heroShow = touch.matches && owner.name === "hero";
   // Outside the Kp part the orb is always our green one, whatever the Sun does now (Dima, 11-26).
   const ol = orbStage() ? stageLook : heroShow ? heroLook : LOOKS[0];
