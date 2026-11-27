@@ -348,13 +348,13 @@ const CARDS = {
     <div class="col bottom"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div>
     <div class="pic3 top"><div class="disc sq"><img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="Aurora over the northern hemisphere, live from NOAA" referrerpolicy="no-referrer" loading="lazy" draggable="false"><canvas id="aurorafilm" width="560" height="560" style="opacity:0"></canvas></div></div>
   </div></div></article>`,
-  quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>4.3</b>")}<div class="cb"><div class="words"><p class="w20">2 near you, M4+</p><p class="cn">Closest: M4.3, 160 km away.</p></div></div></article>`,
+  quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>5.1</b>")}<div class="cb"><div class="words"><p class="w20">2 near you, M4+</p><p class="cn">Closest: M5.1, 160 km away.</p></div></div></article>`,
   fires: `<article class="card s2 c-map">${cardHead("fire", "Wildfires")}${cmap("fire", 64, 30, `<i></i><i></i><b>${icon("fire")}</b>`)}<div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away.</p></div></div></article>`,
   weather: `<article class="card s2 c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
     <div class="wnow"><p class="v34">8°</p><p class="w20">Rain</p></div>
     <div class="hrs">${HOURS.map(([t, c, r, rain]) => `<div><b>${t}</b>${wx(rain)}<span>${r >= 20 ? r + "%" : "&nbsp;"}</span><em>${c}°</em></div>`).join("")}</div></div></div></article>`,
   uv: `<article class="card s1 tile2 c-uv">${tileHead("sun", "UV index")}<div class="cb"><p class="vl"><span id="uv">3</span> <b id="uvw">Moderate</b></p><div class="scale"><i id="uvdot"></i></div><p class="cn end">Clear sky: up to 4 at 13:00.</p></div></article>`,
-  press: `<article class="card s1 tile2 c-press">${tileHead("gauge", "Pressure")}<div class="cb"><div class="gauge"><svg viewBox="-62 -62 124 124" aria-hidden="true">${gaugeTicks}<line id="needle" class="needle" x1="46" y1="0" x2="61" y2="0"/></svg><p><span id="hpa">1015</span><small id="ptrend">↓ Falling</small></p><em>hPa</em></div></div></article>`
+  press: `<article class="card s1 tile2 c-press">${tileHead("gauge", "Pressure")}<div class="cb"><div class="gauge"><svg viewBox="-63 -63 126 126" role="img" aria-label="Pressure">${gaugeTicks}<line id="needle" class="needle" x1="46" y1="0" x2="61" y2="0"/><text id="hpa" class="gv" y="6" text-anchor="middle">1015</text><text id="ptrend" class="gt" y="20" text-anchor="middle">↓ Falling</text><text class="gt" y="52" text-anchor="middle">hPa</text></svg></div></div></article>`
 };
 // The phones show the same Solar flares card as the page (no tab bar: less noise), at the app's size, scaled to the screen.
 const phoneFlares = `<article class="card c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
@@ -381,8 +381,9 @@ let todayStep = 0, lastHpa = 1015;
 function stepToday() {
   todayStep++;
   const p = [1015, 1004, 988, 996, 1021, 1034, 1027, 1009][todayStep % 8];
-  put(document.querySelector("#hpa"), p);
-  put(document.querySelector("#ptrend"), p < lastHpa ? "↓ Falling" : "↑ Rising");
+  // The dial is one drawing: its words scale with it.
+  document.querySelector("#hpa").textContent = p;
+  document.querySelector("#ptrend").textContent = p < lastHpa ? "↓ Falling" : "↑ Rising";
   lastHpa = p;
   document.querySelector("#needle").style.transform = `rotate(${135 + 270 * (Math.min(1060, Math.max(960, p)) - 960) / 100}deg)`;
   if (todayStep % 2) { const u = [3, 5, 8, 4, 2][(todayStep >> 1) % 5]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : u < 6 ? "Moderate" : u < 8 ? "High" : "Very high"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
