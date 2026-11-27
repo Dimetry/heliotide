@@ -862,3 +862,5 @@ document.querySelectorAll(".windvid").forEach((v) => new IntersectionObserver(([
   new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(card);
   setInterval(() => { if (on && !document.hidden && !still.matches) { stepFlares(); } }, 4800);
 })();
+// Test switch for the top of the page on iPhones: ?noveil removes the colour strip.
+if (/noveil/.test(location.search)) { document.querySelector(".veil")?.remove(); }
