@@ -910,3 +910,7 @@ main { overflow-x: clip; }
 /* The aurora is soft light, not rays: a light blur melts the strips together. */
 .aurbg { filter: blur(6px); transform: scale(1.04); }
 .disc.circ video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; clip-path: circle(46.8%); opacity: 1; }
+/* iOS 26 Safari (and in-app browsers built on it) cannot blur above the page: it tints the area under its status bar
+   and toolbar with the colour of a fixed element touching the top edge. A thin strip in the page colour gives that
+   area our page colour, so text no longer shows through there; our blur starts right under it. */
+.veil { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 9; background: var(--page); pointer-events: none; }
