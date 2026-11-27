@@ -854,3 +854,12 @@ main { overflow-x: clip; }
 /* Clean relief (Apple Maps satellite, no names, no borders, sharp on Retina): the pin stands in the middle of the picture. */
 .cmap img, .cmap.quake img, .cmap.fire img { width: 130%; left: 0; top: 50%; transform: translateY(-50%); }
 .cmap .pinn, .c-map .cmap .pinn, .cmap.quake .pinn, .cmap.fire .pinn { left: 65%; top: 50%; }
+/* Map cards, quieter (11-26, night): the same relief in grey, see-through; the coast reads as a soft outline. */
+.cmap img { filter: grayscale(1) contrast(1.5) brightness(1.12); opacity: .42; }
+@media (prefers-color-scheme: dark) { .cmap img { filter: grayscale(1) contrast(1.35) brightness(1.25); opacity: .3; } }
+/* Square tiles: the same margin on every side; what is inside floats in the free space. */
+#bento .tile2 .cb { padding: 0 0 16px; justify-content: center; }
+#bento .c-press .gauge { flex: 1; min-height: 0; padding: 0; }
+#bento .c-press .gauge svg { height: auto; width: auto; max-width: 100%; max-height: 100%; }
+#bento .c-press .gauge em { bottom: 6%; }
+#bento .c-uv .cb { justify-content: flex-end; }
