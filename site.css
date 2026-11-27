@@ -831,3 +831,26 @@ main { overflow-x: clip; }
 .cmap .pinn, .c-map .cmap .pinn { left: 66%; }
 .cmap.quake img { left: calc(66% - .418 * 135%); } .cmap.fire img { left: calc(66% - .50 * 135%); }
 .cmap { -webkit-mask: linear-gradient(42deg, transparent 30%, rgba(0, 0, 0, .55) 46%, #000 64%); mask: linear-gradient(42deg, transparent 30%, rgba(0, 0, 0, .55) 46%, #000 64%); }
+/* 11-26, late 2. Maps: the whole card is the map's box, the picture reaches past the fade, so no edge ever shows. */
+.cmap { left: 0; right: 0; width: auto; -webkit-mask: linear-gradient(55deg, transparent 34%, rgba(0, 0, 0, .6) 50%, #000 62%); mask: linear-gradient(55deg, transparent 34%, rgba(0, 0, 0, .6) 50%, #000 62%); }
+.cmap img { width: 130%; top: 50%; }
+.cmap.quake img { left: 10%; transform: translateY(-50.5%); } .cmap.quake .pinn { left: calc(10% + .418 * 130%); }
+.cmap.fire img { left: 0; transform: translateY(-55%); } .cmap.fire .pinn { left: 65%; }
+.c-map .words { width: 48%; }
+/* Solar wind and Aurora: one line less on every screen, so they fit their two squares. */
+#bento .c-wind .tr:not(.first) { display: none; } #bento .c-aurora .cn { display: none; }
+/* Weather only on a tablet (it fills the row there). */
+#bento .c-wx { display: none; }
+@media (min-width: 640px) and (max-width: 1099px) { #bento .c-wx { display: flex; } }
+/* Pressure: the dial as far from the bottom as from the sides. */
+#bento .c-press .cb { padding-bottom: 16px; } #bento .c-press .gauge svg { max-height: 100%; height: 100%; }
+/* Chat field: a plain frosted fill, no blending (it flickered black and white while the chat moved). */
+.field { background: rgba(255, 255, 255, .6) !important; box-shadow: inset 0 0 0 calc(var(--p) * .6) rgba(0, 0, 0, .1) !important; }
+.field::before { display: none !important; }
+@media (prefers-color-scheme: dark) { .field { background: rgba(255, 255, 255, .14) !important; box-shadow: inset 0 0 0 calc(var(--p) * .6) rgba(255, 255, 255, .1) !important; } }
+/* The two big titles: the bigger the type, the tighter its letters and lines (Dima, 11-26). */
+#hero h1, #end h2 { letter-spacing: -.045em; line-height: .9; }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #hero h1, #end h2 { letter-spacing: -.048em; line-height: .9; } }
+/* Clean relief (Apple Maps satellite, no names, no borders, sharp on Retina): the pin stands in the middle of the picture. */
+.cmap img, .cmap.quake img, .cmap.fire img { width: 130%; left: 0; top: 50%; transform: translateY(-50%); }
+.cmap .pinn, .c-map .cmap .pinn, .cmap.quake .pinn, .cmap.fire .pinn { left: 65%; top: 50%; }
