@@ -883,3 +883,20 @@ main { overflow-x: clip; }
   #bento .c-map .words { width: 56%; }
 }
 @media (max-width: 359px) { #bento .c-uv .vl b { font-size: 15px; } }
+/* Pressure: one drawing that scales with its tile (the words are inside it); even margins on every side. */
+#bento .c-press .gauge { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#bento .c-press .gauge svg { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; aspect-ratio: auto; overflow: visible; }
+.gauge .gv { font-size: 23px; fill: var(--ink); font-weight: 400; letter-spacing: -.02em; }
+.gauge .gt { font-size: 8.5px; fill: var(--quiet); font-weight: 500; }
+/* Event pins a little more to the right; the earthquake a strong red M5.1, bigger. */
+.cmap .pinn, .c-map .cmap .pinn, .cmap.quake .pinn, .cmap.fire .pinn { left: 74%; }
+.cmap.quake .pinn { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+.cmap.quake .pinn b { background: radial-gradient(circle at 34% 26%, #ff6a55, #d92d20 62%); font-size: 15px; }
+.cmap.quake .pinn i { border-color: #e0392b; }
+/* Alerts (11-26, night 5): the line ABOVE the part cuts the phone; we see its lower part with the alerts; the words
+   are under it on a phone and on its right on a computer. */
+#alerts { padding-top: 0; padding-bottom: 64px; }
+#alerts .low { order: -1; align-self: start; margin: 0; height: var(--h); -webkit-mask: linear-gradient(rgba(0, 0, 0, .45), #000 40%); mask: linear-gradient(rgba(0, 0, 0, .45), #000 40%); }
+#alerts .low .phone { bottom: 12px; }
+@media (max-width: 899px) { #alerts .low { align-self: center; } }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #alerts { align-items: start; } #alerts .lead { align-self: center; } }

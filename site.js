@@ -372,7 +372,7 @@ if (pals.length) {
   new IntersectionObserver(([e]) => { if (e.isIntersecting && !palsOn) { palsSince = now_; } palsOn = e.isIntersecting; }, { threshold: 0.4 }).observe($("#chat"));
   // When somebody else writes, one of the friends "says" it: a few quick happy faces and small hops.
   new MutationObserver((list) => {
-    for (const m of list) { for (const n of m.addedNodes) { if (n.classList?.contains("bub") && !n.classList.contains("mine") && palsOn) { const p = pals[Math.floor(Math.random() * pals.length)]; p.talk = now_ + 1.5; } } }
+    for (const m of list) { for (const n of m.addedNodes) { if (n.classList?.contains("bub") && !n.classList.contains("mine") && palsOn) { const on = pals.filter((q) => q.k > 0.9), p = on[Math.floor(Math.random() * on.length)]; if (p) { p.talk = now_ + 1.5; } } } }
   }).observe($(".bubbles"), { childList: true });
 }
 /// Four characters, by colour (Fable, 11-26): green the calm sleepy host, sky the curious one, pink the dramatic one,
@@ -396,9 +396,10 @@ function stepPals(dt) {
     const c = PALS[i] ?? PALS[0];
     // One by one: each first slides out from behind the phone and past its edge (behind it), then, once clear of
     // the phone, comes to the front and swings back to its place on a curve. The next starts as this one lands.
-    const late = palsOn ? now_ - palsSince - p.at : -1;
-    if (late < 0) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } p.k = 0; continue; }
-    p.k = clamp(late / 1.3, 0, 1);
+    // World: all four; Near me: only the first two stay, the other two fly back behind the phone (and out again).
+    const wanted = palsOn && now_ - palsSince - p.at > 0 && (typeof room === "undefined" || room === 1 || i < 2);
+    p.k = clamp((p.k ?? 0) + (wanted ? dt / 1.3 : -dt / 1.0), 0, 1);
+    if (p.k <= 0) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
     any = true;
     p.el.style.visibility = "visible";
     p.t += dt; p.ct = (p.ct ?? 20 + i * 7) + dt * 0.72 * ORB_PACE[[0, 1, 3, 2][i] ?? 0];
