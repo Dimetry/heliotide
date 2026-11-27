@@ -907,3 +907,5 @@ main { overflow-x: clip; }
 .c-aurora .cb { position: relative; z-index: 1; justify-content: flex-end; }
 .c-aurora .words { width: 52%; }
 .c-aurora .ch { position: relative; z-index: 2; }
+/* The aurora is soft light, not rays: a light blur melts the strips together. */
+.aurbg { filter: blur(6px); transform: scale(1.04); }

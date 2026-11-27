@@ -843,8 +843,8 @@ setInterval(() => { if (!document.hidden) { live(); } }, 5 * 60e3);
         const u = x / W;
         const y = H * (b.base + b.amp * Math.sin(u * b.k * 6.283 + t * b.sp * 6.283) + 0.03 * Math.sin(u * 9 + t * 0.5));
         const len = H * b.len * (0.8 + 0.2 * Math.sin(u * 6 + t * 0.35));
-        ctx.globalAlpha = set[i][1] * (0.5 + 0.5 * Math.abs(Math.sin(u * 23 + t * 0.7) * Math.sin(u * 9 - t * 0.4)));
-        ctx.drawImage(imgs[theme][i], x, y - len, step * 1.15, len * 1.1);
+        ctx.globalAlpha = set[i][1] * (0.6 + 0.4 * Math.sin(u * 5 + t * 0.5) * Math.sin(u * 3 - t * 0.3));   // broad, slow light: no stripes
+        ctx.drawImage(imgs[theme][i], x - step, y - len, step * 3, len * 1.1);
       }
     });
     ctx.globalAlpha = 1;
