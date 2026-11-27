@@ -411,9 +411,11 @@ function stepPals(dt) {
     const face_ = talking ? (Math.floor(now_ * c.talk[2]) % 2 ? c.talk[0] : c.talk[1]) : palFace(c, p.t);
     p.face.step(dt, face_, aim);
     const nod = talking && c.nod ? Math.sin(Math.min(1, (p.talk - now_) / 1.5) * Math.PI) * 0.25 : 0;
-    p.path.setAttribute("d", p.face.path([0.18 * Math.sin(p.t * 0.7), 0.12 * Math.sin(p.t * 0.53) - nod]));
+    // The whole face turns to the chat (not only the eyes), with a small calm sway.
+    p.look = p.look ?? aim.slice(); for (let k = 0; k < 2; k++) { p.look[k] += (aim[k] - p.look[k]) * Math.min(1, dt * 3); }
+    p.path.setAttribute("d", p.face.path([0.55 * p.look[0] + 0.05 * Math.sin(p.t * 0.7), -0.42 * p.look[1] + 0.04 * Math.sin(p.t * 0.53) - nod]));
     const k = p.k, eo = (v) => 1 - (1 - v) ** 3, eio = (v) => v < 0.5 ? 4 * v * v * v : 1 - (-2 * v + 2) ** 3 / 2;
-    const e1 = eo(Math.min(1, k / 0.45)), e2 = k < 0.45 ? 0 : eio((k - 0.45) / 0.55);
+    const e1 = eio(Math.min(1, k / 0.45)), e2 = k < 0.45 ? 0 : eio((k - 0.45) / 0.55);
     const x = p.side * (95 - 175 * e1 + 80 * e2), lift = -Math.sin(Math.PI * Math.min(1, k * 1.1)) * 26;
     const hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
     const tilt = c.tilt;
