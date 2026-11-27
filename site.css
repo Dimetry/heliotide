@@ -863,3 +863,8 @@ main { overflow-x: clip; }
 #bento .c-press .gauge svg { height: auto; width: auto; max-width: 100%; max-height: 100%; }
 #bento .c-press .gauge em { bottom: 6%; }
 #bento .c-uv .cb { justify-content: flex-end; }
+/* Alerts after Widgets: its phone stands on the thin line under the part and is cut by it, fading a little (not fully). */
+#alerts { padding-bottom: 0; }
+#alerts .low { align-self: end; margin-bottom: 0; height: var(--h); -webkit-mask: linear-gradient(#000 55%, rgba(0, 0, 0, .45)); mask: linear-gradient(#000 55%, rgba(0, 0, 0, .45)); }
+#alerts .low .phone { bottom: -12%; }
+@media (max-width: 899px) { #alerts .low { align-self: center; } }
