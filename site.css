@@ -872,3 +872,14 @@ main { overflow-x: clip; }
 .vland { position: absolute; inset: 0; background: currentColor; opacity: .16; -webkit-mask: url(img/land-quake.svg) center / cover no-repeat; mask: url(img/land-quake.svg) center / cover no-repeat; }
 .vland.fire { -webkit-mask-image: url(img/land-fire.svg); mask-image: url(img/land-fire.svg); }
 @media (prefers-color-scheme: dark) { .vland { opacity: .2; } }
+/* Phones: Solar wind and Aurora keep their picture inside the card: as tall as the free space under the title, no more. */
+@media (max-width: 639px) {
+  #bento .c-wind .pb, #bento .c-aurora .pb { height: auto; align-items: end; }
+  #bento .c-wind .pic3, #bento .c-aurora .pic3 { height: auto; align-self: end; }
+  #bento .c-wind .disc, #bento .c-aurora .disc { height: auto; width: min(32vw, calc(var(--u) - 64px)); }
+}
+@media (max-width: 359px) {
+  #bento .card .vl, #bento .card .v34 { font-size: 28px; } #bento .card .w20 { font-size: 17px; } #bento .card .cn { font-size: 13px; }
+  #bento .c-map .words { width: 56%; }
+}
+@media (max-width: 359px) { #bento .c-uv .vl b { font-size: 15px; } }
