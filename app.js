@@ -316,12 +316,13 @@ const cardHead = (i, t) => `<div class="ch">${icon(i)}<span class="ct">${t}</spa
 const tileHead = cardHead;
 const term = (t, before, value, word, first) => `<div class="tr${first ? " first" : ""}"><u>${t}</u><span>${before ? `<small>${before}</small> ` : ""}${value ? `<small>${value}</small>${word ? " · " : ""}` : ""}${word ? `<b>${word}</b>` : ""}</span></div>`;
 // The X-ray of the last 12 hours: quiet with a few short flares, ending in the "Now" dot.
-const XRAY = (() => {
-  const spikes = { 13: 26, 37: 18, 41: 9, 46: 12, 52: 14, 64: 30, 78: 6 };
+const xrayPath = (last = 0) => {
+  const spikes = { 13: 26, 37: 18, 41: 9, 46: 12, 52: 14, 64: 30, 78: 6, 82: last };
   let y = 44, d = "M0 44";
   for (let i = 1; i <= 84; i++) { y = 44 + Math.sin(i * 1.7) * 1.3 + Math.sin(i * 0.31) * 1.6; if (spikes[i]) { d += ` L${(i * 4 - 2).toFixed(0)} ${y.toFixed(1)} L${i * 4} ${(44 - spikes[i]).toFixed(1)} L${i * 4 + 2} ${y.toFixed(1)}`; } else { d += ` L${i * 4} ${y.toFixed(1)}`; } }
   return d;
-})();
+};
+const XRAY = xrayPath(0);
 const gaugeTicks = Array.from({ length: 41 }, (_, i) => { const a = (135 + 270 * i / 40) * Math.PI / 180; return `<line x1="${(52 * Math.cos(a)).toFixed(1)}" y1="${(52 * Math.sin(a)).toFixed(1)}" x2="${(60 * Math.cos(a)).toFixed(1)}" y2="${(60 * Math.sin(a)).toFixed(1)}"/>`; }).join("");
 const HOURS = [["Now", 8, 90, 1], ["14", 8, 84, 1], ["15", 9, 80, 1], ["16", 9, 62, 1], ["17", 8, 40, 0], ["18", 8, 20, 0], ["19", 7, 10, 0], ["20", 7, 5, 0]];
 const wx = (rain) => `<svg class="wx" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 20a5.500 5.500 0 0 1-.4-11A7.500 7.500 0 0 1 23 10.500 4.800 4.800 0 0 1 23.500 20Z"/>${rain ? '<g><path d="M11 23l-1.500 4M16 23l-1.500 4M21 23l-1.500 4"/></g>' : ""}</svg>`;
@@ -330,15 +331,15 @@ const cmap = (n, x, y, pin) => `<div class="cmap ${n}" aria-hidden="true"><i cla
 
 const CARDS = {
   flares: `<article class="card s4 c-flares">${cardHead("flare", "Solar flares")}<div class="cb">
-    <p class="vl"><span>B1.5</span> <b>Low</b></p><p class="cn">Strongest in last 24 h: B6.4 at 22:07.</p>
-    <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path class="fill" d="${XRAY} L336 56 L0 56Z"/><path d="${XRAY}"/></svg><i></i></div>
+    <p class="vl"><span id="fv">B1.5</span> <b id="fw">Low</b></p><p class="cn" id="fn">Strongest in last 24 h: B6.4 at 22:07.</p>
+    <div class="fchart"><svg viewBox="0 0 340 56" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset="1" stop-color="currentColor" stop-opacity=".16"/></linearGradient></defs><path id="xfill" class="fill" d="${XRAY} L336 56 L0 56Z"/><path id="xline" d="${XRAY}"/></svg><i></i></div>
     <div class="axis"><span>12h ago</span><span>6h ago</span><b>Now</b></div>
     <div class="pb lead"><div class="pic3" data-tone="dark"><div class="disc"><img class="sunhmi" src="img/sun-hmi.jpg" alt="The Sun now, seen by NASA SDO" draggable="false"></div></div>
-      <div class="col bottom">${term("X Strong", "Chance", "", "1%", 1)}${term("M Medium", "Chance", "", "1%")}${term("C Small", "Chance", "", "15%")}</div></div>
+      <div class="col bottom">${term("X Strong", "Chance", "", '<span id="fx">1%</span>', 1)}${term("M Medium", "Chance", "", '<span id="fm">1%</span>')}${term("C Small", "Chance", "", '<span id="fc">15%</span>')}</div></div>
   </div></article>`,
   wind: `<article class="card s2 c-wind">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
     <div class="col"><p class="vl"><span>325</span><small>km/s</small> <b>Calm</b></p>${term("Density", "", "0.8 p/cm³", "Calm", 1)}${term("Field · Bz", "", "−1.3 nT", "Calm")}</div>
-    <div class="pic3"><div class="disc circ"><picture><source type="image/avif" srcset="img/wind-key.avif"><img src="img/wind-key.png" alt="The solar wind model of NOAA, seen from above" draggable="false"></picture><canvas id="windfilm" width="400" height="400" style="opacity:0"></canvas></div></div>
+    <div class="pic3"><div class="disc circ"><video class="windvid" src="img/wind.mp4" autoplay poster="img/wind-still.jpg" muted loop playsinline preload="metadata" aria-label="The solar wind model of NOAA (WSA-Enlil), seen from above"></video><canvas id="windfilm" width="400" height="400" hidden></canvas></div></div>
   </div></div></article>`,
   alerts: `<article class="card s4 c-alerts">${cardHead("alert", "Alerts")}<div class="cb">
     <p class="w20">All normal</p>
@@ -363,7 +364,7 @@ const phoneFlares = `<article class="card c-flares">${cardHead("flare", "Solar f
   </div></article>`;
 const phoneWind = `<article class="card c-wind2">${cardHead("wind", "Solar wind")}<div class="cb"><div class="pb">
     <div class="col"><u class="lab0">Speed</u><p class="vl"><span data-d="wind"></span><small>km/s</small> <b data-d="windWord"></b></p></div>
-    <div class="pic3"><div class="disc circ"><img src="img/wind-key.png" alt="" loading="lazy" draggable="false"></div></div></div></div></article>`;
+    <div class="pic3"><div class="disc circ"><img src="img/wind-still.jpg" alt="" loading="lazy" draggable="false"></div></div></div></div></article>`;
 for (const el of document.querySelectorAll(".pcard")) { el.innerHTML = phoneFlares + phoneWind; }
 function fitCards() { for (const el of document.querySelectorAll(".pcard")) { el.style.transform = `scale(${(el.closest(".dev").clientWidth / 450).toFixed(4)})`; } }
 fitCards();
@@ -386,3 +387,25 @@ function stepToday() {
   if (todayStep % 2) { const u = [3, 5, 8, 4, 2][(todayStep >> 1) % 5]; put(document.querySelector("#uv"), u); put(document.querySelector("#uvw"), u < 3 ? "Low" : u < 6 ? "Moderate" : u < 8 ? "High" : "Very high"); document.querySelector("#uvdot").style.left = u / 11 * 100 + "%"; }
 }
 document.querySelector("#needle").style.transform = `rotate(${135 + 270 * 55 / 100}deg)`;
+
+// Solar flares come alive (Dima, 11-26): a few calm scenes in turn, as a day can go: quiet, a small flare, a medium one,
+// then quiet again. The newest spike grows on the chart, the class, the words and the chances follow.
+const FLARE_SCENES = [
+  { v: "B1.5", w: "Low", n: "Strongest in last 24 h: B6.4 at 22:07.", x: "1%", m: "1%", c: "15%", spike: 0 },
+  { v: "C2.3", w: "Moderate", n: "A small flare a few minutes ago.", x: "1%", m: "5%", c: "35%", spike: 16 },
+  { v: "M1.1", w: "Medium", n: "A medium flare just now. Radio may crackle.", x: "5%", m: "25%", c: "60%", spike: 34 },
+  { v: "C4.0", w: "Moderate", n: "Calming down after a medium flare.", x: "2%", m: "15%", c: "45%", spike: 20 }
+];
+let flareScene = 0, flareSpike = 0;
+function stepFlares() {
+  flareScene = (flareScene + 1) % FLARE_SCENES.length;
+  const f = FLARE_SCENES[flareScene], $id = (i) => document.getElementById(i);
+  put($id("fv"), f.v); put($id("fw"), f.w); put($id("fn"), f.n); put($id("fx"), f.x); put($id("fm"), f.m); put($id("fc"), f.c);
+  const from = flareSpike, to = f.spike, t0 = performance.now(), D = still.matches ? 0 : 900;
+  const tick = (ms) => {
+    const k = D ? Math.min(1, (ms - t0) / D) : 1, e = k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2, h = from + (to - from) * e, d = xrayPath(h);
+    $id("xline").setAttribute("d", d); $id("xfill").setAttribute("d", d + " L336 56 L0 56Z");
+    if (k < 1) { requestAnimationFrame(tick); } else { flareSpike = to; }
+  };
+  requestAnimationFrame(tick);
+}

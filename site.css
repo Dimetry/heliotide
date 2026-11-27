@@ -909,3 +909,4 @@ main { overflow-x: clip; }
 .c-aurora .ch { position: relative; z-index: 2; }
 /* The aurora is soft light, not rays: a light blur melts the strips together. */
 .aurbg { filter: blur(6px); transform: scale(1.04); }
+.disc.circ video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; clip-path: circle(46.8%); opacity: 1; }
