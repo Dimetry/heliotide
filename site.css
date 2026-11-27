@@ -925,3 +925,4 @@ main { overflow-x: clip; }
 #end .endword svg { width: 46px; height: 46px; margin: -23px; }
 #end .endword line { stroke-width: 7; opacity: .42; }
 #end .endword { margin-top: 26px; }
+body { background: var(--page); }
