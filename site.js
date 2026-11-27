@@ -864,3 +864,24 @@ document.querySelectorAll(".windvid").forEach((v) => new IntersectionObserver(([
 })();
 // Test switch for the top of the page on iPhones: ?noveil removes the colour strip.
 if (/noveil/.test(location.search)) { document.querySelector(".veil")?.remove(); }
+
+// The wordmark is born under the orb of the first screen; scrolling, it rises and docks in the bar at the top
+// (Dima, 11-27). While it is below the bar's line, the bar's own word waits; after that the bar's word takes over and
+// slides from where the first-screen word stood to the middle.
+(() => {
+  const heroWord = document.querySelector(".heroword"), barWord = document.querySelector("#bar .word");
+  if (!heroWord || !barWord) { return; }
+  let ticking = false;
+  const step = () => {
+    ticking = false;
+    const h = heroWord.getBoundingClientRect(), b = bar.getBoundingClientRect(), hy = h.top + h.height / 2, by = b.top + b.height / 2;
+    const below = hy > by;
+    bar.classList.toggle("wait", below);
+    heroWord.style.visibility = below ? "visible" : "hidden";
+    const dx = (h.left + h.width / 2) - innerWidth / 2, t = Math.min(1, Math.max(0, (by - hy) / 120));
+    barWord.style.translate = below || Math.abs(dx) < 1 ? "" : `${(dx * (1 - t)).toFixed(1)}px 0`;
+  };
+  addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(step); } }, { passive: true });
+  addEventListener("resize", step);
+  step();
+})();

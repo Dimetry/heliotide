@@ -927,3 +927,21 @@ main { overflow-x: clip; }
 #end .endword { margin-top: 26px; }
 body { background: var(--page); }
 .veil { height: 24px; background: linear-gradient(var(--page) 70%, transparent); }
+/* 11-27: the solid top made the blur band too thin, so words popped out sharp right under the logo. The blur gets its
+   full height back; only a short soft strip of page colour stays at the very top (Safari takes its tint from it). */
+#bar::before { display: none; }
+.veil { height: 18px; background: linear-gradient(var(--page), color-mix(in srgb, var(--page) 0%, transparent)); }
+#bar { height: 68px; }
+.haze.a { -webkit-mask: linear-gradient(#000 calc(100% - 44px), transparent); mask: linear-gradient(#000 calc(100% - 44px), transparent); }
+.haze.b { -webkit-mask: linear-gradient(#000 calc(100% - 48px), transparent); mask: linear-gradient(#000 calc(100% - 48px), transparent); }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #end .endword { margin-top: 38px; } }
+.haze.b { background: color-mix(in srgb, var(--page) 72%, transparent); }
+/* The first-screen wordmark under the orb: the same size as the bar's, so it hands over without a jump. */
+#hero .heroword { font-size: 15px; justify-content: center; margin: 2px 0 22px; color: var(--ink); }
+#hero .heroword .sun_ { width: 20px; height: 20px; margin: 0 -1px; }
+#hero .heroword .sun_ b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: inherit; }
+#hero .heroword svg { width: 44px; height: 44px; margin: -22px; transform: scale(.84); }
+#hero .heroword line { stroke-width: 7; opacity: .42; }
+#hero .heroword > span { opacity: 1 !important; }
+#bar.wait .word { opacity: 0 !important; transition: none; }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #hero .heroword { justify-content: flex-start; margin-left: 2px; } }
