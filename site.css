@@ -902,3 +902,8 @@ main { overflow-x: clip; }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #alerts { align-items: start; } #alerts .lead { align-self: center; } }
 .m-watch { --s: 215; }
 #auroraart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 8px; }
+/* Aurora card: the drawn aurora covers the whole card and melts into it on the left, as the map cards do. */
+.aurbg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; -webkit-mask: linear-gradient(55deg, transparent 22%, rgba(0, 0, 0, .6) 42%, #000 62%); mask: linear-gradient(55deg, transparent 22%, rgba(0, 0, 0, .6) 42%, #000 62%); }
+.c-aurora .cb { position: relative; z-index: 1; justify-content: flex-end; }
+.c-aurora .words { width: 52%; }
+.c-aurora .ch { position: relative; z-index: 2; }

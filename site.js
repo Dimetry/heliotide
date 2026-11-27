@@ -805,49 +805,48 @@ setTimeout(arrived, 4000);
 setInterval(() => { if (!document.hidden) { live(); } }, 5 * 60e3);
 
 
-// ---- The Aurora card: a calm drawn aurora instead of NOAA's chart (Dima, 11-26). Plain 2D canvas, no library:
-// three soft curtains of thin rays (one small gradient picture each, stretched), green into blue, drifting slowly. ----
+// ---- The Aurora card: a soft drawn aurora over the whole card, melting into it like the maps (Dima, 11-26).
+// Plain 2D canvas, no library: three curtains of thin rays (one small gradient picture each, stretched), green into
+// blue, drifting slowly; deeper colours on a light card, brighter ones on a dark card. ----
 (() => {
   const c = document.querySelector("#auroraart");
   if (!c) { return; }
-  const ctx = c.getContext("2d"), W = c.width, H = c.height;
-  const ray = (rgb) => {               // one ray: clear at the top, bright low, a quick fade at the bottom edge
+  const ctx = c.getContext("2d");
+  const ray = (rgb) => {
     const s = document.createElement("canvas"); s.width = 1; s.height = 128;
     const x = s.getContext("2d"), g = x.createLinearGradient(0, 0, 0, 128);
-    g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(0.55, `rgba(${rgb},.35)`); g.addColorStop(0.86, `rgba(${rgb},.95)`); g.addColorStop(1, `rgba(${rgb},0)`);
+    g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(0.55, `rgba(${rgb},.3)`); g.addColorStop(0.85, `rgba(${rgb},.9)`); g.addColorStop(1, `rgba(${rgb},0)`);
     x.fillStyle = g; x.fillRect(0, 0, 1, 128); return s;
   };
-  const bands = [
-    { img: ray("90,255,170"), base: 0.52, amp: 0.07, k: 1.3, sp: 0.045, len: 0.46, a: 0.95 },
-    { img: ray("50,200,255"), base: 0.40, amp: 0.06, k: 2.1, sp: -0.035, len: 0.32, a: 0.7 },
-    { img: ray("150,255,140"), base: 0.62, amp: 0.05, k: 0.9, sp: 0.028, len: 0.36, a: 0.6 }
-  ];
-  const stars = Array.from({ length: 34 }, () => [Math.random() * W, Math.random() * H * 0.7, Math.random() * 1.1 + 0.3, Math.random() * 6.28]);
-  const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#02060f"); sky.addColorStop(0.7, "#061a2b"); sky.addColorStop(1, "#0a2a36");
+  const SETS = {
+    light: [["20,180,110", 1], ["20,130,220", 0.75], ["70,190,80", 0.65]],
+    dark: [["90,255,170", 0.85], ["50,200,255", 0.6], ["150,255,140", 0.5]]
+  };
+  const shape = [{ base: 0.62, amp: 0.10, k: 1.1, sp: 0.04, len: 0.55 }, { base: 0.48, amp: 0.08, k: 1.9, sp: -0.03, len: 0.4 }, { base: 0.72, amp: 0.07, k: 0.8, sp: 0.025, len: 0.45 }];
+  const imgs = { light: SETS.light.map(([rgb]) => ray(rgb)), dark: SETS.dark.map(([rgb]) => ray(rgb)) };
   let on = false, last = 0;
-  new IntersectionObserver(([e]) => { on = e.isIntersecting; if (on) { requestAnimationFrame(draw); } }).observe(c);
+  const fit = () => { const r = c.getBoundingClientRect(), k = Math.min(1.5, devicePixelRatio || 1); c.width = Math.max(40, Math.round(r.width * k)); c.height = Math.max(40, Math.round(r.height * k)); };
+  new IntersectionObserver(([e]) => { on = e.isIntersecting; if (on) { fit(); requestAnimationFrame(draw); } }).observe(c);
+  addEventListener("resize", () => { if (on) { fit(); } });
+  document.addEventListener("visibilitychange", () => { if (on && !document.hidden) { requestAnimationFrame(draw); } });
   function draw(ms) {
     if (!on || document.hidden) { return; }
     requestAnimationFrame(draw);
-    if (ms - last < 40) { return; }                       // 25 frames a second are plenty for a slow sky
+    if (ms - last < 40) { return; }
     last = ms;
-    const t = ms / 1000;
-    ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    for (const [x, y, r, p] of stars) { ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.3 * Math.sin(t * 1.3 + p)})`; ctx.fillRect(x, y, r, r); }
-    ctx.globalCompositeOperation = "lighter";
-    for (const b of bands) {
-      for (let x = 0; x < W; x += 2) {
+    const t = ms / 1000, W = c.width, H = c.height, theme = darkMode.matches ? "dark" : "light", set = SETS[theme];
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = theme === "dark" ? "lighter" : "source-over";
+    shape.forEach((b, i) => {
+      const step = Math.max(2, W / 160);
+      for (let x = 0; x < W; x += step) {
         const u = x / W;
-        const y = H * (b.base + b.amp * Math.sin(u * b.k * 6.283 + t * b.sp * 6.283) + 0.025 * Math.sin(u * 11 + t * 0.6));
-        const len = H * b.len * (0.8 + 0.2 * Math.sin(u * 7 + t * 0.4));
-        ctx.globalAlpha = b.a * (0.55 + 0.45 * Math.sin(u * 37 + t * 0.9) * Math.sin(u * 13 - t * 0.5));
-        ctx.drawImage(b.img, x, y - len, 2.2, len * 1.08);
+        const y = H * (b.base + b.amp * Math.sin(u * b.k * 6.283 + t * b.sp * 6.283) + 0.03 * Math.sin(u * 9 + t * 0.5));
+        const len = H * b.len * (0.8 + 0.2 * Math.sin(u * 6 + t * 0.35));
+        ctx.globalAlpha = set[i][1] * (0.5 + 0.5 * Math.abs(Math.sin(u * 23 + t * 0.7) * Math.sin(u * 9 - t * 0.4)));
+        ctx.drawImage(imgs[theme][i], x, y - len, step * 1.15, len * 1.1);
       }
-    }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    // a dark line of hills at the bottom
-    ctx.fillStyle = "#01040a"; ctx.beginPath(); ctx.moveTo(0, H);
-    for (let x = 0; x <= W; x += 8) { ctx.lineTo(x, H * (0.9 - 0.05 * Math.sin(x / W * 5.5 + 0.6) - 0.025 * Math.sin(x / W * 17))); }
-    ctx.lineTo(W, H); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
   }
 })();
