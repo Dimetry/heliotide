@@ -914,3 +914,14 @@ main { overflow-x: clip; }
    and toolbar with the colour of a fixed element touching the top edge. A thin strip in the page colour gives that
    area our page colour, so text no longer shows through there; our blur starts right under it. */
 .veil { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 9; background: var(--page); pointer-events: none; }
+/* iOS Safari paints the status bar area itself, in the page colour, and never draws the page there. So the blur cannot
+   go higher; instead the top of our bar starts in that same colour and melts into the blur: no hard line between them. */
+#bar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 30px; z-index: 0; pointer-events: none; background: linear-gradient(var(--page), color-mix(in srgb, var(--page) 0%, transparent)); }
+#bar .word { z-index: 1; }
+/* The end: our wordmark under the orb, above the title. */
+#end .endword { justify-content: center; font-size: 17px; margin: 0 0 22px; color: var(--ink); }
+#end .endword .sun_ { width: 22px; height: 22px; margin: 0 -1px; }
+#end .endword .sun_ b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: inherit; }
+#end .endword svg { width: 46px; height: 46px; margin: -23px; }
+#end .endword line { stroke-width: 7; opacity: .42; }
+#end .endword { margin-top: 26px; }
