@@ -344,10 +344,7 @@ const CARDS = {
     <p class="w20">All normal</p>
     <div class="arows">${term("Magnetic storm", "", "", "None", 1)}${term("Radio blackout", "", "", "None")}${term("Radiation storm", "", "", "None")}${term("Solar wind", "", "325 km/s", "Calm")}${term("Aurora here", "", "6% now", "Unlikely")}</div>
   </div></article>`,
-  aurora: `<article class="card s2 c-aurora">${cardHead("aurora", "Aurora")}<div class="cb"><div class="pb">
-    <div class="col bottom"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div>
-    <div class="pic3 top"><div class="disc sq"><!-- NOAA's live picture is kept here, switched off (Dima, 11-26): <img src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg"> --><canvas id="aurorafilm" width="560" height="560" hidden></canvas><canvas id="auroraart" width="320" height="320" role="img" aria-label="Aurora over the night sky"></canvas></div></div>
-  </div></div></article>`,
+  aurora: `<article class="card s2 c-aurora">${cardHead("aurora", "Aurora")}<canvas id="auroraart" class="aurbg" aria-hidden="true"></canvas><!-- NOAA's live picture is kept, switched off (Dima, 11-26): https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg --><canvas id="aurorafilm" width="560" height="560" hidden></canvas><div class="cb"><div class="words"><p class="vl"><span>34</span><small>%</small></p><p class="w20">Chance now</p><p class="cn">Look north, away from city lights.</p></div></div></article>`,
   quakes: `<article class="card s2 c-map">${cardHead("quake", "Earthquakes")}${cmap("quake", 41.8, 50.5, "<i></i><i></i><i></i><b>5.1</b>")}<div class="cb"><div class="words"><p class="w20">2 near you, M4+</p><p class="cn">Closest: M5.1, 160 km away.</p></div></div></article>`,
   fires: `<article class="card s2 c-map">${cardHead("fire", "Wildfires")}${cmap("fire", 64, 30, `<i></i><i></i><b>${icon("fire")}</b>`)}<div class="cb"><div class="words"><p class="w20">2 nearby</p><p class="cn">Closest: 84 km away.</p></div></div></article>`,
   weather: `<article class="card s2 c-wx">${cardHead("cloud", "Weather")}<div class="cb"><div class="wxrow">
