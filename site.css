@@ -926,3 +926,4 @@ main { overflow-x: clip; }
 #end .endword line { stroke-width: 7; opacity: .42; }
 #end .endword { margin-top: 26px; }
 body { background: var(--page); }
+.veil { height: 24px; background: linear-gradient(var(--page) 70%, transparent); }
