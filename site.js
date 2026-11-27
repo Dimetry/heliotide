@@ -850,3 +850,15 @@ setInterval(() => { if (!document.hidden) { live(); } }, 5 * 60e3);
     ctx.globalAlpha = 1;
   }
 })();
+
+// The solar wind film (NOAA WSA-Enlil, 24 real pictures, saved on the site): it plays only while it is on screen.
+document.querySelectorAll(".windvid").forEach((v) => new IntersectionObserver(([e]) => { if (e.isIntersecting && !still.matches) { v.play().catch(() => {}); } else { v.pause(); } }).observe(v));
+
+// The Solar flares card changes its scene every few seconds while it is on screen.
+(() => {
+  const card = document.querySelector("#bento .c-flares");
+  if (!card) { return; }
+  let on = false;
+  new IntersectionObserver(([e]) => { on = e.isIntersecting; }).observe(card);
+  setInterval(() => { if (on && !document.hidden && !still.matches) { stepFlares(); } }, 4800);
+})();
