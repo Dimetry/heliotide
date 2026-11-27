@@ -868,3 +868,7 @@ main { overflow-x: clip; }
 #alerts .low { align-self: end; margin-bottom: 0; height: var(--h); -webkit-mask: linear-gradient(#000 55%, rgba(0, 0, 0, .45)); mask: linear-gradient(#000 55%, rgba(0, 0, 0, .45)); }
 #alerts .low .phone { bottom: -12%; }
 @media (max-width: 899px) { #alerts .low { align-self: center; } }
+/* Map cards (11-26, night 4): a plain grey vector map, the land as one quiet flat shape. */
+.vland { position: absolute; inset: 0; background: currentColor; opacity: .16; -webkit-mask: url(img/land-quake.svg) center / cover no-repeat; mask: url(img/land-quake.svg) center / cover no-repeat; }
+.vland.fire { -webkit-mask-image: url(img/land-fire.svg); mask-image: url(img/land-fire.svg); }
+@media (prefers-color-scheme: dark) { .vland { opacity: .2; } }
