@@ -203,8 +203,8 @@ function showWidgets(day, root = document) {
 const NOTES = [["Strong magnetic storm", "Kp 7 now. Aurora may be seen far from the poles."], ["Earthquake near you", "Magnitude 4.8, near Grindavík, Iceland."], ["Aurora possible tonight", "Look north after dark, away from city lights."], ["Strong solar flare", "X2.1. Short radio blackouts are possible."]];
 const NEAR = [["Freyja", "Grindavík", "Did anyone feel that just now?"], ["Óskar", "Reykjavík", "Yes! The lamp was swinging."], ["", "", "4.8, not far from us. It is on the map."], ["Birta", "Keflavík", "The dog woke up before it."], ["Freyja", "Grindavík", "Look north, the sky is green"], ["", "", "Going outside!"], ["Óskar", "Reykjavík", "Clouds here. Enjoy it for me."]];
 const WORLD = [["Mateo", "Santiago", "Small one here an hour ago. Nobody else woke up."], ["Yuki", "Sapporo", "Kp 4 already? I have had a headache all day."], ["Amara", "Nairobi", "Nothing here, only a beautiful sunset."], ["Ingrid", "Tromsø", "The aurora is dancing. I wish you all could see it."], ["", "", "Send us some of that sky!"], ["Liam", "Dunedin", "Aurora australis tonight too!"], ["Noor", "Amman", "Slept badly again. Is it the storm or the coffee?"], ["Chloé", "Lyon", "Coffee. But I check the Kp first too."], ["Kenji", "Osaka", "M5.1 off the coast. All fine here."]];
-const ROOMS = [{ name: "Reykjavík area · 12 online", talk: NEAR }, { name: "World · 214 online", talk: WORLD }];
-let room = 1, said = 0, turnNo = 0;
+const ROOMS = [{ name: "World · 214 online", talk: WORLD }, { name: "Reykjavík area · 12 online", talk: NEAR }];   // World left, Near me right (Dima, 11-27)
+let room = 0, said = 0, turnNo = 0;
 function openRoom(i) {
   room = i; said = 0; turnNo++;
   document.querySelectorAll("#chat .segments button").forEach((b, k) => b.setAttribute("aria-pressed", k === i));
@@ -241,7 +241,7 @@ async function talkLoop(active) {
         const c = next[2][n - 1];
         await wait(/[.,!?]/.test(c) ? some(220, 380) : c === " " ? some(110, 190) : some(55, 125));
       }
-      await wait(some(550, 900));
+      await wait(some(160, 260));   // sent at once, as a real chat does (Dima, 11-27)
       if (mine === turnNo) { fieldText(""); say(); }
     }
   }
@@ -272,14 +272,22 @@ function note(i) {
 }
 function addBubble(el, quiet) {
   const box = document.querySelector(".bubbles");
+  // FLIP (Dima, 11-27): only the bubbles move, never the whole list with its edges. Each starts from where it is seen
+  // now (also in the middle of a move), so quick messages never jump.
+  const before = new Map([...box.children].map((c) => [c, c.getBoundingClientRect().top]));
   box.append(el);
-  while (box.children.length > 10) { box.firstElementChild.remove(); }
-  if (quiet || still.matches) { return; }
-  for (const a of box.getAnimations()) { a.finish(); }   // two quick messages never overlap
-  const h = el.offsetHeight + 10, mine = el.classList.contains("mine"), soft = "cubic-bezier(.22, 1, .36, 1)";
-  box.animate([{ transform: `translateY(${h}px)` }, { transform: "none" }], { duration: 720, easing: soft });
+  while (box.children.length > 10) { before.delete(box.firstElementChild); box.firstElementChild.remove(); }
+  if (quiet || still.matches || !box.animate) { return; }
+  const soft = "cubic-bezier(.22, 1, .36, 1)", mine = el.classList.contains("mine");
+  const k = box.getBoundingClientRect().height / (box.offsetHeight || 1) || 1;   // the phone is drawn scaled
+  for (const [c, top] of before) {
+    c.getAnimations().forEach((a) => a.cancel());
+    const dy = (top - c.getBoundingClientRect().top) / k;
+    if (Math.abs(dy) > 0.5) { c.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 560, easing: soft }); }
+  }
   el.style.transformOrigin = mine ? "100% 100%" : "0 100%";
-  el.animate([{ opacity: 0, transform: mine ? "translateY(26%) scale(.92)" : "translateY(8%) scale(.95)" }, { opacity: 1, transform: "none" }], { duration: 760, easing: soft });
+  el.animate(mine ? [{ opacity: 0.6, transform: "translateY(30%) scale(.94)" }, { opacity: 1, transform: "none" }]
+                  : [{ opacity: 0, transform: "translateY(18%) scale(.95)" }, { opacity: 1, transform: "none" }], { duration: mine ? 380 : 560, easing: soft });
 }
 function say(quiet) {
   const talk = ROOMS[room].talk, [who, from, text] = talk[said++ % talk.length], el = document.createElement("div");

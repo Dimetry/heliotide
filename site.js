@@ -397,7 +397,8 @@ function stepPals(dt) {
     // One by one: each first slides out from behind the phone and past its edge (behind it), then, once clear of
     // the phone, comes to the front and swings back to its place on a curve. The next starts as this one lands.
     // World: all four; Near me: only the first two stay, the other two fly back behind the phone (and out again).
-    const wanted = palsOn && now_ - palsSince - p.at > 0 && (typeof room === "undefined" || room === 1 || i < 2);
+    const wanted = palsOn && now_ - palsSince - p.at > 0 && (typeof room === "undefined" || room === 0 || i === 1 || i === 3);   // Near me keeps the two lower ones (Dima, 11-27)
+    p.g = (p.g ?? 1) + (((typeof room !== "undefined" && room === 1) ? 1.18 : 1) - (p.g ?? 1)) * Math.min(1, dt * 2.5);   // and they grow a little
     p.k = clamp((p.k ?? 0) + (wanted ? dt / 1.3 : -dt / 1.0), 0, 1);
     if (p.k <= 0) { if (p.el.style.visibility !== "hidden") { p.el.style.visibility = "hidden"; } continue; }
     any = true;
@@ -420,7 +421,7 @@ function stepPals(dt) {
     const x = p.side * (95 - 175 * e1 + 80 * e2), lift = -Math.sin(Math.PI * Math.min(1, k * 1.1)) * 26;
     const hop = talking && c.hop ? -Math.abs(Math.sin(now_ * 11)) * c.hop : 0, shake = talking && c.shake ? Math.sin(now_ * 30) * c.shake : 0;
     const tilt = c.tilt;
-    p.el.style.transform = `translate(calc(${x.toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16 + lift).toFixed(1)}px) rotate(${tilt}deg) scale(${(0.75 + 0.25 * e1).toFixed(3)})`;
+    p.el.style.transform = `translate(calc(${x.toFixed(1)}% + ${shake.toFixed(1)}px), ${(Math.sin(p.t * c.bob[0]) * c.bob[1] + hop + nod * 16 + lift).toFixed(1)}px) rotate(${tilt}deg) scale(${((0.75 + 0.25 * e1) * p.g).toFixed(3)})`;
     const front = k > 0.45 ? "2" : "0";                       // behind the phone until it is out past the edge
     if (p.el.style.zIndex !== front) { p.el.style.zIndex = front; }
   }
@@ -663,7 +664,7 @@ every(2600, ["#today"], () => stepToday());
 talkLoop(() => loops.get("#chat") && !document.hidden);
 const rooms = [...document.querySelectorAll("#chat .segments button")];
 rooms.forEach((b, i) => b.addEventListener("click", () => openRoom(i)));
-openRoom(1);
+openRoom(0);
 
 // Parts off screen stop their small CSS loops (pins, rain, rings, the caret).
 const asleep = new IntersectionObserver((list) => { for (const e of list) { e.target.classList.toggle("off", !e.isIntersecting); } });

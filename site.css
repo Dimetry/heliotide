@@ -723,9 +723,9 @@ main { overflow-x: clip; }
 /* Widgets: the state line big, bold and in full ink on every widget; it may take two lines. */
 /* Widget state line as in the app (WidgetViews.swift TwoLines, 11-27): semibold, ink, one size per widget (small 13, medium 16, large 18),
    one line with "…" (small: two lines), never bigger or bolder by state. */
-.w .two b { color: var(--ink-w, #000); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.w .two b { color: var(--ink-w, #000); font-weight: 600; white-space: nowrap; line-height: 1.2; }
 @media (prefers-color-scheme: dark) { .w .two b { --ink-w: #fff; } }
-.small .two b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.small .two b { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .w .two > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Alerts: the bottom of the Lock Screen, cut straight, a little higher; room on the right for the shadow. */
 .low { --h: 300px; -webkit-mask: none; mask: none; width: 380px; padding-right: 40px; }
@@ -951,3 +951,17 @@ body { background: var(--page); }
 .m-watch .later { left: 50%; font-size: max(5px, calc(var(--s) * 100cqw / var(--w) * .058)); }
 .m-watch .later { white-space: normal; width: 62%; text-align: center; line-height: 1.15; }
 .w .two { min-width: 0; }
+
+/* 11-27 (Dima): on phones the Alerts phone does not fade out; the divider above already cuts it. */
+@media (max-width: 760px) { #alerts .low { -webkit-mask: none; mask: none; } }
+/* 11-27 (Dima): widget mosaic with even gaps; the large widget is as tall as the column on its right
+   (medium + gap + small). --c = column width, --g = every gap. */
+.rail { --c: 270px; --g: 14px; gap: var(--g); }
+.rail .col { width: var(--c); gap: var(--g); } .rail .line { gap: var(--g); }
+.rail .line .w.small, .rail .line .otile { width: calc((var(--c) - var(--g)) / 2); }
+.rail .w.large { width: calc((var(--c) * 170 / 364 + var(--g) + (var(--c) - var(--g)) / 2) * 364 / 382); }
+@media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { .rail { --c: 290px; --g: 20px; } }
+@media (max-height: 480px) and (orientation: landscape) { .rail { --c: 220px; --g: 12px; } }
+/* World / Near me with the app's symbols (globe, location). */
+#chat .segments button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+#chat .segments .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
