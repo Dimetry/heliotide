@@ -7,9 +7,9 @@ const DAYS = [
     curve: [1.33, 1.67, 1, 0.67, 1, 1.33, 2, 1.67, 1.33, 1.67, 2.33, 2, 2, 1.67, 1.67, 1.33, 1.67, 2, 2.33, 2, 1.67, 1.33, 1.33, 1.67] },
   { level: 1, kp: 4, state: "Space weather is active now", feel: "Some people may notice it", condition: "Active space weather", watch: "Storm tomorrow", outlook: "Storm expected", peak: 5, flare: "C4.1", m: "25%", x: "5%", flareWord: "Moderate", wind: 468, windWord: "Raised", bz: -6, field: "Unsettled", radio: "Normal", radiation: "Normal",
     curve: [1.67, 2, 1.33, 2.33, 2, 2.67, 3, 2.33, 3.33, 3, 3.67, 4, 4.33, 4, 3.67, 4.67, 5, 4.33, 3.67, 3.33, 3, 2.67, 2.67, 2.33] },
-  { level: 2, kp: 6, state: "Magnetic storm now", feel: "Some people may feel a bit off", condition: "Magnetic storm", watch: "Storm possible", outlook: "Storm expected", peak: 6, flare: "M1.8", m: "55%", x: "15%", flareWord: "Medium", wind: 612, windWord: "High", bz: -14, field: "Stormy", radio: "Minor issues", radiation: "Normal",
+  { level: 2, kp: 6, state: "Space weather is stormy now", feel: "Some people may feel a bit off", condition: "Stormy space weather", watch: "Storm possible", outlook: "Storm expected", peak: 6, flare: "M1.8", m: "55%", x: "15%", flareWord: "Medium", wind: 612, windWord: "High", bz: -14, field: "Stormy", radio: "Minor issues", radiation: "Normal",
     curve: [2, 2.33, 1.67, 2, 2.67, 2.33, 3, 5.33, 6.33, 5.67, 6.67, 6, 5.67, 5.33, 5, 4.67, 4.33, 4, 4, 3.67, 3.33, 3, 3, 2.67] },
-  { level: 3, kp: 8, state: "Severe magnetic storm now", feel: "Some people may sleep lighter", condition: "Severe magnetic storm", watch: "Storm today", outlook: "Storm expected", peak: 8, flare: "X2.1", m: "85%", x: "40%", flareWord: "Strong", wind: 925, windWord: "High", bz: -32, field: "Stormy", radio: "Disrupted", radiation: "Raised",
+  { level: 3, kp: 8, state: "Space weather is severe now", feel: "Some people may sleep lighter", condition: "Severe space weather", watch: "Storm today", outlook: "Storm expected", peak: 8, flare: "X2.1", m: "85%", x: "40%", flareWord: "Strong", wind: 925, windWord: "High", bz: -32, field: "Stormy", radio: "Disrupted", radiation: "Raised",
     curve: [2.33, 3, 2.67, 3.33, 3, 6, 7.67, 8.33, 7.33, 8.67, 7.67, 8, 7.67, 7.33, 7, 6.33, 6, 5.67, 5, 4.67, 4.33, 4, 3.67, 3.33] }
 ];
 const minus = (v) => v < 0 ? "−" + -v : "" + v;
