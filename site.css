@@ -947,6 +947,6 @@ body { background: var(--page); }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { #hero .heroword { justify-content: flex-start; margin-left: 2px; } }
 
 /* Release 11-27: Duo and Watch are not supported yet. Their screens are black with a small "Coming soon". */
-.m .later { position: absolute; left: 50.6%; top: 50.6%; transform: translate(-50%, -50%); white-space: nowrap; color: rgba(255, 255, 255, .62); font-weight: 500; letter-spacing: .01em; font-size: max(6px, calc(var(--s) * 100cqw / var(--w) * .045)); line-height: 1; pointer-events: none; }
-.m-watch .later { left: 50%; font-size: max(6px, calc(var(--s) * 100cqw / var(--w) * .085)); }
+.m .later { position: absolute; left: 50.6%; top: 50.6%; transform: translate(-50%, -50%); white-space: nowrap; color: #fff; font-weight: 500; letter-spacing: -.01em; font-size: max(5px, calc(var(--s) * 100cqw / var(--w) * .034)); line-height: 1; pointer-events: none; }
+.m-watch .later { left: 50%; font-size: max(5px, calc(var(--s) * 100cqw / var(--w) * .058)); }
 .m-watch .later { white-space: normal; width: 62%; text-align: center; line-height: 1.15; }
