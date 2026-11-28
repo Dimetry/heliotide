@@ -223,7 +223,7 @@ html:not(.landed) .orb { pointer-events: none; }
 .km small { font-size: calc(var(--p) * 19); font-weight: 500; letter-spacing: 0; }
 .small .km { padding: calc(var(--p) * 8) calc(var(--p) * 8) 0 0; }
 .two { display: flex; flex-direction: column; gap: calc(var(--p) * 2); font-size: calc(var(--p) * 13); }
-.two b { font-weight: 600; } .two span { color: var(--q); font-weight: 500; }
+.two b { font-weight: 600; } .two > span { color: var(--q); font-weight: 500; }
 .small .two { position: absolute; left: 0; right: 0; bottom: calc(var(--p) * -3); }
 .sig { display: flex; flex-direction: column; justify-content: space-between; }
 .sig > div { display: flex; flex-direction: column; gap: calc(var(--p) * 1); } .sig small { display: block; font-size: calc(var(--p) * 10); font-weight: 600; color: var(--q); }
@@ -231,7 +231,7 @@ html:not(.landed) .orb { pointer-events: none; }
 .side { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
 .side .two { font-size: calc(var(--p) * 16); } .side .km { font-size: calc(var(--p) * 58); } .side .km small { font-size: calc(var(--p) * 17); }
 .lh { display: flex; justify-content: space-between; align-items: flex-end; padding-top: calc(var(--p) * 2); }
-.lh .two b { font-size: calc(var(--p) * 18); } .lh .two span { font-size: calc(var(--p) * 15); font-weight: 400; } .lh .km { font-size: calc(var(--p) * 60); } .lh .km small { font-size: calc(var(--p) * 18); }
+.lh .two b { font-size: calc(var(--p) * 18); } .lh .two > span { font-size: calc(var(--p) * 15); font-weight: 400; } .lh .km { font-size: calc(var(--p) * 60); } .lh .km small { font-size: calc(var(--p) * 18); }
 .large .chart { position: relative; height: calc(var(--p) * 52); margin: 0 calc(var(--p) * -16); }
 .large .chart path { stroke-width: calc(var(--p) * 2); }
 .large .chart i { left: var(--x); width: calc(var(--p) * 6); height: calc(var(--p) * 6); margin: calc(var(--p) * -3); }
@@ -721,11 +721,12 @@ main { overflow-x: clip; }
 .part.more + .part.more::before { content: ""; position: absolute; top: 0; left: 50%; width: min(1040px, calc(100% - 2 * var(--edge))); transform: translateX(-50%); height: 1px; background: color-mix(in srgb, var(--ink) 12%, transparent); }
 #chat { padding-bottom: 72px; }
 /* Widgets: the state line big, bold and in full ink on every widget; it may take two lines. */
-.w .two b { color: var(--ink-w, rgba(0, 0, 0, .92)); font-weight: 700; white-space: normal; }
+/* Widget state line as in the app (WidgetViews.swift TwoLines, 11-27): semibold, ink, one size per widget (small 13, medium 16, large 18),
+   one line with "…" (small: two lines), never bigger or bolder by state. */
+.w .two b { color: var(--ink-w, #000); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
 @media (prefers-color-scheme: dark) { .w .two b { --ink-w: #fff; } }
-.small .two b { font-size: calc(var(--p) * 16); line-height: 1.12; }
-.side .two b { font-size: calc(var(--p) * 18); line-height: 1.12; }
-.lh .two b { font-size: calc(var(--p) * 22); line-height: 1.1; }
+.small .two b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.w .two > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Alerts: the bottom of the Lock Screen, cut straight, a little higher; room on the right for the shadow. */
 .low { --h: 300px; -webkit-mask: none; mask: none; width: 380px; padding-right: 40px; }
 .low .phone { right: 60px; }
@@ -809,7 +810,6 @@ main { overflow-x: clip; }
 /* Devices stand on the table: no gap above the shadow. The watch in front may stand a little higher. */
 .family .m { bottom: calc((var(--y, 0) - 7) * 100cqw / var(--w)); }
 .family .m-watch { --y: 2; }
-.lh .two b { font-size: calc(var(--p) * 26); } .side .two b { font-size: calc(var(--p) * 21); } .small .two b { font-size: calc(var(--p) * 18); }
 /* Alerts phone in the middle again (its shadow is gone, no room needed on the right). */
 .low { padding-right: 0; width: 340px; } .low .phone { right: 20px; }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 700px) { .low { width: 400px; } }
@@ -950,3 +950,4 @@ body { background: var(--page); }
 .m .later { position: absolute; left: 50.6%; top: 50.6%; transform: translate(-50%, -50%); white-space: nowrap; color: #fff; font-weight: 500; letter-spacing: -.01em; font-size: max(5px, calc(var(--s) * 100cqw / var(--w) * .034)); line-height: 1; pointer-events: none; }
 .m-watch .later { left: 50%; font-size: max(5px, calc(var(--s) * 100cqw / var(--w) * .058)); }
 .m-watch .later { white-space: normal; width: 62%; text-align: center; line-height: 1.15; }
+.w .two { min-width: 0; }
